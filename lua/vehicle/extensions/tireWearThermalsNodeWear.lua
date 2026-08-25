@@ -19,8 +19,8 @@ local LOCK_COL_RATE = 0.016 -- base /s at slipF≈LOCK_SLIP_F_REF (tuned under s
 local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
 local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
 local ENABLE_CAMBER_ENERGY_COLE = true
--- Post-demo soft: 0.014 hit ~35% on Bolide skidpad; ~0.009 targets teens on long armed arc.
-local CAMBER_COL_BASE = 0.009
+-- Post-demo soft: 0.014→0.009 still ~21% mid-stint armed; 0.006 for normal-camber play.
+local CAMBER_COL_BASE = 0.006
 local CAMBER_DEG_ARM = 2.0 -- Bolide smoke; production can raise back toward 4°
 local CAMBER_DEG_ZERO = 1.0 -- steeper frac just above arm (was 1.5)
 local CAMBER_SLIP_F_REF = 180 -- was 500; camber scrub slipF << lock, REF starved cole
