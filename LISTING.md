@@ -4,8 +4,8 @@
 
 | Resource | GitHub | BeamNG Repo | Zip | Tag id (local) |
 | --- | --- | --- | --- | --- |
-| **Core** — thermals + UI | [Tire-Wear-and-Thermals-ReSpin](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin) | [39082](https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/) | `TireWearThermalsReSpin_antoniomdavis36749.zip` | `TWTRS_RESPIN` |
-| **Compat Tires** — second listing | [Tire-Wear-and-Thermals-ReSpin-Tires](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires) | [39083](https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/) | `TireWearThermalsReSpin_CompatTires.zip` | `TWTRS_COMPAT` |
+| **Core** — thermals + UI | Tire-Wear-and-Thermals-ReSpin (display: **Node-Thermal Friction**) | [39082](https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/) | `TireWearThermalsReSpin.zip` | `TWTRS_RESPIN` |
+| **Compat Tires** — second listing | Tire-Wear-and-Thermals-ReSpin-Tires | [39083](https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/) | `TireWearThermalsReSpin_CompatTires.zip` | `TWTRS_COMPAT` |
 
 Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link both Repo URLs in each resource description (paste blocks below).
 
@@ -15,11 +15,11 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 
 | Field | Value |
 | --- | --- |
-| **Title** | Tire Wear and Thermals ReSpin |
-| **Tagline** | Tires heat up, wear down, and lose grip — a ReSpin of Luuk and Zesty_Maple98 |
-| **Version** | 0.1.2 |
-| **Zip filename** | `TireWearThermalsReSpin_antoniomdavis36749.zip` (or `TireWearThermalsReSpin.zip`) |
-| **Prefix** | Alpha |
+| **Title** | Node-Thermal Friction |
+| **Tagline** | EXPERIMENTAL — private/small-group. Node wear + thermals friction toward V2. |
+| **Version** | 0.2.0-exp |
+| **Zip filename** | `TireWearThermalsReSpin.zip` (stable Repo id; display title is Node-Thermal Friction) |
+| **Prefix** | Experimental |
 | **Category** | Utility / Gameplay (confirm on upload form) |
 
 ---
@@ -27,78 +27,87 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 ## Description (BBCode)
 
 ```bbcode
-[B]Tire Wear and Thermals ReSpin[/B]
-Tires heat up, wear down, and lose grip as you drive. Open source for BeamNG.drive.
+[B]Node-Thermal Friction[/B]
+Open-source tire temperature, wear, and grip simulation for BeamNG.drive.
 
-This is a [B]new[/B] listing, not an update to Redux. It continues Luuk’s original mod and Zesty_Maple98’s Redux rework (AGPL), with more heat and wear tuning for current BeamNG.
+This is a [B]new[/B] resource (not an update to Redux). It continues the AGPL lineage of earlier open-source tire thermals/wear mods (formerly listed as Tire Wear and Thermals ReSpin), with further thermals/wear tuning and BeamNG 0.39 compatibility work. Upstream authors are listed under Credits.
+
+[B]Per-tire profiles — not a universal config[/B]
+ReSpin does [B]not[/B] apply one tire setup to the whole car. Each fitted tire is classified independently from its JBeam (name, [I]treadCoef[/I], [I]softnessCoef[/I], purpose/duty) and receives its own thermals, wear, and grip profile. A Sport front and a Race rear do not share knobs. Classic / Crew show live tread, grip, and temps per corner.
 
 [HR][/HR]
 [B]Credits[/B]
 • [USER=53119]@lucky4luuk[/USER] — original [I]Tyre Thermals and Wear[/I] (open source; authorship cited)
 • [USER=393895]@Zesty_Maple98[/USER] — [I]Tyre Wear and Thermals Redux[/I] expansion (permission received)
 
-Full credits are also in CREDITS.md / NOTICE inside the zip.
+Full attribution is also in CREDITS.md / NOTICE inside the package.
 
 [B]Listing images[/B]
-The hero / gallery shots show the [I]Civetta Scintilla GT3[/I] from [B]Scintilla GT3 Racing Parts[/B] (Exchy / Turbo49 / Cyborella et al.). Used with [B]courtesy permission[/B] from those authors. ReSpin does not ship that pack’s models, textures, or sounds.
+Hero / gallery stills show the [I]Civetta Scintilla GT3[/I] from [B]Scintilla GT3 Racing Parts[/B] (Exchy / Turbo49 / Cyborella et al.). Used with [B]courtesy permission[/B] from the pack authors. ReSpin does not ship that pack’s meshes, textures, or sounds.
 Vehicle mod: [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/[/URL]
 
 [HR][/HR]
-[B]What you get[/B]
-• Tires heat from sliding, load, camber, brakes, and the road
-• Wear that actually costs grip over a stint
-• Street, sport, and race slicks each feel different
-• Race slicks (Hard / Medium / Soft) are locked from live testing — Soft wears fastest, Hard lasts longest
-• Front-drive and all-wheel Soft cars keep the driven fronts from cooking as easily
-• Pressure, load, and surface still change how much grip you have
-• Brake cooling ducts under Tuning → Brakes (saved with the car)
-• Four apps: Driver (simple), Classic (inner / center / outer temps), Crew (carcass, rim, and stint fade), Pitwall (full engineer view plus how far you’ve gone)
-• Works in multiplayer
-• Fine with BeamNG 0.39 pack-air / draft — no extra draft mod needed
-• Optional extra tire parts (separate download) for a few GT3 packs whose stock tires fight the heat window
+[B]Features[/B]
+• Per-tire profiles (classification → dedicated heat/wear/grip pack). Not a car-wide universal tire config
+• Tire thermals driven by slip, load, camber, brakes, and surface
+• Wear that feeds back into grip over a stint
+• Compound-aware behaviour (street → sport → race / slick spectrum)
+• Locked ReSpin slick ladder (Hard C2 / Medium C3 / Soft C4) with Soft > Medium > Hard wear rates
+• Locked street Sport heat and Sport Plus heat+wear (live Belasco / Track ~15°C, ~22 km protocol)
+• 20" Sport compounds classify as Sport (name + tread routing; not utility)
+• Track Day heat locked for now (between Sport Plus and Hard C2)
+• Layout-aware Soft drive heat (FWD / AWD fronts) — keeps Hot under abuse without rewriting compound knobs
+• Pressure, load, and surface effects on grip
+• Brake cooling duct sliders (Tuning → Brakes; saved in .pc configs)
+• UI apps: Classic / Crew (player HUDs). **Dev Pitwall** (testers): dense engineer telemetry — not in public zip
+• Dev Pitwall (`-dev` / git): stint/odo distance, heat-knob chips, node-spike debug (testers only)
+• Multiplayer-compatible vehicle extension
+• BeamNG 0.39-aware pack-air / draft coexistence (no dependency on extra draft mods)
+• Optional [B]Respin[/B] selectable tire clones + four matched Scintilla GT3 race configs (second resource — meshes stay in those mods)
 
 [HR][/HR]
 [B]How to use[/B]
-1. Install this mod. Turn off any older tyre-thermals unpack if you still have one.
-2. Spawn a car.
-3. Apps → add [B]Tyre Wear & Thermals[/B] (Driver, Classic, Crew, or Pitwall).
-4. Optional: Tuning → Brakes → Front/Rear duct opening (1% closed, 100% wide open).
-5. Optional extra tires: install [B]Tire Wear and Thermals ReSpin — Compat Tires[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]), plus the [I]Scintilla GT3[/I] or [I]Pigniteon ETK Racing[/I] pack for the 3D models. On Scintilla, pick a [B]GT3 ReSpin[/B] config, or Parts → tires → [B]Respin[/B]. Stock configs still use the original tires.
+1. Install / enable the mod (disable any older thermals-and-wear unpack if present).
+2. Spawn a vehicle.
+3. Apps menu → add [B]Node-Thermal Friction[/B] (Classic or Crew). **Dev Pitwall** is for testers/engineering only — not shipped in the public zip.
+4. Optional: Tuning → Brakes → Front/Rear duct opening (1% = closed, 100% = fully open).
+5. Optional (compatibility tires): install [B]Tire Wear and Thermals ReSpin — Compat Tires[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]), plus [I]Scintilla GT3[/I] or [I]Pigniteon ETK Racing[/I] for meshes. Scintilla: pick a [B]GT3 ReSpin[/B] config (Endurance Hard/Medium/Soft or Qualify Supersoft), or Parts → tires → [B]Respin[/B]. Author configs still default to upstream tires.
 
 [HR][/HR]
-[B]What you need[/B]
-• Current BeamNG.drive (tested on 0.39-era builds)
-• Nothing else required for heat, wear, and the apps
-• Optional [B]Compat Tires[/B] is a [B]second download[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]) — it cannot live inside this zip or the apps disappear
-• Those extra tires also need the matching car pack for the 3D models. ReSpin does not ship those models.
+[B]Requirements[/B]
+• Current BeamNG.drive (developed/tested with 0.39-era builds)
+• No required companion mods for core thermals/wear
+• Optional [B]Compat Tires[/B] is a [B]second Repo resource[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]) — cannot ship inside this zip or the UI apps vanish
+• Compatibility tires also need the matching car mod for meshes only (Scintilla GT3 Racing Parts / Pigniteon ETK Racing). ReSpin does not redistribute those meshes.
 
-[B]Still Alpha[/B]
-• Street, truck, and wet tires still need more testing. Race slicks plus street Sport and Sport Plus heat are in a good place.
-• The HUD can look odd on cars with more than four wheels
-• Pitwall is busy on purpose — it’s an engineer screen
-• Some third-party race tires don’t play nice with heat; use the optional Compat Tires or wait on those authors
-• All-wheel Soft can still spike one front if you soak the brakes hard — that’s the harsh-drive ceiling, not a bad compound
+[B]Known limitations (Alpha)[/B]
+• Street / utility / wet compounds still need broader surface A/B. Locked from live Track ~15°C stints: race Soft/Med/Hard, street Sport heat, Sport Plus heat+wear. Track Day heat locked for now.
+• Graining is experimental (cold out-lap); not a locked band
+• UI layout can be imperfect on vehicles with more than four wheels
+• Dev Pitwall (testers): dense diagnostics + node-spike debug — not a public player feature
+• Some third-party race tires use unconventional friction; use the optional Respin clones or wait for upstream fixes
+• AWD Soft can still spike one front under heavy brake soak — treated as a harsh-drive ceiling, not a compound miss
 
 [HR][/HR]
 [B]Links[/B]
 This resource: [URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/[/URL]
 Compat Tires (optional parts): [URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]
-Source: [URL]https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin[/URL]
+Source: GitHub: [I]Tire-Wear-and-Thermals-ReSpin[/I]
 Discussion (ReSpin): [URL]https://www.beamng.com/threads/tire-wear-and-thermals-respin-%E2%80%94-discussion-feedback-compat.111238/[/URL]
 Discussion (upstream Redux thread): [URL]https://www.beamng.com/threads/tyre-wear-and-thermals-mod-discussion.97035/[/URL]
 Original: [URL]https://www.beamng.com/resources/luuks-tyre-thermals-and-wear-mod.26947/[/URL]
 Redux: [URL]https://www.beamng.com/resources/tyre-wear-and-thermals-redux.29934/[/URL]
-Scintilla GT3 Racing Parts (listing vehicle / optional compat models): [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/[/URL]
+Scintilla GT3 Racing Parts (listing vehicle / optional compat meshes): [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/[/URL]
 
 [B]License[/B]
-GNU Affero General Public License v3 — see the [I]license[/I] file in the zip. Source must stay available for network-use derivatives under AGPL.
+GNU Affero General Public License v3 — see the [I]license[/I] file in the package. Source must remain available for network-use derivatives under AGPL.
 ```
 
 ---
 
 ## Compat Tires resource (second listing)
 
-Pack, inventory, and listing BBCode live in **[Tire-Wear-and-Thermals-ReSpin-Tires](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires)** (`LISTING.md` there). Do not put `vehicles/` in this core tree.
+Pack, inventory, and listing BBCode live in **Tire-Wear-and-Thermals-ReSpin-Tires** (`LISTING.md` there). Do not put `vehicles/` in this core tree.
 
 **Live listing:** https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/
 
@@ -138,21 +147,20 @@ Yes — BeamNG Repo listings support **multiple images** with **captions/descrip
 | Image | Resource | Caption / description (paste on upload) |
 | --- | --- | --- |
 | `mod_info/TWTRS_RESPIN/images/listing_hero.jpg` (icon: `icon.jpg`) | **Core** ReSpin | **ReSpin** — Tires heat up, wear down, and lose grip. Vehicle: Scintilla GT3 Racing Parts (listing stills used with author permission) — https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/ |
-| `mod_info/TWTRS_RESPIN/images/ui_four_apps.jpg` | **Core** ReSpin | **Four apps in one shot** — Pitwall (full engineer), Crew (carcass + stint fade), Driver (quick read), and Classic (compact inner / center / outer temps). Pick how busy you want the screen. |
+| `mod_info/TWTRS_RESPIN/images/ui_four_apps.jpg` | **Core** ReSpin | **Apps in one shot** — Pitwall (dev engineer), Crew (carcass + stint fade), and Classic (compact inner / center / outer temps). Driver HUD removed. |
 | `mod_info/TWTRS_RESPIN/images/ducts.jpg` | **Core** ReSpin | **Brake cooling ducts** — Tuning → Brakes → Front/Rear Cooling Ducts (1% = closed, 100% = open). Saved with the car. |
 | `tools/listing/locked/respin-compat-hero.jpg` | **Compat Tires** companion (shipped from the tires repo) | **ReSpin Tires** — Optional extra `*_Respin` GT3 tire parts (3D models stay in the car mods). Install beside core ReSpin. |
 | `mod_info/TWTRS_RESPIN/images/tire_thermal_map.jpg` (draft) | **Core** ReSpin (optional 4th gallery) | **Tire thermal map** — Inner / center / outer tread in Pitwall colors (cyan-teal cooler, green usable, amber hotter) plus surface, carcass, and rim-soak callouts. |
 
 Masters (do not restyle without unlock): `tools/listing/locked/respin-core-hero.jpg`, `respin-compat-hero.jpg`, `respin-ui-four-apps.jpg`, `respin-ducts.jpg`. Draft (not locked): `tools/listing/drafts/respin-tire-thermal-map.jpg`.
 
-### Gallery captions — the four apps (from `ui_four_apps.jpg`)
+### Gallery captions — the apps (from `ui_four_apps.jpg`)
 
 Use as one image with this description, or split into bullets in the listing body:
 
-1. **Pitwall** (left) — Full engineer view: weather, per-tire tread / grip / PSI, surface vs carcass heat, brakes / rim soak, extra test numbers.
-2. **Crew** (top right) — Four-corner crew view with tread, grip, PSI, temp state, and surface heat maps.
-3. **Driver** (middle right) — Simple driver HUD: condition, grip, pressure, heat bars.
-4. **Classic** (bottom right) — Compact inner / center / outer temperature blocks per axle.
+1. **Pitwall** (left) — Dev engineer view: weather, per-tire tread / grip / PSI, surface vs carcass heat, brakes / rim soak, extra test numbers (not in public zip).
+2. **Crew** — Four-corner crew view with tread, O|M|I zones, grip, PSI, temp state, and surface heat maps.
+3. **Classic** — Compact inner / center / outer temperature blocks per axle with tread condition.
 
 Exposure on the source capture was pulled down for listing readability; UI panels were kept intact.
 
@@ -162,7 +170,7 @@ Gallery order tip: hero → `ui_four_apps` → `ducts`.
 
 ## Thumbnail / icon
 
-Locked poster icons replace the older tyre/pit thumbnail:
+Locked poster icons replace the older tire/pit thumbnail:
 
 - Core: `mod_info/TWTRS_RESPIN/icon.jpg`
 - Compat: tires repo `mod_info/TWTRS_COMPAT/icon.jpg` (master: `tools/listing/locked/respin-compat-hero.jpg`)
@@ -182,4 +190,4 @@ Mention on the listing when advertising the stop-gap parts; pointer: `COMPAT_TIR
 - Scintilla GT3 Racing Parts — https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/
 - Pigniteon ETK Racing — credit the pack author as on that Repo listing
 
-Do not ship their models/textures inside either ReSpin zip. Compat tires are a **second GitHub repo and BeamNG Repo resource**: https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires
+Do not ship their models/textures inside either ReSpin zip. Compat tires are a **second GitHub repo and BeamNG Repo resource**: Tire-Wear-and-Thermals-ReSpin-Tires

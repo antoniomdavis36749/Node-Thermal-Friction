@@ -4,7 +4,7 @@ Internal experimental rule. Clean-room node wear later must obey this.
 
 ## Goal
 
-One grip story: Luuk-style thermals (heat, PSI, compounds, surfaces) plus
+One grip story: thermal-core (heat, PSI, compounds, surfaces) plus
 future node wear (local contact damage). Never two absolute friction writers.
 
 ## Owners

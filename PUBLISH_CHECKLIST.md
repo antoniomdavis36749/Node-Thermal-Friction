@@ -1,5 +1,8 @@
 # BeamNG Repo publish checklist
 
+> **Deferred:** Public Repo publish is paused while the pack is **experimental /
+> private (V2)**. Use this checklist only if you deliberately resume a public zip.
+
 Branches: **`testing/main`** (active polish) → merge to **`main`** (GitHub default / Repo source link)  
 Working folder: `Tire-Wear-and-Thermals-ReSpin-dev` (local git sync under `mods/unpacked/`)  
 Official packing docs: https://documentation.beamng.com/modding/mod-support/mod_packing/  
@@ -13,7 +16,7 @@ Guidelines: https://www.beamng.com/game/support/policies/modding-guidelines/
 
 ---
 
-## Calibration band (0.1.2) — locked
+## Calibration band (0.2.0-exp) — locked where noted; flatspot removed
 
 Street Sport heat and Sport Plus heat+wear locked on the same Belasco Track ~15°C / ~22 km protocol. Race slick band from 0.1.1 still held.
 
@@ -40,7 +43,7 @@ Live Belasco / WCU Track ~15°C protocol (~4 laps / ~22 km). Soft compound knobs
 - [x] Soft / Medium / Hard ReSpin slick band locked
 - [x] FWD Soft-like topology locked
 - [x] AWD Soft-like front damp locked
-- [x] Pitwall ships (engineer view + stint/odo + heat-knob chips)
+- [x] Pitwall Heavy kept in git for dev/testers (`-dev` unpack); **excluded from public zip** (see packer)
 - [x] Listing / `info.json` refreshed for 0.1.1 (kept; 0.1.2 supersedes public copy)
 
 ---
@@ -48,11 +51,11 @@ Live Belasco / WCU Track ~15°C protocol (~4 laps / ~22 km). Soft compound knobs
 ## A. Legal & credits (required)
 
 - [x] Keep AGPL-3.0 (`license`)
-- [x] Credit **lucky4luuk** (original, open source — cite authorship) and **Zesty_Maple98** (Redux) — `CREDITS.md`, `NOTICE`, README, app authors, listing text
-- [x] Luuk: open-source release; authorship citation required (stated in listing)
-- [x] Zesty_Maple98 official permission received (stated in listing)
+- [x] Credit **lucky4luuk** (original, open source — cite authorship) and **Zesty_Maple98** (Redux) — `CREDITS.md`, `NOTICE`, README Credits, listing Credits only (not app author / file headers)
+- [x] lucky4luuk: open-source release; authorship citation required (stated in Credits)
+- [x] Zesty_Maple98 official permission received (stated in Credits)
 - [x] Scintilla GT3 listing photo-mode stills — courtesy permission obtained (stated in `CREDITS.md` / `LISTING.md`)
-- [x] Confirm BeamNG forum username: `antoniomdavis36749`
+- [x] Confirm BeamNG forum username on the Repo upload form (do not store the handle in this tree)
 - [x] Link **your** GitHub source on the listing (`LISTING.md` / `info.json`)
 
 ## B. What ships vs what stays private
@@ -64,14 +67,15 @@ Player zip should contain only runtime content. Dev tooling must not ship.
 | `lua/` (no lap harness) | `vehicles/` (`*_Respin` JBeams + public Scintilla `.pc`) | `tools/`, `.vscode/`, `.git/` |
 | `ui/`, `scripts/` | `mod_info/TWTRS_COMPAT/` | Companion car meshes/textures |
 | `mod_info/TWTRS_RESPIN/` | tires-repo `COMPAT_TIRES.md`, `license`, `NOTICE`, `CREDITS.md` | `tools/output/`, soft-sim dumps |
-| docs + `COMPAT_TIRES.md` pointer | — | Old Redux `resource_id` leftovers |
+| docs + `COMPAT_TIRES.md` pointer | — | Old Redux `resource_id` leftovers; **`ui/modules/apps/tireWearThermalsHeavy/`** (dev Pitwall) |
 
-**Why two zips / two git repos:** a package that contains `vehicles/` is mounted as vehicle-only — core UI/Lua never load. Core testers clone this repo; vehicle parts come from [Tire-Wear-and-Thermals-ReSpin-Tires](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires).
+**Why two zips / two git repos:** a package that contains `vehicles/` is mounted as vehicle-only — core UI/Lua never load. Core testers clone this repo; vehicle parts come from **Tire-Wear-and-Thermals-ReSpin-Tires**.
 
 - [x] Document exclude list (this file + packer)
-- [x] Stop loading `tyreWestCoastLapTest` for players
-- [x] Ship **Pitwall** UI app (full engineer) alongside Driver / Classic / Crew
-- [x] Optional: omit `tyreWestCoastLapTest.lua` from release zip (packer excludes it; file remains in git for tools)
+- [x] Stop loading `tireWestCoastLapTest` for players
+- [x] Ship **Classic / Crew** UI apps in public zip (Driver removed)
+- [-] **Pitwall Heavy** — dev/testers only; lives in git + `-dev` unpack, **not** in public zip
+- [x] Optional: omit `tireWestCoastLapTest.lua` from release zip (packer excludes it; file remains in git for tools)
 - [x] Document compatibility tires (`COMPAT_TIRES.md` pointer); companion lives in the tires repo
 - [x] Clean-zip smoke: core Apps visible when `vehicles/` is **not** in the core package
 - [x] Smoke-test Respin Soft/Med/Hard on Scintilla GT3 (WCU Track 15°C) — band locked
@@ -81,13 +85,13 @@ Player zip should contain only runtime content. Dev tooling must not ship.
 
 Do **not** reuse Redux’s resource identity. This is a new listing derived from open source.
 
-- [x] New title: `Tire Wear and Thermals ReSpin`
+- [x] New title: `Node-Thermal Friction`
 - [x] Polished tagline + BBCode description (`LISTING.md`, `mod_info/TWTRS_RESPIN/info.json`)
 - [x] Version string `0.1.2` (no version in zip filename; 0.1.1 was the first listed drop)
 - [x] Zip name draft: `TireWearThermalsReSpin.zip` (add `_YourBeamNGUser` before upload if needed)
 - [x] Removed Redux `resource_id` / `MXFQY32S5` / foreign owner fields / stale hashes
 - [x] Local placeholder tagid `TWTRS_RESPIN` (Repo will assign official tag on upload)
-- [x] BeamNG forum username confirmed: `antoniomdavis36749`
+- [x] BeamNG forum username confirmed on the Repo upload form (handle not stored in this tree)
 - [x] Icon / preview images — locked heroes + four-UI gallery + ducts
 - [ ] Category confirmed on upload form
 - [x] Prefix: Alpha (street/truck/wet still open; race slicks + Sport / Sport Plus heat locked)
@@ -108,12 +112,12 @@ Do **not** reuse Redux’s resource identity. This is a new listing derived from
 Correct zip root = top-level game folders, **not** a parent `Tire-Wear-and-Thermals-ReSpin-main/` folder. Forward-slash zip paths required (packer uses Python zipfile).
 
 ```powershell
-.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin_antoniomdavis36749.zip'
+.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin.zip'
 ```
 
 - [x] Use `tools/scripts/Pack-Release.ps1` (POSIX paths; core only — no `vehicles/`)
 - [x] Core zip roots: `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_RESPIN/` — **no** `vehicles/`
-- [x] Compat zip: pack from [Tire-Wear-and-Thermals-ReSpin-Tires](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires) (`vehicles/`, `mod_info/TWTRS_COMPAT/`)
+- [x] Compat zip: pack from Tire-Wear-and-Thermals-ReSpin-Tires (`vehicles/`, `mod_info/TWTRS_COMPAT/`)
 - [x] Install **core + compat** → Apps still appear; Respin tires selectable (Scintilla confirmed 2026-08-14)
 - [x] No missing meshes on Respin tire swap; HUD classifies Soft/Med/Hard correctly
 - [x] Confirm compat zip has **no** third-party meshes — only `vehicles/common/*_Respin*.jbeam` plus `vehicles/scintilla/gt3_respin_*.pc`
@@ -124,9 +128,9 @@ Correct zip root = top-level game folders, **not** a parent `Tire-Wear-and-Therm
 
 Upload **both** as **new** resources (not updates to Redux 29934). Core zip from this repo; Compat zip from the tires repo.
 
-### F1. Core — Tire Wear and Thermals ReSpin
+### F1. Core — Node-Thermal Friction
 
-- [x] Upload `TireWearThermalsReSpin_antoniomdavis36749.zip`
+- [x] Upload `TireWearThermalsReSpin.zip`
 - [x] Paste core BBCode from `LISTING.md`; gallery: hero → `ui_four_apps` → `ducts`
 - [x] Category confirmed on form
 - [x] Approved / listed: https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/ (keep zip filename stable)

@@ -288,7 +288,7 @@ angular.module("beamng.apps")
 
                     <div class="tth-dev-banner">DEV / TESTING — not for public release</div>
                     <div class="tth-header">
-                        <span class="tth-title">RESPIN PITWALL<span class="tth-dev-subtitle">dev telemetry · capture-first · node spike</span></span>
+                        <span class="tth-title">NODE-THERMAL FRICTION<span class="tth-dev-subtitle">Pitwall · capture-first · node spike</span></span>
                         <span class="tth-header-meta">
                             Env {{ (envTemp||0).toFixed(2) }}°C · Track {{ (trackTemp||0).toFixed(2) }}°C · Rain {{ (rainState||0).toFixed(2) }}% · Film {{ (waterFilm||0).toFixed(2) }}%
                         </span>
