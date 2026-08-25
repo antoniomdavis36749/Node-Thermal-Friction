@@ -46,6 +46,34 @@ See also: `tools/V2_FRICTION_CONTRACT.md`, `tools/V2_NODE_WEAR_SPIKE.md`.
 
 ---
 
+## Module contracts (short)
+
+Ownership for **Node-Thermal Friction** — keep changes inside the owning module unless a natural shared helper fits.
+
+| Module | Owns | Must not |
+| --- | --- | --- |
+| `auto/tireWearThermals.lua` | Orchestration, grip, `ctw` thermal prepare/step, lifecycle, install order | Per-node μ/mass; second PSI writer |
+| `…Profiles` | Compound tables / interpolate inputs | Runtime wear energy |
+| `…Surface` / `…Ground` | Surface classify, ground LUT/blend | Node wear |
+| `…Temp` / `…Draft` / `…Aero` | Temp nodes, pack-air, native aero sample | Friction writes |
+| `…Classify` / `…Wheel` | Profile pick, JBeam/susp/align/init | Node spike |
+| `…Pressure` | Native PSI, leak, hot writeback | Absolute overwrite of wheel μ |
+| `…Wear` | Soft scalar tread/zones, grain/blister, stint fade | Node friction/mass |
+| `…NodeWear` | Contact-node wear, ring, cole gates, A3 `min(scalar,node)` HUD | `setFrictionThermalSensitivity` |
+| `…NodeProbe` (+ State / controller) | Read-only colE/slipF feed + Pitwall probe | Wear rates (except via cole peek) |
+| `…PhysicsLoop` | `prepareWheelFrame` / fixed steps | New friction APIs |
+| `…Hud` / `…Telemetry` | guiStream / CSV | Physics ownership |
+| UI Classic / Crew / Pitwall | Display only | Second physics story |
+
+**Friction policy A:** thermal core = wheel μ baseline; node layer = relative contact μ/mass only.
+
+**Install order (do not reorder casually):**  
+Ground → Pressure → Temp → Draft → Classify → Wheel → Wear → **NodeWear → NodeProbe** → PhysicsLoop → Hud → Telemetry.
+
+New features only if they fit an existing row without a second absolute friction writer.
+
+---
+
 ## Shared-state ownership
 
 **Rule:** never rebind shared tables after install (`wheelCache = {}`, `brakeDuctSettings = {…}`). Clear **in place** (`for k in pairs(t) do t[k] = nil end`). Vehicle globals (`obj`, `v`, `wheels`) via getters, not frozen install snapshots. Live scalars that mutate (`ENV_TEMP`) via getters (`getEnvTemp`), not frozen numbers.
@@ -193,18 +221,21 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ## Optional next steps (when continuing)
 
-- Section headers only in remaining hot functions (prepare/step/grip) — docs-only
-- Trim wear damage reload (use `ctw.` for rare fields) — readability only
+- Soft-scalar Sport stint A/B → nudge `SCALAR_TREAD_WEAR_SCALE` (0.45) if needed
+- Pack / private share — only when asked
 - Grip refactor — **only** with regression scripts + tester sign-off
+- Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 
 ---
 
 ## Related docs
 
 - `RELEASE_CHECKLIST_TESTERS.md` — pre-tester zip smoke
+- `tools/V2_FRICTION_CONTRACT.md` — friction policy A
+- `tools/V2_NODE_WEAR_SPIKE.md` — node spike + soft scalar flags
 - `tools/scripts/Count-LuaLocals.py` — local scope audit
 - `tools/scripts/Pack-Release.ps1` — release zip
 
 ---
 
-*Last updated: 2026-08-22 (PhysicsLoop extract + shared-state ownership + ctw Wear contract).*
+*Last updated: 2026-08-25 (module contracts + soft scalar / node HUD notes).*

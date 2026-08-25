@@ -343,11 +343,12 @@ angular.module("beamng.apps")
                                 </span>
                             </div>
 
-                            <!-- Structural Condition -->
+                            <!-- Structural Condition: A3 = min(soft scalar, node peak) -->
                             <div class="tth-stat-row">
                                 <span class="tth-label">Tread Condition:</span>
                                 <span class="tth-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(2) }}%
+                                    <span class="tth-cap-dim"> · min(scalar,node)</span>
                                 </span>
                             </div>
                             <div class="tth-bar-container" style="margin-bottom: 7px;">
@@ -561,6 +562,9 @@ angular.module("beamng.apps")
                                 </span>
                             </div>
                             <div class="tth-section-label">NODE SPIKE</div>
+                            <div class="tth-cap-dim" style="margin: 0 0 4px 0; font-size: 10px;">
+                                HUD tread = min(soft scalar, node) · grip wearPenalty skipped while spike ON
+                            </div>
                             <div class="tth-capture-line">
                                 {{ w.name }} · {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} {{ w.nodeGate || 'idle' }}
                                 · c{{ ((w.nodeWearContact||0)*100).toFixed(0) }}%
@@ -574,6 +578,17 @@ angular.module("beamng.apps")
                                 <span class="tth-label">Spike / gate:</span>
                                 <span class="tth-value" ng-style="{'color': (w.nodeGate==='lock' || w.nodeGate==='lock+cam') ? '#f59e0b' : '#f1f5f9'}">
                                     {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} · {{ w.nodeGate || 'idle' }}
+                                </span>
+                            </div>
+                            <div class="tth-stat-row">
+                                <span class="tth-label">HUD tread vs peak:</span>
+                                <span class="tth-value" style="font-size: 14px;">
+                                    {{ (w.condition !== undefined ? w.condition : 100).toFixed(0) }}%
+                                    <span class="tth-cap-dim"> HUD</span>
+                                    · {{ ((w.nodeWearPeak||0)*100).toFixed(0) }}%
+                                    <span class="tth-cap-dim"> peak</span>
+                                    <span class="tth-cap-dim" ng-if="(w.condition||100) + 0.5 < (100 - (w.nodeWearPeak||0)*100)"> · scalar leading</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeWearPeak||0) > 0.005 && (w.condition||100) + 0.5 >= (100 - (w.nodeWearPeak||0)*100) && (100 - (w.nodeWearPeak||0)*100) + 0.5 >= (w.condition||100)"> · node leading</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
@@ -754,7 +769,7 @@ angular.module("beamng.apps")
                     "driveHeatGate", "driveHeatGateCarcass",
                     "loadN", "peakForce", "longGrip", "latGrip", "lockFade",
                     "nodeWearPeak", "nodeWearContact", "nodeMuScale", "nodeSlideScale", "nodeMassScale",
-                    "nodeOmega",
+                    "nodeOmega", "nodeCamFrac",
                     "slipEnergy", "longSlip", "sideSlip",
                     "suspCompressionMm", "suspVel", "suspStress", "suspBumpMm", "suspDroopMm", "dynamicRadius",
                     "muStatic", "muSlide", "contactDepth", "rough",
