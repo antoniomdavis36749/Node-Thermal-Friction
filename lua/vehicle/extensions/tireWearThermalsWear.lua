@@ -98,9 +98,9 @@ function M.install(F, deps)
     
         local wear = 0
         local zoneWearDelta = { 0, 0, 0 }
-        -- V2 thermal-first: scalar tread/zone wear off. Thermals + grain/blister stay.
-        -- Physical wear moves to clean-room node spike (tireWearThermalsNodeWear).
-        local ENABLE_SCALAR_TREAD_WEAR = false
+        -- Soft scalar tread back on with node spike: ages Sport under load; A3 HUD uses min(scalar, node).
+        local ENABLE_SCALAR_TREAD_WEAR = true
+        local SCALAR_TREAD_WEAR_SCALE = 0.45 -- soft vs pre-spike full rate
         if ENABLE_SCALAR_TREAD_WEAR and not isAirborne then
                 local tempWearPenalty = 1.0
                 if tempDistWeighted > 1.0 then
@@ -128,6 +128,7 @@ function M.install(F, deps)
                 end
         
                 wear = tempDistToWearMult(tempDistWeighted) * (slidingWear + (vehNotParked * abs(propulsionTorque * 0.008 - brakeTorque * 0.025) * 0.3 * TORQUE_ENERGY_MULTIPLIER) * 0.08 + angularVel * 0.0005 * (ctw.rollingWearCoef or 1.0)) * (wearRate * cycleWearMultiplier / max(0.7, min(1.3, tyreWidth / 0.2))) * (1.0 + min(0.75, (w.suspStress or 0) * 0.35 * bottomOutSens)) * surfaceWearScale * dt
+                wear = wear * SCALAR_TREAD_WEAR_SCALE
 
                 -- Path A2: secondary contact (kerb+asphalt) mild wear bump when ID2 rougher — spike excluded upstream
                 do

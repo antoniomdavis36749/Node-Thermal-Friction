@@ -194,13 +194,17 @@ function M.install(F, deps)
         data.nodeWearRingFlip = flip and 1 or 0
     end
 
-    -- A3: overall condition from peak; O|M|I from outer vs inner tread nodes.
-    -- Display-only — grip wearPenalty stays at full when spike is on (node μ owns feel).
+    -- A3: HUD condition / O|M|I = min(scalar tread, node peak/zones).
+    -- Grip wearPenalty still ignored while spike on (node μ owns contact feel — no double tax).
     local function publishHudBridgeA3(data, wd)
         if not ENABLE_HUD_BRIDGE_A3 or not data then return end
         if not data.zoneCondition then data.zoneCondition = { 100, 100, 100 } end
+        local scalarCond = data.condition or 100
+        local s1 = data.zoneCondition[1] or 100
+        local s2 = data.zoneCondition[2] or 100
+        local s3 = data.zoneCondition[3] or 100
         local peak = data.nodeWearPeak or 0
-        data.condition = max(0, min(100, 100 * (1.0 - peak)))
+        local nodeCond = max(0, min(100, 100 * (1.0 - peak)))
 
         local treadNodes = wd and wd.treadNodes
         local n = treadNodeCount(treadNodes)
@@ -226,9 +230,13 @@ function M.install(F, deps)
         end
         -- Prefer peak so middle never reads healthier than overall when only one side wore
         local mMax = (oMax + iMax) * 0.5
-        data.zoneCondition[1] = max(0, min(100, 100 * (1.0 - oMax)))
-        data.zoneCondition[2] = max(0, min(100, 100 * (1.0 - mMax)))
-        data.zoneCondition[3] = max(0, min(100, 100 * (1.0 - iMax)))
+        local n1 = max(0, min(100, 100 * (1.0 - oMax)))
+        local n2 = max(0, min(100, 100 * (1.0 - mMax)))
+        local n3 = max(0, min(100, 100 * (1.0 - iMax)))
+        data.zoneCondition[1] = min(s1, n1)
+        data.zoneCondition[2] = min(s2, n2)
+        data.zoneCondition[3] = min(s3, n3)
+        data.condition = min(scalarCond, nodeCond)
     end
 
     local function clearHudBridgeA3(data)
@@ -498,7 +506,8 @@ function M.install(F, deps)
                     publishHudBridgeA3(data, wd)
                 else
                     local peak = data.nodeWearPeak or 0
-                    data.condition = max(0, min(100, 100 * (1.0 - peak)))
+                    local nodeCond = max(0, min(100, 100 * (1.0 - peak)))
+                    data.condition = min(data.condition or 100, nodeCond)
                 end
             end
         end

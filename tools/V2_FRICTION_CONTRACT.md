@@ -35,7 +35,8 @@ No copy or port from other node-based tire mods.
 ## Current experimental pack (Phase 0–1 + node spike)
 
 - Scalar **flatspot removed**.
-- Scalar **tread/zone wear off** (`ENABLE_SCALAR_TREAD_WEAR = false`) — thermal-first.
+- Soft **scalar tread/zone wear on** (`ENABLE_SCALAR_TREAD_WEAR`, scale **0.45**) — HUD uses
+  `min(scalar, node)`; grip wearPenalty still skipped while node spike owns contact μ.
 - Grain / blister still thermal-side.
 - **Brake lock fade disabled** — native lock.
 - **Node wear spike on** (`ENABLE_NODE_WEAR_SPIKE`) — Policy A tread-ring

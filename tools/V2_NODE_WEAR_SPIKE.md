@@ -6,7 +6,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 
 | Flag | File | Default | Role |
 | --- | --- | --- | --- |
-| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **false** | Thermal-first: freeze tread% / zones at 100 |
+| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **true** (soft ×0.45) | Everyday tread/zone %; HUD `min(scalar, node)` |
 | `ENABLE_NODE_WEAR_SPIKE` | `tireWearThermalsNodeWear.lua` | **true** | Contact-node friction/mass wear |
 | `ENABLE_RING_WEAR` | same | **true** | Phase 2 sector spread on tread ring |
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
@@ -146,17 +146,18 @@ Not a player feature — Pitwall remains excluded from public zip.
 
 ## A3 HUD bridge (Classic + Crew)
 
-When `ENABLE_HUD_BRIDGE_A3` and node spike are on (scalar tread still off):
+When `ENABLE_HUD_BRIDGE_A3` and node spike are on:
 
 | HUD field | Source |
 | --- | --- |
-| Overall `%` (`condition`) | `100 × (1 − nodeWearPeak)` |
-| Outer / Mid / Inner | Max wear on outer nodes / avg(O,I) / max on inner nodes |
+| Overall `%` (`condition`) | **min**(scalar tread, `100 × (1 − nodeWearPeak)`) |
+| Outer / Mid / Inner | **min**(scalar zone, node outer/mid/inner) |
 
 Classic canvas + Crew zone strip both read the same stream fields. Driver UI removed.
 
-Grip path treats `condition` / `zoneCondition` as **100** for wearPenalty while spike is on
-(node μ already owns contact feel — no double tax).
+Grip path treats `condition` / `zoneCondition` as **100** for wearPenalty while spike on
+(node μ already owns contact feel — no double tax). Soft scalar ages the **% bar** and
+leak/puncture thresholds without stacking a second grip tax.
 
 ## Gated lock energy swap (`ENABLE_LOCK_ENERGY_COLE`)
 
@@ -243,6 +244,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 ## Next
 
-- Continuous camber ramp from **1.0°** is in tree; Pitwall shows **camF** / Camber frac labels.
-- Soft scalar tread deferred until you flip it — feel A/B is fine **after** soft scalar (prefer `min(scalar, node)` on HUD).
+- Soft scalar tread **on** (×0.45) + A3 `min(scalar, node)` — Sport stint feel A/B when ready.
 - Optional: pack / private tester share.
