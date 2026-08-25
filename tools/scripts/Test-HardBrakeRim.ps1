@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
   Soft-sim: hard-brake → rim rise (tire-side soak only).
-  Mirrors live luukstyrethermalsandwear.lua rim node:
+  Mirrors live tireWearThermals.lua rim node:
     brakeSurfSoak 0.016 / brakeCoreSoak 0.0025 / brakeRadiantCoef 2.2e-11
     ductAirCoolFactor / ductSoakCondFactor / brakeAreaScale / rotorSoakMult
   Rotor temps are a soft-proxy INPUT (native owns real rotors — not reimplemented).

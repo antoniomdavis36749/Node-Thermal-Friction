@@ -1,0 +1,24 @@
+{
+  "name": "Node-Thermal Friction Pitwall",
+  "description": "Dev Pitwall: 8-node temps, node-spike / cole energy, elevation/env, pressure, drive heat, surface μ, suspension, slip.",
+  "author": "Node-Thermal Friction",
+  "version": "0.2.0",
+  "directive": "tireWearThermalsHeavy",
+  "domElement": "<tire-wear-thermals-heavy></tire-wear-thermals-heavy>",
+  "types": [
+    "ui.apps.categories.debug",
+    "ui.apps.categories.vehicle_info",
+    "ui.apps.categories.racing"
+  ],
+  "category": "Telemetry",
+  "isAuxiliary": false,
+  "interactive": "yes",
+  "css": {
+    "left": "0px",
+    "top": "0px",
+    "width": "420px",
+    "height": "560px",
+    "min-width": "320px",
+    "min-height": "280px"
+  }
+}

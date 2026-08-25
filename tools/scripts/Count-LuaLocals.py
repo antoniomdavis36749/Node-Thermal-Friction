@@ -78,7 +78,7 @@ def main() -> int:
     path = Path(
         sys.argv[1]
         if len(sys.argv) > 1
-        else r"lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua"
+        else r"lua/vehicle/extensions/auto/tireWearThermals.lua"
     )
     src = path.read_text(encoding="utf-8")
     clean = strip_noise(src)

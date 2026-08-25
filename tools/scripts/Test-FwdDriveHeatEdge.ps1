@@ -9,7 +9,7 @@
 #   Stationary burnout             --- soft-cap must stay OFF (airspeed below Speed0)
 #   Cruise residual                --- low slip; soft-cap blend near zero
 #
-# Refs: Test-FwdDriveHeat.ps1, luukstyrethermalsandwear.lua THERMAL_TOPOLOGY
+# Refs: Test-FwdDriveHeat.ps1, tireWearThermals.lua THERMAL_TOPOLOGY
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }

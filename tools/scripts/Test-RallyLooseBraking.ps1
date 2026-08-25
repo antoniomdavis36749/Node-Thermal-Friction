@@ -1,7 +1,7 @@
 # Rally / gravel compound x loose-surface HARD BRAKING soft-sim (60/80/100 mph -> 0).
 # Reuses CalcTyreWear post-fix knobs from Test-StraightLineSpeedSweep.ps1 /
 # Test-RallyLooseSpeedSweep.ps1 + brake/rim/clog/wear gates from live
-# luukstyrethermalsandwear.lua (driveHeatGate brake open, brake*0.025 netTorque,
+# tireWearThermals.lua (driveHeatGate brake open, brake*0.025 netTorque,
 # cruiseRR off when |brake|>50, LOCKUP_HEAT_FLOOR, rim soak via brakeGainRate,
 # loose surfaceWearScale, rally clog pack*0.55 / clogCoef 0.16).
 #

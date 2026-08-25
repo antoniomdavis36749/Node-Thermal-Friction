@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 <#
-  Canonical contact-patch thermal helper (mirrors live luukstyrethermalsandwear.lua).
+  Canonical contact-patch thermal helper (mirrors live tireWearThermals.lua).
   Dot-source from soft-sims: . (Join-Path $PSScriptRoot 'lib\PatchThermal.ps1')
   No area-shrink on soft sink — conduction uses depth/rough denom separately.
   Path A: util via downForceRaw, dynR clamp, GM soft fields, dual-mat blend.

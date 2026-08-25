@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
-$path = Join-Path $PSScriptRoot '..\lua\vehicle\extensions\auto\luukstyrethermalsandwear.lua' | Resolve-Path
+$path = Join-Path $PSScriptRoot '..\lua\vehicle\extensions\auto\tireWearThermals.lua' | Resolve-Path
 $src = [IO.File]::ReadAllText($path)
 $bak = "$path.bak-cold-grip-all"
 if (-not [IO.File]::Exists($bak)) { [IO.File]::Copy($path, $bak, $false) }

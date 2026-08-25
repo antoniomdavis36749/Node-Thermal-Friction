@@ -5,7 +5,7 @@
   typical BeamNG stock fills (cold + Gay-Lussac warm).
 
   Live refs: THERMAL_TOPOLOGY pressure* knobs + CalcPressureGripScales
-  in lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua
+  in lua/vehicle/extensions/auto/tireWearThermals.lua
 #>
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'

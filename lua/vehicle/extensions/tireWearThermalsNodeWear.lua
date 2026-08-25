@@ -19,14 +19,23 @@ local LOCK_COL_RATE = 0.016 -- base /s at slipF≈LOCK_SLIP_F_REF (tuned under s
 local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
 local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
 local ENABLE_CAMBER_ENERGY_COLE = true
--- Post-demo soft: 0.014→0.009 still ~21% mid-stint armed; 0.006 for normal-camber play.
+-- Soft base; continuous ramp from 1° (street gentle → race loud).
 local CAMBER_COL_BASE = 0.006
-local CAMBER_DEG_ARM = 2.0 -- Bolide smoke; production can raise back toward 4°
-local CAMBER_DEG_ZERO = 1.0 -- steeper frac just above arm (was 1.5)
+local CAMBER_DEG_ARM = 1.0 -- wear off below this
+local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
+local CAMBER_FRAC_REF = 4.0 -- |camber|−ZERO over this → frac≈1 (~4.85° = full)
+local CAMBER_FRAC_CAP = 1.15
 local CAMBER_SLIP_F_REF = 180 -- was 500; camber scrub slipF << lock, REF starved cole
 local CAMBER_SLIP_F_MIN = 40 -- N
 local LOCK_RING_HALF_WIDTH = 2
 local LOCK_RING_OFFSET_WEIGHT = { [0] = 1.0, [1] = 0.45, [2] = 0.22 }
+
+-- Continuous: 1.0°≈0.04 · 2°≈0.29 · 3°≈0.54 · ~5°≈1.0 (cap 1.15).
+local function camberFracFromDeg(camberDegAbs)
+    local a = abs(camberDegAbs or 0)
+    if a < CAMBER_DEG_ARM then return 0 end
+    return min(CAMBER_FRAC_CAP, max(0, (a - CAMBER_DEG_ZERO) / max(0.1, CAMBER_FRAC_REF)))
+end
 
 function M.install(F, deps)
     local getWheels = deps.getWheels or function() return deps.wheels end
@@ -393,7 +402,7 @@ function M.install(F, deps)
                 local slip = w.dynamicSlipEnergy or w.slipEnergy or 0
                 local ang = abs(wd.angularVelocity or 0)
                 local lockArm = cid and slip > 0.18 and ang < 14.0
-                local camArm = cid and abs(w.camber or 0) > CAMBER_DEG_ARM and (w.loadRaw or 0) > 800 and slip > 0.08
+                local camArm = cid and abs(w.camber or 0) >= CAMBER_DEG_ARM and (w.loadRaw or 0) > 800 and slip > 0.08
                 local gate = "idle"
                 if not cid then
                     gate = "no-node"
@@ -442,7 +451,7 @@ function M.install(F, deps)
 
                 if camArm then
                     local treadNodes = wd.treadNodes
-                    local camberFrac = min(1.15, max(0, (abs(w.camber) - CAMBER_DEG_ZERO) / 4.0))
+                    local camberFrac = camberFracFromDeg(w.camber)
                     local slipFrac = min(1.15, min(1.2, slip) / 0.28)
                     local camSrc = "slipE"
                     if ENABLE_CAMBER_ENERGY_COLE then
@@ -456,6 +465,7 @@ function M.install(F, deps)
                         end
                     end
                     local camBase = CAMBER_COL_BASE * camberFrac * slipFrac
+                    data.nodeCamBandMult = camberFrac
                     local wheelDir = wd.wheelDir or 1
                     local camberDeg = (w.camber or 0) * wheelDir
                     local nRing = treadNodeCount(treadNodes)
@@ -472,6 +482,7 @@ function M.install(F, deps)
                     data.nodeCamEnergySrc = camSrc
                 else
                     data.nodeCamEnergySrc = "idle"
+                    data.nodeCamBandMult = 0
                 end
 
                 data.nodeWearPeak = wheelPeakFor(wheelKey(i))

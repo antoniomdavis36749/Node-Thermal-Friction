@@ -1,7 +1,7 @@
 ﻿#Requires -Version 5.1
 # P0 gate matrix: street / sport_plus / slick / rally x FWD / RWD / AWD x cruise / hard accel / burnout.
 # Mirrors CalcTyreWear driveHeatGate + excess prop + driveStreetSlip* (live THERMAL_TOPOLOGY).
-# Refs: Test-FwdDriveHeatEdge.ps1, Test-FwdDriveHeat.ps1, luukstyrethermalsandwear.lua
+# Refs: Test-FwdDriveHeatEdge.ps1, Test-FwdDriveHeat.ps1, tireWearThermals.lua
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }

@@ -94,14 +94,31 @@ try {
         Get-ChildItem (Join-Path $stage 'mod_info') -Recurse -Filter 'icon-redux-reference.jpg' -ErrorAction SilentlyContinue | Remove-Item -Force
     }
 
-    $lap = Join-Path $stage 'lua\ge\extensions\tyreWestCoastLapTest.lua'
+    $pitwall = Join-Path $stage 'ui\modules\apps\tireWearThermalsHeavy'
+    if (Test-Path $pitwall) {
+        Remove-Item -Recurse -Force $pitwall
+        Write-Host 'Excluded tireWearThermalsHeavy (dev Pitwall) from public package'
+    }
+
+    foreach ($driverApp in @(
+        'ui\modules\apps\tireWearThermalsDriver',
+        'ui\modules\apps\tyreWearThermalsDriver'
+    )) {
+        $driverPath = Join-Path $stage $driverApp
+        if (Test-Path $driverPath) {
+            Remove-Item -Recurse -Force $driverPath
+            Write-Host "Excluded $driverApp (Driver UI removed) from public package"
+        }
+    }
+
+    $lap = Join-Path $stage 'lua\ge\extensions\tireWestCoastLapTest.lua'
     if (Test-Path $lap) {
         Remove-Item -Force $lap
-        Write-Host 'Excluded tyreWestCoastLapTest.lua from package'
+        Write-Host 'Excluded tireWestCoastLapTest.lua from package'
     }
 
     New-ZipFromStage -StageDir $stage -DestZip $zipPath
-    Write-Host 'NOTE: this packer is core-only (no vehicles/). Companion tires: https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires'
+    Write-Host 'NOTE: this packer is core-only (no vehicles/). Companion tires: Tire-Wear-and-Thermals-ReSpin-Tires'
     Write-Host 'NOTE: zip entries use forward slashes (required by BeamNG zipFS).'
 }
 finally {

@@ -1,6 +1,6 @@
 ﻿# Thermal oddities soft-sim - reproduces spawn cool/rewarm, elevation env swings,
 # and carcass>>skin gap. Mirrors CalcTyreWear / initTyreData / updateGFX env path.
-# Source: lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua
+# Source: lua/vehicle/extensions/auto/tireWearThermals.lua
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }

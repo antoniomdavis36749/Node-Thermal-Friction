@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
   Contact-patch depth soft-sim (Phase A–E extended).
-  Mirrors live luukstyrethermalsandwear.lua via lib/PatchThermal.ps1.
+  Mirrors live tireWearThermals.lua via lib/PatchThermal.ps1.
   Checks: depth→heatScale, load/PSI unstick, conduction denom, no area-shrink.
   No BeamNG launch.
 #>

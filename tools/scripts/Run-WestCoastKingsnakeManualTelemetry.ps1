@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Stops any BeamNG process, launches west_coast_usa + barstow/kingsnake.pc,
-  and arms tyreWestCoastLapTest in manual mode for a sport-tire tune pass:
+  and arms tireWestCoastLapTest in manual mode for a sport-tire tune pass:
     - Teleport once to Belasco racetrack spawn
     - AI disabled (no learn / race / damage-reset AI)
     - CSV telemetry -> tools/output/wc-kingsnake-lap-telemetry.csv

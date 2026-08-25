@@ -60,7 +60,7 @@ function Convert-ToSpectrumJBeam {
             $l = $l -replace '"name"\s*:\s*"[^"]+? Tires"', ('"name":"' + $newDisplayName + ' ' + $nameSuffix + ' Tires"')
         }
 
-        $l = $l -replace '"authors"\s*:\s*"BeamNG"', '"authors":"BeamNG, Luuk"'
+        $l = $l -replace '"authors"\s*:\s*"BeamNG"', '"authors":"BeamNG, ReSpin"'
         
         if ($l -match '^(\s*"value"\s*:\s*)(\d+)(,?\s*(?://.*)?)$') {
             $l = $Matches[1] + ([int]$Matches[2] + $baseValueAdd) + $Matches[3]

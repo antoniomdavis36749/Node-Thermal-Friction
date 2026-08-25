@@ -2,7 +2,7 @@
 # Reuses CalcTyreWear post-fix knobs from Test-StraightLineSpeedSweep.ps1
 # (skinCore scale/floor, cruise RR soft-cap, street high-V propRrDamp, aero discount,
 # carcass cool, hystSkinShare) + rally STANDALONE mods / loose surface params from
-# Test-RallySurfaces.ps1 + live luukstyrethermalsandwear.lua surface conduction.
+# Test-RallySurfaces.ps1 + live tireWearThermals.lua surface conduction.
 #
 # Loose surfaces imply higher residual cruise slip/g than asphalt (grip soft-sim /
 # RallySurfaces only models μ — thermal soft-sim uses elevated residual slip).

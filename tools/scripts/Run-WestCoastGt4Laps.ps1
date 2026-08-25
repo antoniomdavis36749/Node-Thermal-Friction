@@ -21,7 +21,7 @@ $args = @(
   '-vehicleConfig', 'etkc/race_DCT.pc'
 )
 
-# One-shot trigger so tyreWestCoastLapTest starts after world ready
+# One-shot trigger so tireWestCoastLapTest starts after world ready
 $trigger = Join-Path $modVs 'RUN_WC_GT4_TEST'
 [IO.File]::WriteAllText($trigger, "10 laps aggressive`n")
 Write-Host "Trigger written: $trigger"

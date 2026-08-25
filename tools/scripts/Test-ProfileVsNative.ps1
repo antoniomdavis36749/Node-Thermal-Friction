@@ -16,7 +16,7 @@
     hotProd    = shapedThermal(opt+40°C) × peakProd
     polyPeak   = conditionPoly(1) × peakProd   (mod effective peak vs native 1.0)
 
-  Source: lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua (mirrored).
+  Source: lua/vehicle/extensions/auto/tireWearThermals.lua (mirrored).
 #>
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
@@ -149,7 +149,7 @@ $profiles = New-Object System.Collections.Generic.List[object]
 $pp = @(
   @{ a=0.30; p='sport_plus';  gm=1.04; dry=1.04; lat=1.02; long=1.05; tOpt=76; plat=14; wc=52; wh=32; fl=0.24; ad=0.52; comp=0.45; slip=16.6; work=10.2; sc=$SOFTCAP_SPORT_PLUS; ch=$CHAR_SPORT_PLUS },
   @{ a=0.40; p='track_day';    gm=1.04; dry=1.04; lat=1.0; long=1.08; tOpt=76; plat=16; wc=64; wh=52; fl=0.28; ad=0.444; comp=0.42; slip=10.9; work=6.20; sc=$SOFTCAP_TRACK_DAY; ch=$CHAR_TRACK_DAY },
-  @{ a=0.50; p='sport';       gm=1.00; dry=1.02; lat=1.0; long=1.0; tOpt=66; plat=18; wc=74; wh=55; fl=0.34; ad=0.42; comp=0.50; slip=9.40; work=5.45; sc=$SOFTCAP_SPORT; ch=$CHAR_SPORT },
+  @{ a=0.50; p='sport';       gm=1.00; dry=1.02; lat=1.0; long=1.0; tOpt=66; plat=18; wc=74; wh=55; fl=0.34; ad=0.42; comp=0.50; slip=9.68; work=5.61; sc=$SOFTCAP_SPORT; ch=$CHAR_SPORT },
   @{ a=0.60; p='standard';    gm=1.00; dry=1.01; lat=1.0; long=1.0; tOpt=63; plat=17; wc=66; wh=55; fl=0.30; ad=0.41; comp=0.55; slip=8.25; work=4.85; sc=$SOFTCAP_STREET; ch=$CHAR_NEUTRAL },
   @{ a=0.70; p='standard';    gm=1.00; dry=1.00; lat=1.0; long=1.0; tOpt=60; plat=16; wc=58; wh=55; fl=0.26; ad=0.40; comp=0.60; slip=7.9; work=4.8; sc=$SOFTCAP_STREET; ch=$CHAR_NEUTRAL },
   @{ a=0.80; p='allterrain';  gm=0.86; dry=1.00; lat=1.0; long=1.0; tOpt=56; plat=18; wc=58; wh=50; fl=0.26; ad=0.36; comp=0.75; slip=7.2; work=4.5; sc=$SOFTCAP_STREET; ch=$CHAR_NEUTRAL },

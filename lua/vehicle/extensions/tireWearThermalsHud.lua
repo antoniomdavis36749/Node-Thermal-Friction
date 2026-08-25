@@ -1,5 +1,5 @@
 -- lua/vehicle/extensions/tireWearThermalsHud.lua
--- Credits: lucky4luuk (original), Zesty_Maple98 (Redux expansion). See CREDITS.md.
+-- Upstream authorship: see CREDITS.md / NOTICE.
 -- guiStream init/flush only. Physics loop lives in tireWearThermalsPhysicsLoop.lua.
 local M = {}
 

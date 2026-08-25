@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Soft-sim sweep: downforce heat aggressiveness analysis + A/B aeroHeatScale.
-    Validates the aeroHeatScale discount applied in luukstyrethermalsandwear.lua.
+    Validates the aeroHeatScale discount applied in tireWearThermals.lua.
 
 .DESCRIPTION
     Analyses the effective load_kg_thermal multiplier across speed / downforce levels.

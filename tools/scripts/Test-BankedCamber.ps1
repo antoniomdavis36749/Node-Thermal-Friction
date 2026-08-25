@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
   Soft-sim: high-bank camber vs gravity (BUG) vs vehicle-frame vs road-relative (BEST).
-  Live formulas from luukstyrethermalsandwear.lua camber penalty path.
+  Live formulas from tireWearThermals.lua camber penalty path.
   No BeamNG launch.
 #>
 $ErrorActionPreference = 'Stop'

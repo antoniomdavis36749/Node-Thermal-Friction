@@ -1,6 +1,6 @@
 # Unit check: purpose + compound descriptor + classifyReason routing
 # Mirrors getInterpolatedProfile + vehicleHasPlainRallyDamper + remapSlickSoftness in
-# lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua
+# lua/vehicle/extensions/auto/tireWearThermals.lua
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
 if (-not (Test-Path $outDir)) { New-Item -ItemType Directory -Path $outDir | Out-Null }
@@ -330,7 +330,7 @@ $cases = @(
 )
 
 Out '=== Tire purpose / descriptor / classifyReason ==='
-Out ('Mirrored from luukstyrethermalsandwear.lua @ {0:yyyy-MM-dd}' -f (Get-Date))
+Out ('Mirrored from tireWearThermals.lua @ {0:yyyy-MM-dd}' -f (Get-Date))
 Out ''
 
 $fail = 0
@@ -390,9 +390,9 @@ if ($fail -eq 0) {
 }
 
 # Light schema check: compound-character knobs present with neutral defaults
-$luaPath = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'lua\vehicle\extensions\auto\luukstyrethermalsandwear.lua'
+$luaPath = Join-Path (Split-Path (Split-Path $PSScriptRoot -Parent) -Parent) 'lua\vehicle\extensions\auto\tireWearThermals.lua'
 if (-not (Test-Path $luaPath)) {
-  $luaPath = Join-Path (Split-Path $PSScriptRoot -Parent) '..\lua\vehicle\extensions\auto\luukstyrethermalsandwear.lua'
+  $luaPath = Join-Path (Split-Path $PSScriptRoot -Parent) '..\lua\vehicle\extensions\auto\tireWearThermals.lua'
 }
 $luaPath = [IO.Path]::GetFullPath($luaPath)
 $charFail = 0
@@ -405,7 +405,6 @@ if (Test-Path $luaPath) {
     @{ k='hotGripPower'; v='2.0' },
     @{ k='grainRate'; v='0.00042' },
     @{ k='blisterRate'; v='0.00028' },
-    @{ k='flatSpotRate'; v='0.025' },
     @{ k='stintFadeRate'; v='1.0' },
     @{ k='camberWearMult'; v='1.0' }
   )

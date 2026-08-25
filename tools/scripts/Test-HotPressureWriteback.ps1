@@ -2,7 +2,7 @@
 <#
   Soft-sim: safe hot PSI write-back (Gay-Lussac Lua -> native group).
   Mirrors applyHotPressureWriteback + CalcTyreWear guards in
-  lua/vehicle/extensions/auto/luukstyrethermalsandwear.lua THERMAL_TOPOLOGY.
+  lua/vehicle/extensions/auto/tireWearThermals.lua THERMAL_TOPOLOGY.
 
   Checks:
     1) Warm-up: native rate-limits toward Lua hot target and converges

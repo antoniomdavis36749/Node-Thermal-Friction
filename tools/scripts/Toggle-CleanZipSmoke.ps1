@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $mods = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods'
 $unpacked = Join-Path $mods 'unpacked\Tire-Wear-and-Thermals-ReSpin-dev'
 $park = 'C:\Users\anton\AppData\Local\Temp\Tire-Wear-and-Thermals-ReSpin-dev.__smoke_off'
-$zipName = 'TireWearThermalsReSpin_antoniomdavis36749.zip'
+$zipName = 'TireWearThermalsReSpin.zip'
 $zipDst = Join-Path $mods $zipName
 
 if (Get-Process -Name 'BeamNG.drive*' -ErrorAction SilentlyContinue) {
@@ -57,7 +57,7 @@ if ($Enable) {
     Write-Host "  zip: $zipDst"
     Write-Host "  unpacked parked at: $park"
     Write-Host 'Restart BeamNG → Repository/Mods: ensure TireWearThermalsReSpin is ON.'
-    Write-Host 'Apps menu → add Tyre Wear & Thermals (Pitwall/Driver/Classic/Crew). Apps do not auto-open.'
+    Write-Host 'Apps menu → add Tire Wear Thermals ReSpin (Pitwall/Classic/Crew). Apps do not auto-open.'
 }
 elseif ($Restore) {
     if (Test-Path $park) {

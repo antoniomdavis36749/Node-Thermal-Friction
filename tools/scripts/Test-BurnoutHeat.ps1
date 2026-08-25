@@ -1,5 +1,5 @@
 # Burnout heat soft-sim - mirrors live CalcTyreWear soft-sats / gates / caps
-# Source: luukstyrethermalsandwear.lua (THERMAL_TOPOLOGY + sport_plus PROFILE_POINTS)
+# Source: tireWearThermals.lua (THERMAL_TOPOLOGY + sport_plus PROFILE_POINTS)
 # Fix A: gated high-|lastSlip| longComp boost (slipVelBoost*) so burnout can smoke.
 $ErrorActionPreference = 'Stop'
 $out = Join-Path (Join-Path (Split-Path $PSScriptRoot -Parent) 'output') 'burnout-heat-softsim.txt'

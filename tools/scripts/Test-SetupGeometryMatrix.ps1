@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 <#
   Soft-sim: PSI / camber / toe / caster / rake effects vs live
-  luukstyrethermalsandwear.lua formulas (no BeamNG launch).
+  tireWearThermals.lua formulas (no BeamNG launch).
 
   Anchors: sport_plus PROFILE_POINTS (feel-lock -- do not retune from this script).
   Compares effect magnitudes to real-world order-of-magnitude expectations.
@@ -17,7 +17,7 @@ function Clamp([double]$v, [double]$lo, [double]$hi) {
 }
 function Deg2Rad([double]$d) { return $d * [math]::PI / 180.0 }
 
-# Live CalcBiasWeights (auto/luukstyrethermalsandwear.lua)
+# Live CalcBiasWeights (auto/tireWearThermals.lua)
 function Calc-BiasWeights([double]$loadBias, [double]$pressureRatio) {
   $dampedBias = $loadBias * 0.40
   $weightLeft = [math]::Max(0.15, -0.75 * $dampedBias + 1.0)

@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Stops any BeamNG process, launches west_coast_usa + scintilla/gts.pc,
-  and arms tyreWestCoastLapTest in manual mode for a sport_plus tire tune pass:
+  and arms tireWestCoastLapTest in manual mode for a sport_plus tire tune pass:
     - Teleport once to Belasco racetrack spawn
     - AI disabled (no learn / race / damage-reset AI)
     - CSV telemetry -> tools/output/wc-scintilla-lap-telemetry.csv

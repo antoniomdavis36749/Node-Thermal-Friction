@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Stops any BeamNG process, launches west_coast_usa + etkc/race_DCT (no -windowed),
-  and arms tyreWestCoastLapTest in manual mode:
+  and arms tireWestCoastLapTest in manual mode:
     - Teleport once to Belasco racetrack spawn
     - AI disabled (no learn / race / damage-reset AI)
     - CSV telemetry -> tools/output/wc-gt4-lap-telemetry.csv (append-only; survives car reset)

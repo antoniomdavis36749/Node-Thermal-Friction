@@ -1,0 +1,26 @@
+{
+  "name": "Node-Thermal Friction Classic",
+  "author": "Node-Thermal Friction",
+  "version": "0.2.0",
+  "directive": "tireWearThermals",
+  "domElement": "<tire-wear-thermals></tire-wear-thermals>",
+  "types": [
+    "ui.apps.categories.debug",
+    "ui.apps.categories.vehicle_info",
+    "ui.apps.categories.info",
+    "ui.apps.categories.racing"
+  ],
+  "description": "Classic canvas: real-time tire temperatures (inner, middle, outer), core temperatures, camber angles, and tread wear condition.",
+  "category": "Telemetry",
+  "isAuxiliary": false,
+  "interactive": "no",
+  "css": {
+    "left": "0px",
+    "top": "0px",
+    "width": "220px",
+    "height": "220px",
+    "min-width": "180px",
+    "min-height": "180px"
+  },
+  "preserveAspectRatio": true
+}

@@ -40,7 +40,7 @@ after a typical lock). Soft-sat only after **35%** wear.
 | Lock/scrub base | `0.024 * min(1.45, slipCap/0.45)` · `slipCap = min(1.4, slip)` |
 | Load scale | `min(1.30, loadN/4000)` |
 | Soft-sat | if wear > 0.35: `rate *= headroom^1.15` |
-| Camber scallop | `0.006 * camberFrac * slipFrac` (normal-camber soft; was 0.009 / demo 0.014) |
+| Camber scallop | `0.006 * camberFrac * slipFrac` · continuous from **1.0°** · `frac=(|c|−0.85)/4` cap 1.15 |
 
 Do not change without a new timed lock A/B. Target feel: visible peak after ~10 s
 lock without slamming to 100% in one event.
@@ -176,30 +176,37 @@ GFX order: `stepNodeWearSpike` peeks live bucket → then `stepNodeCollisionProb
 
 ## Gated camber energy (`ENABLE_CAMBER_ENERGY_COLE`)
 
-**When:** camber arm = cid + `|camber| > CAMBER_DEG_ARM` (**2.0°** Bolide smoke; was 4°) + load > 800 + `slipE > 0.08`.
-Ramp: `camberFrac` from `CAMBER_DEG_ZERO` (**1.0°**).
+**When:** camber arm = cid + `|camber| ≥ CAMBER_DEG_ARM` (**1.0°**) + load > 800 + `slipE > 0.08`.
 
-**What:** camber **geometry** (outer/inner ring weights) unchanged. Slip multiplier + demo rate:
+**Continuous ramp** (street gentle → race loud; replaces hard 2°/4° gate and discrete bands):
 
-- Base: `CAMBER_COL_BASE = 0.006` (normal-camber retest; 0.009 still ~21% mid-stint; demo 0.014 ~35%)
+| \|camber\| | `camberFrac` ≈ | Feel |
+| --- | --- | --- |
+| &lt; 1.0° | 0 | off |
+| 1.0° | ~0.04 | whisper street |
+| 2.0° | ~0.29 | mild sport |
+| 3.0° | ~0.54 | aggressive |
+| ~4.85° | 1.0 | race / scrub (cap 1.15) |
+
+`camberFrac = min(1.15, max(0, (|camber| − 0.85) / 4.0))` while armed (`|camber| ≥ 1.0°`)
+
+**What:** camber **geometry** (outer/inner ring weights) unchanged. Rate:
+
+- `camBase = CAMBER_COL_BASE (0.006) * camberFrac * slipFrac`
 - Legacy slipFrac: `min(1.15, min(1.2, slipE) / 0.28)`
-- Cole slipFrac: `min(1.15, slipF / 180)` when `slipHits > 0` and `slipF ≥ 40 N` (REF was 500 — starved cole)
+- Cole slipFrac: `min(1.15, slipF / 180)` when `slipHits > 0` and `slipF ≥ 40 N`
 - Else fall back to slipE term
 
 Pitwall capture: `L:…/C:cole` when camber arm uses probe (`C:slipE` fallback, `C:idle` when not armed).
 
-### Full camber demo (Bolide) — arm *and* accumulation
+### Camber ramp retest
 
-Stock Bolide often puts **|camber| > 2° on the light inside** while the **loaded outside** stays under the gate. For a clean wear demo:
+1. Respawn · Pitwall · park → `map128` · `idle/idle` · peak 0  
+2. **Stock Sport** mild corners (~1–2°) → gate may open; peak crawls **slowly**  
+3. Harder turn / more camber (~3°+) → faster climb; avoid full lock  
+4. Straighten → peak held · Reset → 0  
 
-1. **Setup:** Parts/Tuning → add **static negative camber** (~−3.5° to −5°) on the axle you’ll load (rear for RWD circles).
-2. Respawn · Pitwall on · park → `map128` · `idle/idle` · peak 0
-3. **Skidpad / constant circle** — speed/steer so the **loaded** corner shows gate **`camber`** (or `lock+cam`) and tag **`C:cole`**. Avoid full lock.
-4. Hold **30–45 s** with that yellow line armed → want **soft peak** at `0.006` with **stock/normal camber** (0.009 hit ~21% mid-stint; demo 0.014 ~35%), **n ≥ 3** if armed long enough, Classic **O|M|I** bias when it builds
-5. Straighten / park → peak **held**, gate back to `idle`
-6. Reset → 0
-
-**Pass criteria:** peak moves while `C:cole` (not only that the tag lights). Cruise alone must not climb peak. Normal camber may stay near 0% unless load + |camber| clear the 2° arm.
+Cruise/park must not climb peak. Scalar tread still off until node work is done.
 
 ## nodeCollision / slipForce probe (Pitwall — read-only + swap feed)
 
@@ -235,8 +242,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 ## Next
 
-- Soft camber rate `0.006` verified on stock/normal camber (peak ~0; gate rarely opens).
-- Camber gate still **2.0°** Bolide smoke — decide street vs race before raising toward 4°.
-- Optional: restore production camber gate (see street note — 4° is high for non-race).
+- Continuous camber ramp from **1.0°** (`frac=(|c|−0.85)/4`, base 0.006) — retest stock Sport + harder/race camber.
 - Soft scalar tread deferred until node work is done.
 - Optional: pack / private tester share.

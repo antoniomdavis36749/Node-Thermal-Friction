@@ -7,6 +7,9 @@ Helpers for soft-sims, West Coast lap telemetry, and profile transforms.
 | `scripts/` | PowerShell / Python helpers |
 | `fixtures/` | Race track / Belasco path inputs |
 | `output/` | Generated CSV, status JSON, soft-sim dumps (gitignored) |
+| `V2_FRICTION_CONTRACT.md` | Experimental V2: thermal vs node-wear friction ownership |
+| `V2_NODE_WEAR_SPIKE.md` | Clean-room node wear spike flags + retest |
+| `REFACTOR_SPLITS.md` | Module split / Lua locals process |
 
 ## West Coast lap / telemetry
 
@@ -20,8 +23,8 @@ Triggers live in `tools/` (VFS: `mods/unpacked/Tire-Wear-and-Thermals-ReSpin-dev
 Outputs go to `tools/output/` (`wc-*-lap-*.csv/json/txt`).
 
 Vehicle CSV (armed only via `setTelemetryCsv` / West Coast runners; off by default) keeps the
-legacy `wall..film` columns, then appends UI-stream fields: `profile,profile1,profile2,purpose,classifyReason,patchFrac,patchHeatScale,aeroLoadN,totalDownforceN,aeroFracPct,dutyMods,driveHeatGate,streetSlipScale,utilNudge`.
-`dutyMods` / profile strings are CSV-quoted when they contain commas. Parsers that only use
+legacy `wall..film` columns, then appends UI-stream fields: `profile,profile1,profile2,purpose,classifyReason,patchFrac,patchHeatScale,aeroLoadN,totalDownforceN,aeroFracPct,dutyMods,driveHeatGate,streetSlipScale,utilNudge,aeroDragN,aeroFrontN,aeroRearN,copPct`.
+`aeroLoadN` / `totalDownforceN` / `aeroFracPct` are **native triangle aero** (`calcTotalAeroForces` / CoP axle split), not the old speed×48% estimate. Suffix `aeroDragN,aeroFrontN,aeroRearN,copPct` are extra native channels. `dutyMods` / profile strings are CSV-quoted when they contain commas. Parsers that only use
 legacy indices (e.g. `Summarize-WcTelemetry.ps1` cols 0–13) stay compatible.
 
 Example runners: `scripts/Run-WestCoastManualTelemetry.ps1`, `Run-WestCoastGt4Laps.ps1`, etc.
@@ -35,7 +38,7 @@ Use this procedure when you want a *compound ranking* based on **steady high-spe
 - Same car model + same vehicle setup
 - Same tire compound ladder (e.g. Sport → Sport Plus → Track Day)
 - Same Belasco straight segment (use your usual marker / lane)
-- Pitwall / Tyre Telemetry overlay visible so you can read:
+- Pitwall / Tire Telemetry overlay visible so you can read:
   - wheel speeds (FL/FR/RL/RR)
   - slip channels (`Slip E / long / side`) if shown
 - Record for each run:
@@ -47,7 +50,7 @@ Use this procedure when you want a *compound ranking* based on **steady high-spe
 
 1. **Grip-map screenshots only**
    - Early tests used “grip map” screenshots; those don’t give the wheel-speed and slip channels you need for HS slip comparison.
-   - Always use Pitwall / Tyre Telemetry capture at the sampling moment.
+   - Always use Pitwall / Tire Telemetry capture at the sampling moment.
 2. **Full acceleration instead of cruise**
    - HS slip must be sampled during **steady cruise / held condition**.
    - Testing while torque is ramping mixes warm-up effects into the slip measurement.
@@ -90,7 +93,7 @@ Date: __________   Car: __________   Compound: __________
 Tire part (F/R): __________ / __________   Pitwall: sport_name ✓ / other: __________
 
 PRE-FLIGHT
-[ ] Pitwall / Tyre Telemetry open (NOT grip map)
+[ ] Pitwall / Tire Telemetry open (NOT grip map)
 [ ] Same Belasco straight + lane/marker as prior runs
 [ ] Target speed band: _____ mph (e.g. ~134)
 
@@ -134,7 +137,7 @@ Use this for **full-lap compound tuning** — thermal settle shape, wear rate, b
 ### Required
 
 - **Belasco Motorsports Park** (`west_coast_usa` racetrack layout) — same line each compare
-- **Pitwall / Tyre Telemetry** (Heavy app preferred: **Stint km**, **Odo km**, per-wheel **Heat knobs**)
+- **Pitwall / Tire Telemetry** (Heavy app preferred: **Stint km**, **Odo km**, per-wheel **Heat knobs**)
 - **Vehicle respawn** after any profile/knob change (confirm live stamps in Heat knobs row)
 - Record **Track °C** and **Env °C** from Pitwall header (baseline compare: Track **~15°C**, Env **~21°C** when possible)
 - Consistent pace: race pace you can repeat lap to lap (not one-lap quali vs cruise)
@@ -176,9 +179,9 @@ Same car/tires, respawn between compounds:
 
 | Compound | Opt (°C) | Stint focus |
 | --- | --- | --- |
-| Sport | ~66 | **HEAT LOCKED (v7).** 22 km cruise ~53/59/60/61 vs 66. Wear still open. |
+| Sport | ~66 | **HEAT+WEAR LOCKED.** Heat v7 + tiny bump 9.68/5.61. Wear **0.0026** (22 km ~0.6–0.9% / target ~0.8%; under Plus 0.0028) |
 | Sport Plus | ~76 | **HEAT+WEAR LOCKED (#8).** velCool 0.50, slip/work 16.6/10.2, wear 0.0028 |
-| Track Day | ~76 | Between Plus and Hard slick character; slight abuse overshoot |
+| Track Day | ~76 | **HEAT+WEAR LOCKED.** Heat v3 10.9/6.20. Wear **0.0033** (first-cut above Plus 0.0028 / ~1.5%; was immortal 0.00073) |
 
 Judge **shape and wear trend**, not “all four wheels at opt” on street rubber.
 
@@ -228,8 +231,10 @@ INVALID IF: no respawn | < ~20 km | grip-map only | mixed with HS slip sample
 
 ### WCU Soft C4 mute-removal notes (live)
 
-- **Sport HEAT LOCKED (v7):** Scintilla native Sport, Belasco Track **15°C**, **22.07 km**. Cruise settle ~**53 / 59 / 60 / 61** vs opt **66** (FR/FL/RR/RL; F≪R). Turn 1 ~**58–60** Normal. HS straight dump accepted — do **not** chase 66 on cruise. Knobs: slip/work **9.40/5.45**, `skinVelCoolScale` **0.72**, `workHeatG0` **0.16**, `DRIVE_SOFTCAP_SPORT` **0.92/0.95/0.87**. Grip v6 held. Wear not locked. **Do not nudge Sport heat.**
+- **Sport HEAT+WEAR LOCKED:** slip/work **9.40/5.45 → 9.68/5.61** (~3%). velCool **0.72**, `DRIVE_SOFTCAP_SPORT` **0.92/0.95/0.87** held. Wear **0.0026** (22 km ~0.6–0.9% vs target ~0.8%; under Plus **0.0028** / ~1.5%). Front lockups on the lock stint; rears were the cleaner read. Grain 0 at 22 km hot is expected. **Do not nudge Sport heat/wear.**
 - **Sport Plus HEAT+WEAR LOCKED (#8):** Belasco Track **15°C**. #7 FL **102°C / 60% blister / 83%** tread. #8: in-window cruise, blister **0**, worst wear **~1.5%**. Knobs: `skinVelCoolScale` **0.50**, slip/work **16.6/10.2**, `wearRate` **0.0028**. Blister #7e / grip v4 held. **Do not nudge Plus heat/wear.**
+- **Aero heat = mechanical (realism):** native Pitwall/CSV stay. `aeroHeatScale` **1.0** — aero newtons in `downForce` heat like weight. The 0.55 mute and speed×48% fake are off. If a GT3 cooks on a straight, chase RR / high-V cool, not an aero fudge. Locked Sport/Plus/slick heat was already on 1.0.
+- **Track Day HEAT+WEAR LOCKED:** heat v3 slip/work **10.9/6.20**, opt **76**, velCool **0.80** held. Wear **0.0033** (was immortal **0.00073** at 22 km ~0.2–0.5%; first-cut above Plus **0.0028** / ~1.5%, no 0.0033 22 km confirmation). **Do not nudge Track Day heat/wear.**
 - **Graining #1:** Global thresh **0.10→0.045**, window decay **0.012→0.0035**, rolling cap **0.008→0.003**. Sport/Plus `grainTempRatio` **0.88** (Sport &lt;~58°C, Plus &lt;~67°C), `grainRate` ×2. Soft/slick packs unchanged. **Respawn**; look for grain on a cold out-lap, not at 22 km hot.
 - **Compound for A/B:** ReSpin Soft Slick (C4) F+R — hold fixed across each mute family.
 - **Phase 1 (done):** `drivePropSlickScale` / `drivePropSlickCarcassScale` → 1.0. Rears warm into/near opt 82; fronts lag (undriven + brake).

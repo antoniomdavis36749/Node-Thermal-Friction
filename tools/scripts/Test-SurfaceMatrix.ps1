@@ -46,7 +46,7 @@ foreach ($k in ($expected.Keys | Sort-Object)) {
 function Lerp($a,$b,$t){ return $a + ($b-$a)*$t }
 function Min2($a,$b){ if($a -lt $b){return $a}; return $b }
 
-# Live getSurfaceSanityScale caps (luukstyrethermalsandwear.lua)
+# Live getSurfaceSanityScale caps (tireWearThermals.lua)
 $caps = @{
     dry_paved = 1.15; hard_smooth = 1.10; wet_paved = 1.15; gravel = 1.00
     gravel_wet = 0.88; dirt = 0.95; mud = 0.85; sand = 0.90; snow = 0.60; ice = 0.30; rock = 1.40

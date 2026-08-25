@@ -21,7 +21,7 @@ Scintilla GT3 vehicle shown in heroes / thermal-map stills: **courtesy permissio
 Shipped copies:
 
 - `mod_info/TWTRS_RESPIN/icon.jpg` (512) + `images/listing_hero.jpg` (1280)
-- Compat shipped copies live in [Tire-Wear-and-Thermals-ReSpin-Tires](https://github.com/antoniomdavis36749/Tire-Wear-and-Thermals-ReSpin-Tires) `mod_info/TWTRS_COMPAT/`
+- Compat shipped copies live in Tire-Wear-and-Thermals-ReSpin-Tires `mod_info/TWTRS_COMPAT/`
 
 Regen icons from masters if needed; do not replace masters without an explicit unlock.
 

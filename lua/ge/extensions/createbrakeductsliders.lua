@@ -1,7 +1,7 @@
 -- Injects Front/Rear brake cooling duct sliders into every vehicle's Tuning menu.
 -- Values persist in .pc configs via vars["$WheelCoolingDuctFront/Rear"].
 -- Compatible with BeamNG 0.35+ variable system (documentation.beamng.com/.../variables/).
--- Credits: lucky4luuk (original), Zesty_Maple98 (Redux expansion). See CREDITS.md.
+-- Upstream authorship: see CREDITS.md / NOTICE.
 
 local M = {}
 
@@ -16,7 +16,7 @@ local function makeDuctVar(name, title, subCategory, savedVal)
         category = "Brakes",
         subCategory = subCategory,
         title = title,
-        description = "Tyre/rim cooling duct opening. 1%=Closed (stock / no ducts), 100%=Fully open. Boosts tyre & rim air cooling and slightly reduces brake→rim heat soak. Does NOT change native rotor cooling. Saved with vehicle configs.",
+        description = "Tire/rim cooling duct opening. 1%=Closed (stock / no ducts), 100%=Fully open. Boosts tire & rim air cooling and slightly reduces brake→rim heat soak. Does NOT change native rotor cooling. Saved with vehicle configs.",
         type = "range",
         unit = "%",
         min = 1,
@@ -132,7 +132,7 @@ local function sendDuctMailbox(force)
         else
             payload = string.format("{%s,%s}", tostring(front), tostring(rear))
         end
-        be:sendToMailbox("tyreWearMailboxDuct", payload)
+        be:sendToMailbox("tireWearMailboxDuct", payload)
     end
 end
 

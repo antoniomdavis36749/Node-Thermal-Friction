@@ -1,6 +1,6 @@
 ﻿# Straight-line cruise speed sweep soft-sim (25–300 mph).
 # Edge-case probe: RR/hyst + residual cruise slip vs v^0.8 convection at high V.
-# Mirrors CalcTyreWear post-fix knobs from luukstyrethermalsandwear.lua
+# Mirrors CalcTyreWear post-fix knobs from tireWearThermals.lua
 # (spawn grace, skinCore scale/floor, env clamp, cruise RR soft-cap, aero heat discount,
 # carcass cool coefs, hystSkinShare).
 #
