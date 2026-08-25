@@ -198,6 +198,7 @@ GFX order: `stepNodeWearSpike` peeks live bucket → then `stepNodeCollisionProb
 - Else fall back to slipE term
 
 Pitwall capture: `L:…/C:cole` when camber arm uses probe (`C:slipE` fallback, `C:idle` when not armed).
+Capture also shows **`camF0.xx`** (live `camberFrac`) when &gt; 0; Pitwall row **Camber frac** labels soft/sport/aggressive/race bands for readouts.
 
 ### Camber ramp retest
 
@@ -242,6 +243,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 ## Next
 
-- Continuous camber ramp from **1.0°** (`frac=(|c|−0.85)/4`, base 0.006) — retest stock Sport + harder/race camber.
-- Soft scalar tread deferred until node work is done.
+- Continuous camber ramp from **1.0°** is in tree; Pitwall shows **camF** / Camber frac labels.
+- Soft scalar tread deferred until you flip it — feel A/B is fine **after** soft scalar (prefer `min(scalar, node)` on HUD).
 - Optional: pack / private tester share.

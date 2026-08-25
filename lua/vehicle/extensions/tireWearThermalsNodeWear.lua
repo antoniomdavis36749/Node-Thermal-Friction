@@ -363,6 +363,7 @@ function M.install(F, deps)
         data.nodeWearRingFlip = 0
         data.nodeLockEnergySrc = "off"
         data.nodeCamEnergySrc = "off"
+        data.nodeCamFrac = 0
         -- Do not clear A3 here — air/off must keep peak-based Classic % until reset / spike off
     end
 
@@ -465,7 +466,7 @@ function M.install(F, deps)
                         end
                     end
                     local camBase = CAMBER_COL_BASE * camberFrac * slipFrac
-                    data.nodeCamBandMult = camberFrac
+                    data.nodeCamFrac = camberFrac
                     local wheelDir = wd.wheelDir or 1
                     local camberDeg = (w.camber or 0) * wheelDir
                     local nRing = treadNodeCount(treadNodes)
@@ -482,7 +483,7 @@ function M.install(F, deps)
                     data.nodeCamEnergySrc = camSrc
                 else
                     data.nodeCamEnergySrc = "idle"
-                    data.nodeCamBandMult = 0
+                    data.nodeCamFrac = 0
                 end
 
                 data.nodeWearPeak = wheelPeakFor(wheelKey(i))

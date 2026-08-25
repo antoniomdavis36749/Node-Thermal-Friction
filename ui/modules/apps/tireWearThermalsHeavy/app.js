@@ -567,12 +567,24 @@ angular.module("beamng.apps")
                                 · peak{{ ((w.nodeWearPeak||0)*100).toFixed(0) }}%
                                 · n{{ (w.nodeWearTouched||0) }}
                                 · {{ w.nodeLockEnergySrc || 'idle' }}/{{ w.nodeCamEnergySrc || 'idle' }}
+                                <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) > 0"> · camF{{ (w.nodeCamFrac||0).toFixed(2) }}</span>
                                 <span class="tth-cap-dim"> · fade{{ ((w.lockFade||0)*100).toFixed(0) }}%</span>
                             </div>
                             <div class="tth-stat-row">
                                 <span class="tth-label">Spike / gate:</span>
                                 <span class="tth-value" ng-style="{'color': (w.nodeGate==='lock' || w.nodeGate==='lock+cam') ? '#f59e0b' : '#f1f5f9'}">
                                     {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} · {{ w.nodeGate || 'idle' }}
+                                </span>
+                            </div>
+                            <div class="tth-stat-row">
+                                <span class="tth-label">Camber frac:</span>
+                                <span class="tth-value" style="font-size: 14px;">
+                                    {{ (w.nodeCamFrac||0).toFixed(2) }}
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) <= 0"> · off/&lt;1°</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) > 0 && (w.nodeCamFrac||0) < 0.30"> · street/soft</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.30 && (w.nodeCamFrac||0) < 0.55"> · sport</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.55 && (w.nodeCamFrac||0) < 0.85"> · aggressive</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.85"> · race</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
