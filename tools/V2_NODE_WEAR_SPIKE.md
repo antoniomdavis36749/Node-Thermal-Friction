@@ -73,7 +73,8 @@ ring with outer/inner bias (JBeam order: odd index = outer tread node in each ra
 confirm 2026-08-26** — loud ~60% vs cleaner ~9% park-after; rates LOCKED); **Nightsnake**
 (ring wear + wear map CW unify; **cole 5-row matrix 2026-08-25** — park/lock/hold/cruise/reset
 pass; front lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park +
-hard-brake soak, wear map CW, 2026-08-23).
+hard-brake soak, wear map CW, 2026-08-23; **Soft camber soft confirm 2026-08-26** — ~3.2 km
+race-camber arc, park-after FL peak ~32% / FR ~15% / RR ~9% held; no `CAMBER_COL_*` retune).
 
 Note: GT3 **ABS** can prevent a true lock gate (`ω` low + slip). For ring-wear A/B on ABS
 cars, disable ABS or force a lock; hard braking alone may only heat brakes without
@@ -86,6 +87,7 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | --- | --- | --- |
 | Hard brake with ABS on | Gate often stays `idle`; tip `ABS?/no-lock`; brakes heat; peak/n may stay low | Treat as lock-wear failure; do not retune `LOCK_COL_*` |
 | True lock A/B | Disable ABS or force lock until gate `lock` + `L:cole` (or `cole→slipE`) | Use Soft/Med Cond% alone to retune soft scalar |
+| Soft camber soft confirm (Soft slick) | ~3.2 km loaded; fronts/RR gate `camber`; park-after peaks hold (FL ~32% loudest) | Retune `CAMBER_COL_*` from Soft vs Sport — Soft + race camber + time armed |
 | Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
 | Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
 | Wear map CW | All four rings advance same CW when rolling (`wheelDir` flip) | Expect mirrored L/R rings |
@@ -246,7 +248,10 @@ Capture also shows **`camF0.xx`** (live `camberFrac`) when &gt; 0; Pitwall row *
 3. Loaded arc 60–90 s → gate **`camber`**, peak crawls slowly; avoid full lock  
 4. Straighten → peak held · park/cruise must not climb · Reset → 0  
 
-Soft band: park-after peak ~**single-digit %** after ~1 km arc. Teens+ with huge toe = scrub, not rate.
+Soft band (Sport Bolide low-toe): park-after peak ~**single-digit %** after ~1 km arc.
+GT3 Soft race-camber ~3 km: FL peak ~**30%** can happen (Soft + more arm time) — still not
+toe-nuke; **do not** retune rates from Soft vs Sport compare alone.
+
 
 ## nodeCollision / slipForce probe (Pitwall — read-only + swap feed)
 
@@ -288,8 +293,8 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
   fallback intentional.
-- **Camber accumulation CLOSED / rates LOCKED** (Bolide) — loud toe-scrub ~60% peak vs
-  low-toe cleaner ~9% park-after; soft `CAMBER_COL_*` confirmed.
+- **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + **GT3 Soft confirm**
+  2026-08-26 — Soft louder than Sport; no `CAMBER_COL_*` retune).
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
