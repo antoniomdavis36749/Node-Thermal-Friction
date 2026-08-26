@@ -13,6 +13,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
 | `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**CLOSED / rates LOCKED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
 | `CAMBER_COL_SLICK_SCALE` | same | **0.30** (Soft life A1) | Slick/circuit-only mute on `camBase`; Sport/street = 1.0 |
+| `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (Soft life A2) | Slick/circuit arm floor; Sport/street stay **1.0°** |
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
 
@@ -296,8 +297,9 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   fallback intentional.
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + **GT3 Soft confirm**
   2026-08-26 — Soft louder than Sport; base `CAMBER_COL_*` held).
-- **Soft life A1 IN PROGRESS** — slick/circuit `CAMBER_COL_SLICK_SCALE` **0.30** (Sport unchanged).
-  Retest: GT3 Soft Belasco **4 laps / ~22 km**; lap-1 front peak should drop ~×3 vs ~10–12%.
+- **Soft life A1 FAIL @ 22 km** — slick `col×0.30`: fronts ~16–19% Cond drop (target ~3–6%); rears OK.
+- **Soft life A2 IN PROGRESS** — slick arm **2.0°** (+ A1 ×0.30). Retest GT3 Soft Belasco 22 km.
+  Pitwall: `col×0.30` · `arm2.0°`.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.

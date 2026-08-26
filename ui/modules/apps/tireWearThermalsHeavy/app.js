@@ -623,12 +623,13 @@ angular.module("beamng.apps")
                                 <span class="tth-label">Camber frac:</span>
                                 <span class="tth-value" style="font-size: 14px;">
                                     {{ (w.nodeCamFrac||0).toFixed(2) }}
-                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) <= 0"> · off/&lt;1°</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) <= 0"> · off/&lt;{{ (w.nodeCamArmDeg||1).toFixed(1) }}°</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) > 0 && (w.nodeCamFrac||0) < 0.30"> · street/soft</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.30 && (w.nodeCamFrac||0) < 0.55"> · sport</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.55 && (w.nodeCamFrac||0) < 0.85"> · aggressive</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.85"> · race</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamColScale||1) < 0.99"> · col×{{ (w.nodeCamColScale||1).toFixed(2) }}</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamArmDeg||1) > 1.05"> · arm{{ (w.nodeCamArmDeg||1).toFixed(1) }}°</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
@@ -809,7 +810,7 @@ angular.module("beamng.apps")
                     "loadN", "loadPct", "peakForce", "longGrip", "latGrip", "lockFade",
                     "wheelSpeedMps", "wheelSpeedMph",
                     "nodeWearPeak", "nodeWearContact", "nodeMuScale", "nodeSlideScale", "nodeMassScale",
-                    "nodeOmega", "nodeCamFrac", "nodeCamColScale",
+                    "nodeOmega", "nodeCamFrac", "nodeCamColScale", "nodeCamArmDeg",
                     "slipEnergy", "longSlip", "sideSlip",
                     "suspCompressionMm", "suspVel", "suspStress", "suspBumpMm", "suspDroopMm", "dynamicRadius",
                     "muStatic", "muSlide", "contactDepth", "rough",
