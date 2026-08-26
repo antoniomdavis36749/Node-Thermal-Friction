@@ -123,15 +123,16 @@ python tools/scripts/Count-LuaLocals.py lua/vehicle/extensions/tireWearThermalsW
 
 | Scope | ~Distinct locals | Notes |
 |-------|------------------|-------|
-| `ctwStepThermalNodes` | 159 | elevated — already split once; don’t split further unless compile fails |
+| `ctwStepThermalNodes` | 159 | elevated — ~41 to hard cap; don’t split unless compile fails |
 | `ctwPrepareThermals` | 156 | elevated — same |
-| chunk (main) | 126 | elevated — hub locals; OK |
-| `CalculateTyreGrip` | 112 | **hot path — do not split yet** |
+| chunk (main) | 127 | elevated — hub locals; OK |
+| `CalculateTyreGrip` | 108 | **hot path — do not split yet** |
 | `ctwIntegrateWearDamage` | 89 | safe (in `tireWearThermalsWear.lua`) |
 | `prepareWheelFrame` | 48 | safe (PhysicsLoop) |
 | `ctwPrepareDriveGates` | 58 | safe |
 | `ctwIntegrateWearPressure` | 36 | safe |
 | `runFixedPhysicsSteps` | 19 | safe (PhysicsLoop) |
+| `publishHudBridgeA3` | 24 | safe (`tireWearThermalsNodeWear.lua`) |
 
 ---
 
@@ -232,6 +233,9 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - Pack / private share — paused until asked
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
+- **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
+  chunk 127 / grip ~108; all under warn (≥190). No further peel this pass.
+- Pitwall polish: A1 `sc|nd` stream + ABS?/cole→slipE capture hints (GT3 edge aid)
 
 ---
 
@@ -245,4 +249,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-25 (lock cole energy LOCKED; tester share paused).*
+*Last updated: 2026-08-25 (Pitwall A1 sc|nd + GT3 ABS hints; Lua locals audit OK).*

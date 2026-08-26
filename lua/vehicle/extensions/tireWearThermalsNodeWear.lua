@@ -238,12 +238,17 @@ function M.install(F, deps)
         data.zoneCondition[1] = min(s1, n1)
         data.zoneCondition[2] = min(s2, n2)
         data.zoneCondition[3] = min(s3, n3)
+        -- Keep pre-min scalar for Pitwall A1 audit (sc vs nd vs Cond).
+        data.conditionScalar = scalarCond
+        data.conditionNode = nodeCond
         data.condition = min(scalarCond, nodeCond)
     end
 
     local function clearHudBridgeA3(data)
         if not data then return end
         data.condition = 100
+        data.conditionScalar = 100
+        data.conditionNode = 100
         if not data.zoneCondition then data.zoneCondition = { 100, 100, 100 } end
         data.zoneCondition[1], data.zoneCondition[2], data.zoneCondition[3] = 100, 100, 100
     end
@@ -509,7 +514,10 @@ function M.install(F, deps)
                 else
                     local peak = data.nodeWearPeak or 0
                     local nodeCond = max(0, min(100, 100 * (1.0 - peak)))
-                    data.condition = min(data.condition or 100, nodeCond)
+                    local scalarCond = data.condition or 100
+                    data.conditionScalar = scalarCond
+                    data.conditionNode = nodeCond
+                    data.condition = min(scalarCond, nodeCond)
                 end
             end
         end

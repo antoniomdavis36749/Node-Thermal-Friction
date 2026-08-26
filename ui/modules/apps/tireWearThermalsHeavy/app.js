@@ -356,8 +356,12 @@ angular.module("beamng.apps")
                             <div class="tth-stat-row">
                                 <span class="tth-label">Tread Condition:</span>
                                 <span class="tth-value" ng-style="{'color': getConditionColor(w.condition)}">
-                                    {{ (w.condition !== undefined ? w.condition : 0).toFixed(2) }}%
-                                    <span class="tth-cap-dim"> · A1: Cond = min(scalar,node) · grip = node μ</span>
+                                    {{ (w.condition !== undefined ? w.condition : 0).toFixed(1) }}%
+                                    <span class="tth-cap-dim">
+                                         · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}
+                                         · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                         · {{ a1LeadingLabel(w) }}
+                                    </span>
                                 </span>
                             </div>
                             <div class="tth-bar-container" style="margin-bottom: 7px;">
@@ -589,28 +593,30 @@ angular.module("beamng.apps")
                             </div>
                             <div class="tth-capture-line">
                                 {{ w.name }} · {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} {{ w.nodeGate || 'idle' }}
+                                · Cond{{ (w.condition !== undefined ? w.condition : 100).toFixed(0) }}
                                 · c{{ ((w.nodeWearContact||0)*100).toFixed(0) }}%
                                 · peak{{ ((w.nodeWearPeak||0)*100).toFixed(0) }}%
                                 · n{{ (w.nodeWearTouched||0) }}
-                                · {{ w.nodeLockEnergySrc || 'idle' }}/{{ w.nodeCamEnergySrc || 'idle' }}
+                                · L:{{ w.nodeLockEnergySrc || 'idle' }}/C:{{ w.nodeCamEnergySrc || 'idle' }}
                                 <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) > 0"> · camF{{ (w.nodeCamFrac||0).toFixed(2) }}</span>
+                                <span class="tth-cap-dim" ng-if="absHint(w)"> · {{ absHint(w) }}</span>
                                 <span class="tth-cap-dim"> · fade{{ ((w.lockFade||0)*100).toFixed(0) }}%</span>
                             </div>
                             <div class="tth-stat-row">
                                 <span class="tth-label">Spike / gate:</span>
                                 <span class="tth-value" ng-style="{'color': (w.nodeGate==='lock' || w.nodeGate==='lock+cam') ? '#f59e0b' : '#f1f5f9'}">
                                     {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} · {{ w.nodeGate || 'idle' }}
+                                    <span class="tth-cap-dim" ng-if="absHint(w)"> · {{ absHint(w) }}</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
-                                <span class="tth-label">HUD tread vs peak:</span>
+                                <span class="tth-label">A1 Cond sc|nd:</span>
                                 <span class="tth-value" style="font-size: 14px;">
                                     {{ (w.condition !== undefined ? w.condition : 100).toFixed(0) }}%
-                                    <span class="tth-cap-dim"> HUD</span>
-                                    · {{ ((w.nodeWearPeak||0)*100).toFixed(0) }}%
-                                    <span class="tth-cap-dim"> peak</span>
-                                    <span class="tth-cap-dim" ng-if="(w.condition||100) + 0.5 < (100 - (w.nodeWearPeak||0)*100)"> · scalar leading</span>
-                                    <span class="tth-cap-dim" ng-if="(w.nodeWearPeak||0) > 0.005 && (w.condition||100) + 0.5 >= (100 - (w.nodeWearPeak||0)*100) && (100 - (w.nodeWearPeak||0)*100) + 0.5 >= (w.condition||100)"> · node leading</span>
+                                    <span class="tth-cap-dim"> hybrid</span>
+                                    · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 100).toFixed(0) }}
+                                    · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                    <span class="tth-cap-dim"> · {{ a1LeadingLabel(w) }}</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
@@ -874,6 +880,34 @@ angular.module("beamng.apps")
                     var n = Number(v);
                     if (!isFinite(n) || Math.abs(n) < 0.5) n = 0;
                     return scope.fmtSigned(n, 1);
+                };
+
+                // A1 hybrid: which side of min(sc, nd) is driving Cond.
+                scope.a1LeadingLabel = function (w) {
+                    if (!w) return 'A1';
+                    var sc = (w.conditionScalar !== undefined && w.conditionScalar !== null)
+                        ? Number(w.conditionScalar)
+                        : Number(w.condition);
+                    var nd = (w.conditionNode !== undefined && w.conditionNode !== null)
+                        ? Number(w.conditionNode)
+                        : (100 - (Number(w.nodeWearPeak) || 0) * 100);
+                    if (!isFinite(sc)) sc = 100;
+                    if (!isFinite(nd)) nd = 100;
+                    if (Math.abs(sc - nd) < 0.75) return 'tie';
+                    return sc < nd ? 'scalar' : 'node';
+                };
+
+                // GT3/ABS: hard scrub with slipE but ω too high for lock arm → cole falls back / idle.
+                scope.absHint = function (w) {
+                    if (!w) return '';
+                    var gate = w.nodeGate || 'idle';
+                    if (gate === 'lock' || gate === 'lock+cam') return '';
+                    var slip = Number(w.slipEnergy) || 0;
+                    var omega = Number(w.nodeOmega) || 0;
+                    var lockSrc = w.nodeLockEnergySrc || 'idle';
+                    if (slip > 0.18 && omega >= 14) return 'ABS?/no-lock';
+                    if (lockSrc === 'slipE' && slip > 0.18) return 'cole→slipE';
+                    return '';
                 };
 
                 scope.formatPurpose = function (purpose) {

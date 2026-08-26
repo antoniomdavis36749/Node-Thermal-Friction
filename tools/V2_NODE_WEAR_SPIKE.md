@@ -75,7 +75,21 @@ lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park
 
 Note: GT3 **ABS** can prevent a true lock gate (`ω` low + slip). For ring-wear A/B on ABS
 cars, disable ABS or force a lock; hard braking alone may only heat brakes without
-raising **n**/peak.
+raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high but
+ω ≥ 14; **`cole→slipE`** when the lock arm used quiet-probe fallback.
+
+### Scintilla GT3 edge cases (dev notes)
+
+| Case | Expect | Do **not** |
+| --- | --- | --- |
+| Hard brake with ABS on | Gate often stays `idle`; tip `ABS?/no-lock`; brakes heat; peak/n may stay low | Treat as lock-wear failure; do not retune `LOCK_COL_*` |
+| True lock A/B | Disable ABS or force lock until gate `lock` + `L:cole` (or `cole→slipE`) | Use Soft/Med Cond% alone to retune soft scalar |
+| Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
+| Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
+| Wear map CW | All four rings advance same CW when rolling (`wheelDir` flip) | Expect mirrored L/R rings |
+
+Park + hard-brake soak + wear-map CW already verified on GT3 (2026-08-23). Full cole
+5-row on GT3 is optional — ABS makes row 2 noisy; prefer Bolide/Nightsnake for rate locks.
 
 Rates on the **contact node** are unchanged from Phase 1 — neighbors add sector width only.
 
@@ -120,9 +134,10 @@ Respawn vehicle after syncing `-dev` so Lua + Pitwall UI pick up both fixes.
 - **Contact wear 0% / peak teens%** — After a lock, the tire often rests on a *different* tread node than the worn patch. **Peak** is the session max; **contact (c)** is wear on the node under the car *now*. Same at cruise until the flat rolls into the patch.
 - **μ / mass ×1.00 when not on flat** — Scales follow the *current* contact node. Watch **c** jump toward **peak** when the worn sector hits asphalt.
 - **`ON · idle` after lock / at cruise** — Gate is `idle` when slip/ω gates are open; spike module is still enabled (`ON`). Only **`OFF · off`** means `ENABLE_NODE_WEAR_SPIKE` is false.
-- **Tread % in Classic / Crew after lock** — With **A3 HUD bridge** on, header /
-  overall `condition` = `100 × (1 − peak)`; O\|M\|I bars use outer / mid / inner ring wear.
-  Pitwall **Tread** line may still show scalar 100% — compare Classic/Crew to **peak**, not Pitwall tread.
+- **Tread % / Cond after lock** — With **A3 HUD bridge** on, Pitwall/Classic/Crew
+  `condition` = `min(scalarCond, nodeCond)` where `nodeCond = 100×(1−peak)`. Pitwall
+  streams **sc** / **nd** so captures show which side won. Grip still ignores Cond
+  wearPenalty while spike on (A1).
 - **Peaks unchanged while cruising** — Node spike does not heal; only **vehicle reset** clears peak and restores nodes.
 
 **Dev workflow:**
@@ -133,8 +148,10 @@ Respawn vehicle after syncing `-dev` so Lua + Pitwall UI pick up both fixes.
 ## Pitwall capture-first (Win+PrintScreen)
 
 Pitwall Heavy defaults to **opaque dark panels** + a yellow **NODE SPIKE capture line**
-per corner (`FR · ON idle · c0% · peak12% · n5 · fade0%`) so overexposed world HDR
-does not wash key numbers. Re-add the app after UI sync.
+per corner (`FR · ON idle · Cond86 · c0% · peak14% · n5 · L:cole/C:idle`) so overexposed
+world HDR does not wash key numbers. Re-add the app after UI sync.
+Hints: **`ABS?/no-lock`** when slipE high but ω ≥ 14 (typical GT3 ABS); **`cole→slipE`**
+when lock arm used quiet-probe fallback.
 
 Under **NODE SPIKE**, each corner shows a circular **Wear map**:
 
@@ -264,3 +281,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
 - Optional later: camber ramp accumulation A/B.
+- Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
+- GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.

@@ -176,10 +176,14 @@ angular.module("beamng.apps")
                                 <span class="ttm-label">Tread Condition:</span>
                                 <span class="ttm-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(0) }}%
+                                    <span style="font-size: 10px; opacity: 0.75; margin-left: 4px;">
+                                        sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}
+                                        · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                    </span>
                                 </span>
                             </div>
                             <div class="ttm-cap-dim" style="margin: -2px 0 4px 0; font-size: 10px; opacity: 0.7;">
-                                A1: Cond = min(scalar,node) · grip = node μ (no wearPenalty)
+                                A1: Cond = min(sc,nd) · grip = node μ
                             </div>
                             <div class="ttm-bar-container" style="margin-bottom: 5px;">
                                 <div class="ttm-bar-fill" ng-style="{'width': (w.condition || 0) + '%', 'background-color': getConditionColor(w.condition)}"></div>
