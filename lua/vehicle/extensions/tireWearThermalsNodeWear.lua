@@ -21,10 +21,13 @@ local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
 local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
 local ENABLE_CAMBER_ENERGY_COLE = true
 -- Soft base; continuous ramp from 1° (street gentle → race loud).
--- Soft life A/B (slick/circuit only): A1 rate mute + A2 higher arm floor.
+-- Soft life A/B (slick/circuit only): A2 arm 2.0° + A3 camF curve (quieter than flat ×0.30).
 -- Sport/street keep full base + 1.0° arm (Bolide scallop unchanged).
 local CAMBER_COL_BASE = 0.006
-local CAMBER_COL_SLICK_SCALE = 0.30 -- Soft life A1; 1.0 = no slick mute
+-- A3 curve: mild race camber (stint life) quiet; high camF scrub still costs more.
+-- At camF≈0.5 ≈ Soft race lean: ~0.14 (was flat 0.30 → fronts ~18% @ 22 km).
+local CAMBER_COL_SLICK_SCALE_MIN = 0.08 -- just-armed / low camF
+local CAMBER_COL_SLICK_SCALE_MAX = 0.22 -- camF≈1 hard scrub (still << Sport 1.0)
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
@@ -50,9 +53,12 @@ local function camberArmDegForWheel(data)
     return isSlickOrCircuit(data) and CAMBER_DEG_ARM_SLICK or CAMBER_DEG_ARM
 end
 
--- Soft life A1: mute camber stint rate on slick/circuit only.
-local function camberColScaleForWheel(data)
-    return isSlickOrCircuit(data) and CAMBER_COL_SLICK_SCALE or 1.0
+-- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
+local function camberColScaleForWheel(data, camberFrac)
+    if not isSlickOrCircuit(data) then return 1.0 end
+    local t = max(0, min(1, camberFrac or 0))
+    return CAMBER_COL_SLICK_SCALE_MIN
+        + (CAMBER_COL_SLICK_SCALE_MAX - CAMBER_COL_SLICK_SCALE_MIN) * t
 end
 
 -- Continuous: 1.0°≈0.04 · 2°≈0.29 · 3°≈0.54 · ~5°≈1.0 (cap 1.15).
@@ -510,7 +516,7 @@ function M.install(F, deps)
                             camSrc = "cole"
                         end
                     end
-                    local slickScale = camberColScaleForWheel(data)
+                    local slickScale = camberColScaleForWheel(data, camberFrac)
                     local camBase = CAMBER_COL_BASE * slickScale * camberFrac * slipFrac
                     data.nodeCamFrac = camberFrac
                     data.nodeCamColScale = slickScale
@@ -532,7 +538,7 @@ function M.install(F, deps)
                 else
                     data.nodeCamEnergySrc = "idle"
                     data.nodeCamFrac = 0
-                    data.nodeCamColScale = camberColScaleForWheel(data)
+                    data.nodeCamColScale = camberColScaleForWheel(data, 0)
                     data.nodeCamArmDeg = armDeg
                 end
 
