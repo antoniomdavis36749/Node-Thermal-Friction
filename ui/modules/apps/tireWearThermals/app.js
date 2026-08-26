@@ -95,7 +95,8 @@ angular.module("beamng.apps")
 
                     if (condition === undefined) condition = 100;
                     camber = camber || 0;
-                    // A3: O|M|I from zoneCondition; header stays overall condition (peak-based when node spike on)
+                    // A1 / A3 stream: O|M|I from zoneCondition; header condition = display hybrid
+                    // min(scalar, node). Cond % does not tax grip while node spike on.
                     var zc = d.zoneCondition || [];
                     var zoneConds = [
                         (zc[0] !== undefined && zc[0] !== null) ? zc[0] : condition,

@@ -34,10 +34,15 @@ No copy or port from other node-based tire mods.
 
 ## Current experimental pack (Phase 0–1 + node spike)
 
+**Friction coherence A1 LOCKED** — Node owns contact feel; soft scalar is
+display / stint aging only (no wearPenalty while spike on).
+
 - Scalar **flatspot removed**.
 - Soft **scalar tread/zone wear on** (`ENABLE_SCALAR_TREAD_WEAR`, scale **0.15 LOCKED** —
   Sport Belasco clean ~22 km) — HUD uses
-  `min(scalar, node)`; grip wearPenalty still skipped while node spike owns contact μ.
+  `min(scalar, node)`; soft scalar must **not** feed grip `wearPenalty` while
+  `ENABLE_NODE_WEAR_SPIKE` (node spike owns contact μ). Leak / puncture may still
+  use Cond thresholds as today.
 - Grain / blister still thermal-side.
 - **Brake lock fade disabled** — native lock.
 - **Node wear spike on** (`ENABLE_NODE_WEAR_SPIKE`) — Policy A tread-ring
@@ -57,7 +62,7 @@ No copy or port from other node-based tire mods.
 
 ## Exit check before Phase 3 merge
 
-- [ ] One written policy (A or B) chosen
+- [x] One written policy (A or B) chosen — **Policy A** + **Friction coherence A1**
 - [ ] Single vehicle spike: contact energy → node wear → feel, no foreign code
-- [ ] Thermal and node layers do not both absolute-write μ
-- [ ] Pitwall shows one coherent story
+- [x] Thermal and node layers do not both absolute-write μ (thermal = wheel baseline; node = relative contact)
+- [x] Pitwall shows one coherent story (Cond = display hybrid `min(scalar,node)`; grip = thermal + node relative μ, no wearPenalty while spike on)

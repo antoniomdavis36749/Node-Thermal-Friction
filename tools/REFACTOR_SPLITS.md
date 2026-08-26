@@ -222,21 +222,23 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 ## Optional next steps (when continuing)
 
 - Soft-scalar Sport A/B **CLOSED** — `SCALAR_TREAD_WEAR_SCALE` **0.15 LOCKED**
+- Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
+  Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
+  (`tools/V2_FRICTION_CONTRACT.md`). A2/A3 deferred.
 - Pack / private share — only when asked
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
-- Friction story A1/A2/A3 (scalar vs node grip tax) — after hybrid feel sign-off
 
 ---
 
 ## Related docs
 
 - `RELEASE_CHECKLIST_TESTERS.md` — pre-tester zip smoke
-- `tools/V2_FRICTION_CONTRACT.md` — friction policy A
+- `tools/V2_FRICTION_CONTRACT.md` — friction policy A + coherence A1
 - `tools/V2_NODE_WEAR_SPIKE.md` — node spike + soft scalar flags
 - `tools/scripts/Count-LuaLocals.py` — local scope audit
 - `tools/scripts/Pack-Release.ps1` — release zip
 
 ---
 
-*Last updated: 2026-08-25 (soft-scalar Sport A/B closed — scale 0.15 LOCKED).*
+*Last updated: 2026-08-25 (friction coherence A1 LOCKED; soft-scalar 0.15 LOCKED).*

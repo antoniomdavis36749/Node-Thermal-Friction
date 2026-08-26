@@ -144,7 +144,7 @@ Under **NODE SPIKE**, each corner shows a circular **Wear map**:
 
 Not a player feature — Pitwall remains excluded from public zip.
 
-## A3 HUD bridge (Classic + Crew)
+## A3 HUD bridge (Classic + Crew) — Friction coherence **A1 LOCKED**
 
 When `ENABLE_HUD_BRIDGE_A3` and node spike are on:
 
@@ -155,6 +155,7 @@ When `ENABLE_HUD_BRIDGE_A3` and node spike are on:
 
 Classic canvas + Crew zone strip both read the same stream fields. Driver UI removed.
 
+**A1 LOCKED:** Node owns contact feel; soft scalar ×0.15 ages HUD Cond / zones only.
 Grip path treats `condition` / `zoneCondition` as **100** for wearPenalty while spike on
 (node μ already owns contact feel — no double tax). Soft scalar ages the **% bar** and
 leak/puncture thresholds without stacking a second grip tax.
@@ -246,4 +247,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 - Soft scalar tread **LOCKED** at ×0.15 (Sport Belasco clean 22 km: FR ~0.9% in band;
   0.45 overshot). A3 `min(scalar, node)` held.
+- **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
+  (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
 - Optional: pack / private tester share.

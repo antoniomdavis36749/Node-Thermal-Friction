@@ -352,12 +352,12 @@ angular.module("beamng.apps")
                                 </span>
                             </div>
 
-                            <!-- Structural Condition: A3 = min(soft scalar, node peak) -->
+                            <!-- Structural Condition: A1 display hybrid = min(soft scalar, node peak) -->
                             <div class="tth-stat-row">
                                 <span class="tth-label">Tread Condition:</span>
                                 <span class="tth-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(2) }}%
-                                    <span class="tth-cap-dim"> · min(scalar,node)</span>
+                                    <span class="tth-cap-dim"> · A1: Cond = min(scalar,node) · grip = node μ</span>
                                 </span>
                             </div>
                             <div class="tth-bar-container" style="margin-bottom: 7px;">
@@ -585,7 +585,7 @@ angular.module("beamng.apps")
                             </div>
                             <div class="tth-section-label">NODE SPIKE</div>
                             <div class="tth-cap-dim" style="margin: 0 0 4px 0; font-size: 10px;">
-                                HUD tread = min(soft scalar, node) · grip wearPenalty skipped while spike ON
+                                A1: Cond = min(scalar,node) · grip = node μ (no wearPenalty)
                             </div>
                             <div class="tth-capture-line">
                                 {{ w.name }} · {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} {{ w.nodeGate || 'idle' }}

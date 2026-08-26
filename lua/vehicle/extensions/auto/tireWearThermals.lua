@@ -1807,7 +1807,8 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local sensitivity = mods.pressureSensitivity or 0.5
 
     local avgTemp = F.EffectiveTyreTemp(data.temp, w.combinedBias, currentPSI / optP, localEnvTemp, mods)
-    -- A3 HUD may mirror node peak into condition; grip must not double-tax vs node μ.
+    -- Friction coherence A1: Cond may mirror node peak for HUD; soft scalar must not
+    -- feed wearPenalty while spike on (node μ owns contact feel — no double tax).
     local nodeSpikeOwnsWear = F.isNodeWearSpikeEnabled and F.isNodeWearSpikeEnabled()
     local cond = data.condition or 100
     if nodeSpikeOwnsWear then cond = 100 end
@@ -1835,7 +1836,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local isLooseSurface = flags.loose
     local gmName = flags.gmName or (groundModel.nameLower or "")
 
-    -- WEAR GRIP PENALTY (skipped when node spike owns contact μ)
+    -- WEAR GRIP PENALTY — A1: skipped while ENABLE_NODE_WEAR_SPIKE (soft scalar ≠ grip tax)
     local wearPenalty = 1.0
     if not nodeSpikeOwnsWear then
         if isLooseSurface then
@@ -2013,7 +2014,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     end
 
     -- Zone wear: outer/inner wear hurts lateral more; center hurts longitudinal more
-    -- A3 zoneCondition is HUD-only while node spike owns wear feel.
+    -- A1: zoneCondition is HUD-only while node spike owns wear feel (no second grip tax).
     local zoneLatPen, zoneLongPen = 1.0, 1.0
     if not nodeSpikeOwnsWear then
         local zc = data.zoneCondition or { 100, 100, 100 }

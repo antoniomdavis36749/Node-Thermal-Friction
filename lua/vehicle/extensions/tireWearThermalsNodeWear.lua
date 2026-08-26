@@ -5,7 +5,8 @@
 --
 -- Phase 2: lock/scrub wear spreads across wd.treadNodes ring (BeamNG pressureWheel API).
 -- Lock/camber energy: gated slipForce from nodeCollision probe (ENABLE_*_ENERGY_COLE) or slipEnergy.
--- A3 HUD bridge: condition = f(peak); zone O|M|I from outer/inner ring nodes (display only).
+-- A3 HUD bridge (Friction coherence A1): condition = min(scalar, node peak);
+-- zone O|M|I from outer/inner ring (display only). Soft scalar does not tax grip.
 local M = {}
 
 local min, max, abs = math.min, math.max, math.abs
@@ -194,8 +195,9 @@ function M.install(F, deps)
         data.nodeWearRingFlip = flip and 1 or 0
     end
 
-    -- A3: HUD condition / O|M|I = min(scalar tread, node peak/zones).
-    -- Grip wearPenalty still ignored while spike on (node μ owns contact feel — no double tax).
+    -- Friction coherence A1: HUD condition / O|M|I = min(scalar tread, node peak/zones).
+    -- Soft scalar is display/stint aging only; grip wearPenalty skipped while spike on
+    -- (node μ owns contact feel — no double tax). See tools/V2_FRICTION_CONTRACT.md.
     local function publishHudBridgeA3(data, wd)
         if not ENABLE_HUD_BRIDGE_A3 or not data then return end
         if not data.zoneCondition then data.zoneCondition = { 100, 100, 100 } end

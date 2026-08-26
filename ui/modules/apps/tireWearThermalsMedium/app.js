@@ -178,6 +178,9 @@ angular.module("beamng.apps")
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(0) }}%
                                 </span>
                             </div>
+                            <div class="ttm-cap-dim" style="margin: -2px 0 4px 0; font-size: 10px; opacity: 0.7;">
+                                A1: Cond = min(scalar,node) · grip = node μ (no wearPenalty)
+                            </div>
                             <div class="ttm-bar-container" style="margin-bottom: 5px;">
                                 <div class="ttm-bar-fill" ng-style="{'width': (w.condition || 0) + '%', 'background-color': getConditionColor(w.condition)}"></div>
                             </div>
