@@ -228,8 +228,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   (`tools/V2_FRICTION_CONTRACT.md`). A2/A3 deferred.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
-- **Camber accumulation CLOSED** (Bolide) — arm + peak hold; toe-scrub caveat; no
-  `CAMBER_COL_*` retune. Optional low-toe cleaner A/B later.
+- **Camber accumulation CLOSED / rates LOCKED** (Bolide) — low-toe cleaner ~9% peak
+  vs loud toe-scrub ~60%; soft `CAMBER_COL_*` confirmed.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
 - Pack / private share — paused until asked
 - Grip refactor — **only** with regression scripts + tester sign-off
@@ -250,4 +250,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-25 (camber accumulation CLOSED; toe-scrub caveat; no rate retune).*
+*Last updated: 2026-08-26 (camber low-toe confirm; CAMBER_COL rates LOCKED).*
