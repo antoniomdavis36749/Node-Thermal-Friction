@@ -10,8 +10,8 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_NODE_WEAR_SPIKE` | `tireWearThermalsNodeWear.lua` | **true** | Contact-node friction/mass wear |
 | `ENABLE_RING_WEAR` | same | **true** | Phase 2 sector spread on tread ring |
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
-| `ENABLE_LOCK_ENERGY_COLE` | same | **true** | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
-| `ENABLE_CAMBER_ENERGY_COLE` | same | **true** | Camber scallop slip term from probe slipF (geometry unchanged) |
+| `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
+| `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (arm OK; soft) | Camber scallop slip term from probe slipF (geometry unchanged) |
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
 
@@ -23,12 +23,12 @@ Grain / blister remain thermal-side for now.
 - Node spike: `obj:setNodeFrictionSlidingCoefs` + mild `obj:setNodeMass` on
   tread-ring nodes (contact + neighbors). Never writes wheel-level friction API.
 
-## Energy (spike)
+## Energy (spike) — cole path **LOCKED**
 
-Uses wheel `slipEnergy` / `dynamicSlipEnergy` while contact node is set and
-ω is low (lock/scrub) or camber is high. Good enough to feel a flat after a
-hard lock. Finer `nodeCollision` / `p.slipForce` can come later via an optional
-vehicle controller — not required for this spike.
+**Gates** stay on wheel ω / `slipE` / camber (when to wear). **Rate + ring cid**
+prefer probe `slipF` / `peakCid` while the arm is open and the probe is loud;
+**quiet probe → slipE fallback** is intentional (ABS / no hits) so wear does not
+stall. See gated lock / camber sections below.
 
 ## Rates (LOCKED baseline — private spike)
 
@@ -161,9 +161,12 @@ Grip path treats `condition` / `zoneCondition` as **100** for wearPenalty while 
 (node μ already owns contact feel — no double tax). Soft scalar ages the **% bar** and
 leak/puncture thresholds without stacking a second grip tax.
 
-## Gated lock energy swap (`ENABLE_LOCK_ENERGY_COLE`)
+## Gated lock energy swap (`ENABLE_LOCK_ENERGY_COLE`) — **CLOSED / LOCKED**
 
-**When (unchanged):** lock arm = contact cid + `slipE > 0.18` + `ω < 14`. 
+**Sign-off (2026-08-25):** Bolide lock/peak tune + Nightsnake 5-row cole matrix
+passed. Do **not** remove slipE fallback or retune `LOCK_COL_*` without a new A/B.
+
+**When (unchanged):** lock arm = contact cid + `slipE > 0.18` + `ω < 14`.
 
 **What (when flag on):** if this GFX window has `slipHits > 0` and `slipF ≥ 80 N`:
 
@@ -171,13 +174,19 @@ leak/puncture thresholds without stacking a second grip tax.
 - Ring center = probe **peakCid** (fallback `lastTreadContactNode`)
 - Pitwall capture tag **L:** `cole` (else `slipE` / `idle`)
 
-If probe quiet while lock arm is open (ABS / no hits), **falls back to slipE rate** so wear does not stall.
+If probe quiet while lock arm is open (ABS / no hits), **falls back to slipE rate**
+so wear does not stall — **intentional**, not a bug.
 
 GFX order: `stepNodeWearSpike` peeks live bucket → then `stepNodeCollisionProbe` clears into HUD hold.
 
-**Retest:** same 5-row matrix. Expect lock tag **`cole`**, peak still teens, cruise does not raise peak, reset clears.
+**Smoke (closed):** same 5-row matrix — lock tag **`cole`**, peak teens band, cruise
+holds peak, reset clears. Nightsnake fronts a bit hotter than Bolide — note only.
 
-## Gated camber energy (`ENABLE_CAMBER_ENERGY_COLE`)
+## Gated camber energy (`ENABLE_CAMBER_ENERGY_COLE`) — arm OK, **not rate-locked**
+
+**Status:** Bolide scrub proved gate **`camber`** + tag **`C:cole`**. Rate stays
+soft by design; accumulation / ramp A/B **deferred** (not a gate for lock cole
+sign-off). Quiet probe → slipE slipFrac fallback — same policy as lock.
 
 **When:** camber arm = cid + `|camber| ≥ CAMBER_DEG_ARM` (**1.0°**) + load > 800 + `slipE > 0.08`.
 
@@ -203,14 +212,14 @@ GFX order: `stepNodeWearSpike` peeks live bucket → then `stepNodeCollisionProb
 Pitwall capture: `L:…/C:cole` when camber arm uses probe (`C:slipE` fallback, `C:idle` when not armed).
 Capture also shows **`camF0.xx`** (live `camberFrac`) when &gt; 0; Pitwall row **Camber frac** labels soft/sport/aggressive/race bands for readouts.
 
-### Camber ramp retest
+### Camber ramp retest (optional / deferred)
 
 1. Respawn · Pitwall · park → `map128` · `idle/idle` · peak 0  
 2. **Stock Sport** mild corners (~1–2°) → gate may open; peak crawls **slowly**  
 3. Harder turn / more camber (~3°+) → faster climb; avoid full lock  
 4. Straighten → peak held · Reset → 0  
 
-Cruise/park must not climb peak. Scalar tread still off until node work is done.
+Cruise/park must not climb peak. Not required for Phase 3 / lock cole lock.
 
 ## nodeCollision / slipForce probe (Pitwall — read-only + swap feed)
 
@@ -250,5 +259,8 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   0.45 overshot). A3 `min(scalar, node)` held.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
   (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
+- **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
+  fallback intentional. Camber cole arm OK, soft, not rate-locked.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
-- Optional: pack / private tester share.
+- Pack / private tester share — paused until asked.
+- Optional later: camber ramp accumulation A/B.

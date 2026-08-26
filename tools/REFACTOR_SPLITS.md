@@ -225,8 +225,11 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
   Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
   (`tools/V2_FRICTION_CONTRACT.md`). A2/A3 deferred.
+- **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
+  quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`). Camber cole
+  arm verified / soft / not rate-locked.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
-- Pack / private share — only when asked
+- Pack / private share — paused until asked
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 
@@ -242,4 +245,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-25 (Nightsnake cole smoke closed; Phase 3 friction exit checks done).*
+*Last updated: 2026-08-25 (lock cole energy LOCKED; tester share paused).*
