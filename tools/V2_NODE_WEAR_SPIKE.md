@@ -70,7 +70,8 @@ ring with outer/inner bias (JBeam order: odd index = outer tread node in each ra
 3. Reset → all nodes restore; peak and **n** → 0.
 
 **Verified cars:** Bolide (Phase 1–2 lock/peak/n); **Nightsnake** (ring wear + wear map
-CW unify); **Scintilla GT3** (park + hard-brake soak, wear map CW, 2026-08-23).
+CW unify; **cole 5-row matrix 2026-08-25** — park/lock/hold/cruise/reset pass; front
+lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park + hard-brake soak, wear map CW, 2026-08-23).
 
 Note: GT3 **ABS** can prevent a true lock gate (`ω` low + slip). For ring-wear A/B on ABS
 cars, disable ABS or force a lock; hard braking alone may only heat brakes without
@@ -249,4 +250,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   0.45 overshot). A3 `min(scalar, node)` held.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
   (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
+- Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Optional: pack / private tester share.

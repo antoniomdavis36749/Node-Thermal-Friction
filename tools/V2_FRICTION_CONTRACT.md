@@ -63,6 +63,8 @@ display / stint aging only (no wearPenalty while spike on).
 ## Exit check before Phase 3 merge
 
 - [x] One written policy (A or B) chosen — **Policy A** + **Friction coherence A1**
-- [ ] Single vehicle spike: contact energy → node wear → feel, no foreign code
+- [x] Spike feel across cars: Bolide (lock/peak tune) + **Nightsnake** cole 5-row matrix
+  (park → lock → hold → cruise ~40 → reset); front lock wear a bit hotter than Bolide
+  teens band — note only, no rate change. Clean-room / no foreign code.
 - [x] Thermal and node layers do not both absolute-write μ (thermal = wheel baseline; node = relative contact)
 - [x] Pitwall shows one coherent story (Cond = display hybrid `min(scalar,node)`; grip = thermal + node relative μ, no wearPenalty while spike on)
