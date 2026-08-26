@@ -628,6 +628,7 @@ angular.module("beamng.apps")
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.30 && (w.nodeCamFrac||0) < 0.55"> · sport</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.55 && (w.nodeCamFrac||0) < 0.85"> · aggressive</span>
                                     <span class="tth-cap-dim" ng-if="(w.nodeCamFrac||0) >= 0.85"> · race</span>
+                                    <span class="tth-cap-dim" ng-if="(w.nodeCamColScale||1) < 0.99"> · col×{{ (w.nodeCamColScale||1).toFixed(2) }}</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
@@ -808,7 +809,7 @@ angular.module("beamng.apps")
                     "loadN", "loadPct", "peakForce", "longGrip", "latGrip", "lockFade",
                     "wheelSpeedMps", "wheelSpeedMph",
                     "nodeWearPeak", "nodeWearContact", "nodeMuScale", "nodeSlideScale", "nodeMassScale",
-                    "nodeOmega", "nodeCamFrac",
+                    "nodeOmega", "nodeCamFrac", "nodeCamColScale",
                     "slipEnergy", "longSlip", "sideSlip",
                     "suspCompressionMm", "suspVel", "suspStress", "suspBumpMm", "suspDroopMm", "dynamicRadius",
                     "muStatic", "muSlide", "contactDepth", "rough",

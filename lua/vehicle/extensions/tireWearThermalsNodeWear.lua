@@ -21,7 +21,10 @@ local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
 local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
 local ENABLE_CAMBER_ENERGY_COLE = true
 -- Soft base; continuous ramp from 1° (street gentle → race loud).
+-- Sport/street keep full base. Slick/circuit Soft life A/B: scale down camber stint wear
+-- (GT3 Soft lap-1 fronts ~10–12% peak vs Soft C4 ~4% @ 22 km — race camber keeps arm open).
 local CAMBER_COL_BASE = 0.006
+local CAMBER_COL_SLICK_SCALE = 0.30 -- Soft life A1; 1.0 = no slick mute
 local CAMBER_DEG_ARM = 1.0 -- wear off below this
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
 local CAMBER_FRAC_REF = 4.0 -- |camber|−ZERO over this → frac≈1 (~4.85° = full)
@@ -36,6 +39,21 @@ local function camberFracFromDeg(camberDegAbs)
     local a = abs(camberDegAbs or 0)
     if a < CAMBER_DEG_ARM then return 0 end
     return min(CAMBER_FRAC_CAP, max(0, (a - CAMBER_DEG_ZERO) / max(0.1, CAMBER_FRAC_REF)))
+end
+
+-- Soft life A1: mute camber stint rate on slick/circuit only (Sport Bolide scallop unchanged).
+local function camberColScaleForWheel(data)
+    if not data then return 1.0 end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    if string.find(p1, "slick", 1, true) or string.find(p2, "slick", 1, true) then
+        return CAMBER_COL_SLICK_SCALE
+    end
+    local mods = data.interpolatedMods
+    if mods and mods.purpose == "circuit" then
+        return CAMBER_COL_SLICK_SCALE
+    end
+    return 1.0
 end
 
 function M.install(F, deps)
@@ -379,6 +397,7 @@ function M.install(F, deps)
         data.nodeLockEnergySrc = "off"
         data.nodeCamEnergySrc = "off"
         data.nodeCamFrac = 0
+        data.nodeCamColScale = 1
         -- Do not clear A3 here — air/off must keep peak-based Classic % until reset / spike off
     end
 
@@ -480,8 +499,10 @@ function M.install(F, deps)
                             camSrc = "cole"
                         end
                     end
-                    local camBase = CAMBER_COL_BASE * camberFrac * slipFrac
+                    local slickScale = camberColScaleForWheel(data)
+                    local camBase = CAMBER_COL_BASE * slickScale * camberFrac * slipFrac
                     data.nodeCamFrac = camberFrac
+                    data.nodeCamColScale = slickScale
                     local wheelDir = wd.wheelDir or 1
                     local camberDeg = (w.camber or 0) * wheelDir
                     local nRing = treadNodeCount(treadNodes)
@@ -499,6 +520,7 @@ function M.install(F, deps)
                 else
                     data.nodeCamEnergySrc = "idle"
                     data.nodeCamFrac = 0
+                    data.nodeCamColScale = camberColScaleForWheel(data)
                 end
 
                 data.nodeWearPeak = wheelPeakFor(wheelKey(i))

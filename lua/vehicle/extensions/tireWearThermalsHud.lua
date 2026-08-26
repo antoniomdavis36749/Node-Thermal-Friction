@@ -108,6 +108,7 @@ function M.install(F, deps)
                 nodeLockEnergySrc = "off",
                 nodeCamEnergySrc = "off",
                 nodeCamFrac = 0,
+                nodeCamColScale = 1,
                 nodeColOn = 0, nodeColMapN = 0, nodeColHits = 0, nodeColSlipHits = 0,
                 nodeColSlipF = 0, nodeColSlipV = 0, nodeColNormalF = 0, nodeColDepth = 0,
                 nodeColEnergy = 0, nodeColPeakEnergy = 0,
@@ -183,6 +184,7 @@ function M.install(F, deps)
                     entry.nodeLockEnergySrc = data.nodeLockEnergySrc or "idle"
                     entry.nodeCamEnergySrc = data.nodeCamEnergySrc or "idle"
                     entry.nodeCamFrac = math.floor(((data.nodeCamFrac or 0) * 100) + 0.5) / 100
+                    entry.nodeCamColScale = math.floor(((data.nodeCamColScale or 1) * 100) + 0.5) / 100
                     do
                         local srcRing = data.nodeWearRing
                         local dstRing = entry.nodeWearRing
