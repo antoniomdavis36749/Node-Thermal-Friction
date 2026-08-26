@@ -283,7 +283,7 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
   (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
-  fallback intentional. Camber cole arm OK, soft, not rate-locked.
+  fallback intentional.
 - **Camber accumulation CLOSED** (Bolide 2026-08-25) — arm + peak build + park hold;
   toe-scrub caveat; **no `CAMBER_COL_*` retune**. Optional later: low-toe cleaner A/B.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
