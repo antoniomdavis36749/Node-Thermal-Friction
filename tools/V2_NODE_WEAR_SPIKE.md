@@ -11,7 +11,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_RING_WEAR` | same | **true** | Phase 2 sector spread on tread ring |
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
-| `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (arm OK; soft) | Camber scallop slip term from probe slipF (geometry unchanged) |
+| `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**accum CLOSED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
 
@@ -69,9 +69,11 @@ ring with outer/inner bias (JBeam order: odd index = outer tread node in each ra
    advances **same CW direction** on all four Pitwall rings (`wheelDir < 0` flipped).
 3. Reset → all nodes restore; peak and **n** → 0.
 
-**Verified cars:** Bolide (Phase 1–2 lock/peak/n); **Nightsnake** (ring wear + wear map
-CW unify; **cole 5-row matrix 2026-08-25** — park/lock/hold/cruise/reset pass; front
-lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park + hard-brake soak, wear map CW, 2026-08-23).
+**Verified cars:** Bolide (Phase 1–2 lock/peak/n; **camber accum 2026-08-25** — park →
+loaded arc → park-after; fronts gate `camber` + peak held; toe-scrub caveat); **Nightsnake**
+(ring wear + wear map CW unify; **cole 5-row matrix 2026-08-25** — park/lock/hold/cruise/reset
+pass; front lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park +
+hard-brake soak, wear map CW, 2026-08-23).
 
 Note: GT3 **ABS** can prevent a true lock gate (`ω` low + slip). For ring-wear A/B on ABS
 cars, disable ABS or force a lock; hard braking alone may only heat brakes without
@@ -199,11 +201,17 @@ GFX order: `stepNodeWearSpike` peeks live bucket → then `stepNodeCollisionProb
 **Smoke (closed):** same 5-row matrix — lock tag **`cole`**, peak teens band, cruise
 holds peak, reset clears. Nightsnake fronts a bit hotter than Bolide — note only.
 
-## Gated camber energy (`ENABLE_CAMBER_ENERGY_COLE`) — arm OK, **not rate-locked**
+## Gated camber energy (`ENABLE_CAMBER_ENERGY_COLE`) — **CLOSED** (no rate retune)
 
-**Status:** Bolide scrub proved gate **`camber`** + tag **`C:cole`**. Rate stays
-soft by design; accumulation / ramp A/B **deferred** (not a gate for lock cole
-sign-off). Quiet probe → slipE slipFrac fallback — same policy as lock.
+**Sign-off (2026-08-25, Bolide):** park → loaded arc (~60 mph, static ~±3.5–4° camber) →
+park-after. Fronts armed **`camber`** with **`camF` ~0.7**; peak built and **held** at idle
+(FR mid-arc peak ~60% / n32, FL ~14%; rears often `idle` when slipE low despite live camber).
+Quiet probe → slipE slipFrac fallback — same policy as lock.
+
+**Caveat — do not retune `CAMBER_COL_*` from this pass:** front toe was extreme (~8–16°
+under load). Wear is camber-**armed**, but energy was largely **toe scrub × slip**, so peak
+looked hotter than “soft scallop” intent. Optional cleaner A/B later: same camber, stock/low
+toe. Rates stay as-is until that (or a written A/B) says otherwise.
 
 **When:** camber arm = cid + `|camber| ≥ CAMBER_DEG_ARM` (**1.0°**) + load > 800 + `slipE > 0.08`.
 
@@ -229,14 +237,12 @@ sign-off). Quiet probe → slipE slipFrac fallback — same policy as lock.
 Pitwall capture: `L:…/C:cole` when camber arm uses probe (`C:slipE` fallback, `C:idle` when not armed).
 Capture also shows **`camF0.xx`** (live `camberFrac`) when &gt; 0; Pitwall row **Camber frac** labels soft/sport/aggressive/race bands for readouts.
 
-### Camber ramp retest (optional / deferred)
+### Camber ramp retest (protocol — CLOSED 2026-08-25)
 
 1. Respawn · Pitwall · park → `map128` · `idle/idle` · peak 0  
-2. **Stock Sport** mild corners (~1–2°) → gate may open; peak crawls **slowly**  
-3. Harder turn / more camber (~3°+) → faster climb; avoid full lock  
-4. Straighten → peak held · Reset → 0  
-
-Cruise/park must not climb peak. Not required for Phase 3 / lock cole lock.
+2. Static ~±3.5–4° (all corners OK); avoid huge toe if isolating scallop  
+3. Loaded arc 60–90 s → gate **`camber`**, peak crawls; avoid full lock  
+4. Straighten → peak held · park/cruise must not climb · Reset → 0  
 
 ## nodeCollision / slipForce probe (Pitwall — read-only + swap feed)
 
@@ -278,8 +284,9 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
   fallback intentional. Camber cole arm OK, soft, not rate-locked.
+- **Camber accumulation CLOSED** (Bolide 2026-08-25) — arm + peak build + park hold;
+  toe-scrub caveat; **no `CAMBER_COL_*` retune**. Optional later: low-toe cleaner A/B.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
-- Optional later: camber ramp accumulation A/B.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.

@@ -227,8 +227,9 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
   (`tools/V2_FRICTION_CONTRACT.md`). A2/A3 deferred.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
-  quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`). Camber cole
-  arm verified / soft / not rate-locked.
+  quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
+- **Camber accumulation CLOSED** (Bolide) — arm + peak hold; toe-scrub caveat; no
+  `CAMBER_COL_*` retune. Optional low-toe cleaner A/B later.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
 - Pack / private share — paused until asked
 - Grip refactor — **only** with regression scripts + tester sign-off
@@ -249,4 +250,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-25 (Pitwall A1 sc|nd + GT3 ABS hints; Lua locals audit OK).*
+*Last updated: 2026-08-25 (camber accumulation CLOSED; toe-scrub caveat; no rate retune).*
