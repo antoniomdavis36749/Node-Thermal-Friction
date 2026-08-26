@@ -24,10 +24,9 @@ local ENABLE_CAMBER_ENERGY_COLE = true
 -- Soft life A/B (slick/circuit only): A2 arm 2.0° + A3 camF curve (quieter than flat ×0.30).
 -- Sport/street keep full base + 1.0° arm (Bolide scallop unchanged).
 local CAMBER_COL_BASE = 0.006
--- A3 curve: mild race camber (stint life) quiet; high camF scrub still costs more.
--- At camF≈0.5 ≈ Soft race lean: ~0.14 (was flat 0.30 → fronts ~18% @ 22 km).
-local CAMBER_COL_SLICK_SCALE_MIN = 0.08 -- just-armed / low camF
-local CAMBER_COL_SLICK_SCALE_MAX = 0.22 -- camF≈1 hard scrub (still << Sport 1.0)
+-- A3→A3b curve nudge: A3 @ 22 km fronts ~8–11% (target ~3–6%). Quieter stint lean; scrub still > lean.
+local CAMBER_COL_SLICK_SCALE_MIN = 0.05 -- was 0.08
+local CAMBER_COL_SLICK_SCALE_MAX = 0.14 -- was 0.22
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero

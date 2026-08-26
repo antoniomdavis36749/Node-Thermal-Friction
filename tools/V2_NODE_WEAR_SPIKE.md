@@ -12,7 +12,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
 | `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**CLOSED / rates LOCKED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
-| `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.08 / 0.22** (Soft life A3) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
+| `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
 | `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (Soft life A2) | Slick/circuit arm floor; Sport/street stay **1.0°** |
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
@@ -299,8 +299,9 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   2026-08-26 — Soft louder than Sport; base `CAMBER_COL_*` held).
 - **Soft life A1 FAIL @ 22 km** — flat `col×0.30`: fronts ~16–19% Cond drop (target ~3–6%); rears OK.
 - **Soft life A2 FAIL @ 22 km** — arm **2.0°** alone; end Cond matched A1 (race camber stays armed).
-- **Soft life A3 IN PROGRESS** — slick `col×` curve **0.08→0.22** by `camberFrac` (+ A2 arm 2.0°).
-  Typical Soft race lean ~`col×0.14`. Retest GT3 Soft Belasco 22 km.
+- **Soft life A3 @ 22 km** — curve 0.08→0.22: fronts ~8–11% (better than A1/A2 ~18%; still above ~3–6%).
+- **Soft life A3b IN PROGRESS** — curve **0.05→0.14** (+ arm 2.0°). Retest GT3 Soft Belasco 22 km.
+  Typical Soft race lean ~`col×0.10`.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
