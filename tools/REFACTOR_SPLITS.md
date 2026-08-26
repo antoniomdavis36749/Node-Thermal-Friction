@@ -221,10 +221,11 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ## Optional next steps (when continuing)
 
-- Soft-scalar Sport stint A/B → nudge `SCALAR_TREAD_WEAR_SCALE` (0.45) if needed
+- Soft-scalar Sport A/B **CLOSED** — `SCALAR_TREAD_WEAR_SCALE` **0.15 LOCKED**
 - Pack / private share — only when asked
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
+- Friction story A1/A2/A3 (scalar vs node grip tax) — after hybrid feel sign-off
 
 ---
 
@@ -238,4 +239,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-25 (module contracts + soft scalar / node HUD notes).*
+*Last updated: 2026-08-25 (soft-scalar Sport A/B closed — scale 0.15 LOCKED).*

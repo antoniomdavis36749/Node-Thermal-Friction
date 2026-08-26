@@ -6,7 +6,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 
 | Flag | File | Default | Role |
 | --- | --- | --- | --- |
-| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **true** (soft ×0.45) | Everyday tread/zone %; HUD `min(scalar, node)` |
+| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **true** (soft ×0.15 **LOCKED**) | Everyday tread/zone %; HUD `min(scalar, node)` |
 | `ENABLE_NODE_WEAR_SPIKE` | `tireWearThermalsNodeWear.lua` | **true** | Contact-node friction/mass wear |
 | `ENABLE_RING_WEAR` | same | **true** | Phase 2 sector spread on tread ring |
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
@@ -244,5 +244,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 ## Next
 
-- Soft scalar tread **on** (×0.45) + A3 `min(scalar, node)` — Sport stint feel A/B when ready.
+- Soft scalar tread **LOCKED** at ×0.15 (Sport Belasco clean 22 km: FR ~0.9% in band;
+  0.45 overshot). A3 `min(scalar, node)` held.
 - Optional: pack / private tester share.

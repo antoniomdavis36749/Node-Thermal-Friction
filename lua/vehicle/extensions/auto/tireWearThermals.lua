@@ -641,6 +641,25 @@ F.getFreestreamAirspeed = function()
     return max(0, a)
 end
 
+-- Chassis G + yaw for Pitwall (same sensors path as thermals g_mag).
+-- Convention in this mod: gx ≈ long, gy ≈ lat (see patchLatLoadNudge / GFX sample).
+F.getChassisDynamicsSnapshot = function()
+    local gx = (sensors and (sensors.gx2 or sensors.gx) or 0) / 9.80665
+    local gy = (sensors and (sensors.gy2 or sensors.gy) or 0) / 9.80665
+    local yawRad = tonumber(objCall("getYawAngularVelocity"))
+    if yawRad == nil then
+        local ok, _, _, yaw = objPcall("getRollPitchYawAngularVelocity")
+        if ok then yawRad = tonumber(yaw) end
+    end
+    yawRad = yawRad or 0
+    return {
+        gLong = gx,
+        gLat = gy,
+        gMag = sqrt(gx * gx + gy * gy),
+        yawRateDeg = yawRad * (180.0 / pi),
+    }
+end
+
 F.getVehicleAirspeedRef = function()
     -- Chassis velocity first: electrics.airspeed can read 0 in a hop/wake while the car is at 170 mph,
     -- which made Cold fill think we were in the garage and pump fronts 27→38 PSI.
@@ -2561,6 +2580,8 @@ Hud.install(F, {
     EffectiveTyreTemp = function(t, b, p, e, m) return F.EffectiveTyreTemp(t, b, p, e, m) end,
     getNativeBrakeTemps = function(wd, e) return F.getNativeBrakeTemps(wd, e) end,
     getBrakeDuctPercent = function(isFront) return F.getBrakeDuctPercent(isFront) end,
+    getFreestreamAirspeed = function() return F.getFreestreamAirspeed() end,
+    getChassisDynamicsSnapshot = function() return F.getChassisDynamicsSnapshot() end,
 })
 
 Telemetry.install(F, {

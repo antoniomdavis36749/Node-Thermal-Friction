@@ -25,6 +25,10 @@ function M.install(F, deps)
     local EffectiveTyreTemp = deps.EffectiveTyreTemp
     local getNativeBrakeTemps = deps.getNativeBrakeTemps
     local getBrakeDuctPercent = deps.getBrakeDuctPercent
+    local getFreestreamAirspeed = deps.getFreestreamAirspeed or function() return 0 end
+    local getChassisDynamicsSnapshot = deps.getChassisDynamicsSnapshot or function()
+        return { gLong = 0, gLat = 0, gMag = 0, yawRateDeg = 0 }
+    end
 
     F.initGuiStream = function()
         local wheels = getWheels()
@@ -53,6 +57,16 @@ function M.install(F, deps)
         guiStream.envTempRange = 0
         guiStream.stintKm = 0
         guiStream.odoKm = 0
+        guiStream.airspeedMps = 0
+        guiStream.airspeedMph = 0
+        guiStream.weightFrontPct = 0
+        guiStream.weightRearPct = 0
+        guiStream.weightLeftPct = 0
+        guiStream.weightRightPct = 0
+        guiStream.gLong = 0
+        guiStream.gLat = 0
+        guiStream.gMag = 0
+        guiStream.yawRateDeg = 0
         stampStreamIdentity()
         for k in pairs(wheelIndexMap) do wheelIndexMap[k] = nil end
         local idx = 1
@@ -78,7 +92,8 @@ function M.install(F, deps)
                 -- Surface / contact diagnostics
                 surfaceName = "unknown", surfaceType = "generic",
                 muStatic = 1, muSlide = 1, rough = 0,
-                loadN = 0, peakForce = 0, dynamicRadius = 0.3,
+                loadN = 0, loadPct = 0, peakForce = 0, dynamicRadius = 0.3,
+                wheelSpeedMps = 0, wheelSpeedMph = 0,
                 slipEnergy = 0, longSlip = 0, sideSlip = 0,
                 -- Suspension diagnostics
                 suspCompressionMm = 0, suspVel = 0, suspStress = 0, suspBumpMm = 0, suspDroopMm = 0,
@@ -112,6 +127,20 @@ function M.install(F, deps)
     F.flushGuiStream = function(localizedEnvTemp)
             local wheels = getWheels()
             if not wheels or not wheels.wheelRotators then return end
+            local totalLoad = 0
+            local frontLoad, rearLoad, leftLoad, rightLoad = 0, 0, 0, 0
+            local airMps = tonumber(getFreestreamAirspeed()) or 0
+            if airMps < 0 then airMps = 0 end
+            guiStream.airspeedMps = math.floor(airMps * 100) / 100
+            guiStream.airspeedMph = math.floor(airMps * 2.23693629 * 10) / 10
+            do
+                local dyn = getChassisDynamicsSnapshot() or {}
+                guiStream.gLong = math.floor(((dyn.gLong or 0) * 100) + 0.5) / 100
+                guiStream.gLat = math.floor(((dyn.gLat or 0) * 100) + 0.5) / 100
+                guiStream.gMag = math.floor(((dyn.gMag or 0) * 100) + 0.5) / 100
+                guiStream.yawRateDeg = math.floor(((dyn.yawRateDeg or 0) * 10) + 0.5) / 10
+            end
+
             for i, wd in pairs(wheels.wheelRotators) do
                 local w = wheelCache[i]
                 local data = tyreData[i]
@@ -246,6 +275,29 @@ function M.install(F, deps)
                     entry.loadN = math.floor(w.loadRaw or wd.downForce or 0)
                     entry.peakForce = math.floor(w.peakForce or 0)
                     entry.dynamicRadius = math.floor(((w.dynamicRadius or wd.radius or 0.3) * 1000) + 0.5) / 1000
+                    do
+                        local dynR = w.dynamicRadius or wd.radius or 0.3
+                        local spd = math.abs(wd.angularVelocity or 0) * dynR
+                        entry.wheelSpeedMps = math.floor(spd * 100) / 100
+                        entry.wheelSpeedMph = math.floor(spd * 2.23693629 * 10) / 10
+                    end
+                    entry.loadPct = 0
+                    do
+                        local loadN = entry.loadN or 0
+                        if loadN > 0 then
+                            totalLoad = totalLoad + loadN
+                            -- Token after last underscore (FL / wheel_FL) so "wheel" does not fake left.
+                            local n = string.lower(tostring(wd.name or entry.name or ""))
+                            local token = string.match(n, "([^_]+)$") or n
+                            local isFront = not not string.match(token, "^f")
+                            if isFront then frontLoad = frontLoad + loadN else rearLoad = rearLoad + loadN end
+                            if string.find(token, "l", 1, true) then
+                                leftLoad = leftLoad + loadN
+                            else
+                                rightLoad = rightLoad + loadN
+                            end
+                        end
+                    end
                     entry.slipEnergy = math.floor((w.dynamicSlipEnergy or w.slipEnergy or 0) * 1000) / 1000
                     entry.longSlip = math.floor((w.longSlipEnergy or 0) * 1000) / 1000
                     entry.sideSlip = math.floor((w.sideSlipEnergy or 0) * 1000) / 1000
@@ -323,6 +375,23 @@ function M.install(F, deps)
             guiStream.aeroCopPct = math.floor(nativeAero.copPct * 10) / 10
             guiStream.aeroFracPct = math.floor(nativeAero.fracPct * 10) / 10
             guiStream.aeroNative = nativeAero.ok and 1 or 0
+
+            if totalLoad > 1 then
+                guiStream.weightFrontPct = math.floor((frontLoad / totalLoad) * 1000) / 10
+                guiStream.weightRearPct = math.floor((rearLoad / totalLoad) * 1000) / 10
+                guiStream.weightLeftPct = math.floor((leftLoad / totalLoad) * 1000) / 10
+                guiStream.weightRightPct = math.floor((rightLoad / totalLoad) * 1000) / 10
+                for _, entry in ipairs(guiStream.data) do
+                    if entry and (entry.loadN or 0) > 0 then
+                        entry.loadPct = math.floor(((entry.loadN or 0) / totalLoad) * 1000) / 10
+                    else
+                        entry.loadPct = 0
+                    end
+                end
+            else
+                guiStream.weightFrontPct, guiStream.weightRearPct = 0, 0
+                guiStream.weightLeftPct, guiStream.weightRightPct = 0, 0
+            end
 
     end
 end

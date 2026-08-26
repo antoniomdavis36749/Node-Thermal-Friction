@@ -98,9 +98,11 @@ function M.install(F, deps)
     
         local wear = 0
         local zoneWearDelta = { 0, 0, 0 }
-        -- Soft scalar tread back on with node spike: ages Sport under load; A3 HUD uses min(scalar, node).
+        -- Soft scalar tread + node spike: A3 HUD uses min(scalar, node).
+        -- LOCKED 0.15: Sport Belasco clean ~22 km (Track 15°C) — FR ~0.9% in band;
+        -- unloaded corners softer; 0.45 overshot ~2.5–4%. Do not nudge without new A/B.
         local ENABLE_SCALAR_TREAD_WEAR = true
-        local SCALAR_TREAD_WEAR_SCALE = 0.45 -- soft vs pre-spike full rate
+        local SCALAR_TREAD_WEAR_SCALE = 0.15 -- LOCKED vs pre-spike full rate
         if ENABLE_SCALAR_TREAD_WEAR and not isAirborne then
                 local tempWearPenalty = 1.0
                 if tempDistWeighted > 1.0 then
