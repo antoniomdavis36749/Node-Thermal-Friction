@@ -230,7 +230,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
   Soft louder than Sport — base rates held)
-- **Soft life A3** ~8–11% @ 22 km · **A3b** curve **0.05→0.14** pending retest
+- **Soft life A3b CLOSED / LOCKED** — slick `col×` **0.05→0.14** + arm **2.0°**;
+  GT3 Soft 22 km fronts ~5.5–7% Cond. Next: Medium then Hard Belasco spot-check.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
 - Pack / private share — paused until asked
 - Grip refactor — **only** with regression scripts + tester sign-off
@@ -251,4 +252,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-26 (Soft life A3b: slick col curve 0.05–0.14).*
+*Last updated: 2026-08-26 (Soft life A3b LOCKED; Med/Hard ladder next).*
