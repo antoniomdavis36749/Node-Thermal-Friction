@@ -76,9 +76,9 @@ confirm 2026-08-26** — loud ~60% vs cleaner ~9% park-after; rates LOCKED); **N
 (ring wear + wear map CW unify; **cole 5-row matrix 2026-08-25** — park/lock/hold/cruise/reset
 pass; front lock Cond drop ~14–16% vs Bolide teens — note only); **Scintilla GT3** (park +
 hard-brake soak, wear map CW, 2026-08-23; Soft camber stress 2026-08-26; **Soft life A3b
-LOCKED 2026-08-26** — Belasco 22 km fronts Cond ~93–95% / ~5.5–7% drop; **Medium 22 km
-2026-08-27** — fronts ~93.8–94.5% / ~5.5–6%, node-led sc96/nd94 — Soft≈Med on Cond under
-shared slick curve; Hard spot-check next).
+LOCKED 2026-08-26** — Belasco 22 km fronts Cond ~93–95% / ~5.5–7% drop; **Med/Hard 22 km
+2026-08-27** — Med fronts ~5.5–6%, Hard fronts ~4.9–5.9% (94.1/95.1); Soft≈Med≈Hard on
+node Cond under shared slick curve — ladder CLOSED).
 
 Note: GT3 **ABS** can prevent a true lock gate (`ω` low + slip). For ring-wear A/B on ABS
 cars, disable ABS or force a lock; hard braking alone may only heat brakes without
@@ -93,6 +93,7 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | True lock A/B | Disable ABS or force lock until gate `lock` + `L:cole` (or `cole→slipE`) | Use Soft/Med Cond% alone to retune soft scalar |
 | Soft life (Soft slick Belasco 22 km) | A3b curve **0.05→0.14** + arm **2.0°**: fronts ~**5.5–7%** Cond drop (**LOCKED**) | Retune Sport `CAMBER_COL_BASE` or Soft C4 heat for Soft life |
 | Medium 22 km (same curve) | Fronts ~**5.5–6%** Cond, **node-led**; Soft≈Med on Cond (scalar still Med-healthier sc) | Expect Soft≫Med Cond from camber alone — curve is slick-wide |
+| Hard 22 km (same curve) | Fronts ~**4.9–5.9%** Cond (94.1/95.1); Soft≈Med≈Hard on node Cond — **ladder CLOSED** | Retune A3b from Hard (scalar separates compounds; node Cond won’t) |
 | Soft camber soft confirm (stress arc) | ~3.2 km loaded; Soft louder than Sport — expected | Retune from Soft stress vs Sport low-toe alone |
 | Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
 | Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
@@ -303,8 +304,8 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   2026-08-26 — Soft louder than Sport; base `CAMBER_COL_*` held).
 - **Soft life A3b CLOSED / LOCKED** (GT3 Soft Belasco 22 km 2026-08-26) — slick curve
   **0.05→0.14** by `camberFrac` + arm **2.0°**; fronts Cond ~**93–95%** (~5.5–7% drop).
-- **Medium 22 km CLOSED** (2026-08-27) — fronts ~5.5–6% Cond, node-led; Soft≈Med on Cond
-  under shared slick curve (do not retune A3b). **Hard** Belasco spot-check next.
+- **Med/Hard 22 km CLOSED** (2026-08-27) — Soft≈Med≈Hard on node Cond under shared slick
+  curve (Hard fronts ~4.9–5.9%); do not retune A3b. Belasco Soft→Med→Hard ladder done.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - Pack / private tester share — paused until asked.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
