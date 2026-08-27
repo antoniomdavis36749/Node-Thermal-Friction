@@ -3,21 +3,21 @@
 Use this **before every build** you hand to testers (Discord, forum, `-dev` sync, or zip).  
 Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does it work?”** list.
 
-**Current version (update when you ship):** `0.2.0-exp` · **Build date:** ___________ · **Git branch:** ___________
+**Current version (update when you ship):** `0.2.0` · **Build date:** 2026-08-27 · **Git branch:** `testing/main`
 
-**Status:** Experimental / private — public Repo publish paused (see README + `tools/V2_FRICTION_CONTRACT.md`).
+**Status:** Private tester (Beta) — public Repo publish still paused (see README + `tools/V2_FRICTION_CONTRACT.md`).
 
 ---
 
 ## 1. What changed (5 bullets max — paste to testers)
 
-1. Flatspot removed (no accumulation / μ tax / UI)
-2. Marked experimental 0.2.0-exp; V2 friction contract in tools/
-3. Brake lock fade disabled — native lock only (Lock fade stays 0%)
-4. Thermal-first: scalar tread wear off; node-wear spike on (Pitwall **NODE SPIKE** block — dev UI only)
-5. Pitwall Heavy labeled **DEV / TESTING** — not shipping in public builds; use Classic/Crew for normal play
+1. **V2 node wear** — clean-room contact-node μ/mass (lock + camber); Soft life A3b slick camber curve locked
+2. **Friction A1** — node owns contact feel; soft scalar ×0.15 ages Cond/zones only (no Cond grip double-tax)
+3. Soft→Med→Hard Belasco ~22 km ladder closed (node Cond Soft≈Med≈Hard under shared slick curve)
+4. Scalar flatspot removed; brake lock fade off — native lock
+5. **Pitwall Heavy** = DEV only (`-dev` / git); player zip ships **Classic + Crew** only
 
-**Calibration touched?** ☐ No (default) · ☐ Yes — list locks: _______________________
+**Calibration touched?** ☐ No (default) · ☑ Yes — Soft life A3b + Soft/Med/Hard 22 km; Sport soft scalar ×0.15 held
 
 ---
 
@@ -57,7 +57,7 @@ Spawn **one car you know well** (e.g. Scintilla GT3 ReSpin Soft). Console open (
 | Check | Pass |
 |-------|:----:|
 | HUD shows temps / grip / pressure on all four corners | ☐ |
-| Pitwall shows **profile + purpose** per wheel (not all “Standard”) | ☐ |
+| Pitwall (if used) shows **profile + purpose** per wheel (not all “Standard”) | ☐ |
 | Drive 1 lap — temps move, not stuck at ambient | ☐ |
 | Pit stop / respawn — values reset sensibly, no `-1` / NaN pressure | ☐ |
 | Optional CSV telemetry: disarmed by default; enabling doesn’t spam errors | ☐ |
@@ -85,7 +85,7 @@ Only run the rows that match **what you changed**. Skip the rest.
 |----------|:----:|-------|
 | Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | |
 | Hard track lap — Soft/Med/Hard band still plausible | ☐ | |
-| Spinout / lockup — **Leak** only (flatspot removed); no instant blowout at speed | ☐ | |
+| Spinout / lockup — **Leak** only (flatspot removed); node peak teens on hard lock | ☐ | |
 | Wet asphalt — grip drops, no ice-like behavior | ☐ | |
 | FWD/AWD Soft front — no runaway Cold PSI fill at highway speed | ☐ | |
 | Brake duct sliders save in `.pc` and affect Pitwall duct % | ☐ | |
@@ -95,7 +95,7 @@ Only run the rows that match **what you changed**. Skip the rest.
 ## 5. Packaging (only if sending a **zip**, not just `-dev` sync)
 
 ```powershell
-.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin.zip'
+.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin_0.2.0.zip'
 ```
 
 | Check | Done |
@@ -103,7 +103,7 @@ Only run the rows that match **what you changed**. Skip the rest.
 | Zip contains `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_RESPIN/` at **root** (no extra parent folder) | ☐ |
 | Zip does **not** contain `tools/`, `.git/`, `.vscode/` | ☐ |
 | Zip does **not** contain `ui/modules/apps/tireWearThermalsHeavy/` (dev Pitwall) | ☐ |
-| `mod_info/TWTRS_RESPIN/info.json` **version_string** matches section 1 | ☐ |
+| `mod_info/TWTRS_RESPIN/info.json` **version_string** matches section 1 (`0.2.0`) | ☐ |
 | Clean install: enable zip only → apps appear in Apps menu | ☐ |
 
 Compat tires zip (if changed): pack from **ReSpin Tires** repo separately.
@@ -113,24 +113,25 @@ Compat tires zip (if changed): pack from **ReSpin Tires** repo separately.
 ## 6. Copy-paste for testers (Discord / forum)
 
 ```
-ReSpin test build — v________ · ________ (date)
+ReSpin private tester — v0.2.0 · 2026-08-27 (Beta)
 
 CHANGES:
-• 
-• 
+• V2 node wear (lock/camber contact μ) + Soft life slick camber curve
+• Friction A1: node feel + soft scalar Cond aging (no flatspot bar)
+• Classic / Crew HUDs in zip; Dev Pitwall only on -dev
 
 INSTALL:
 • Disable other tire-thermals mods and the public ReSpin Repo copies (39082/39083) if you use -dev.
 • Minimal load: ReSpin core + compat tires (if Scintilla ReSpin) + test car only — disable unrelated mods.
-• Core: Tire-Wear-and-Thermals-ReSpin-dev (or attached zip).
+• Core: Tire-Wear-and-Thermals-ReSpin-dev (or attached TireWearThermalsReSpin_0.2.0.zip).
 • Compat (Scintilla ReSpin tires only): Tire-Wear-and-Thermals-ReSpin-Tires-dev.
-• After install: spawn car, add Tire Wear Thermals ReSpin apps (Pitwall recommended).
+• After install: spawn car, add Node-Thermal Friction Classic or Crew.
 
 IMPORTANT: Respawn vehicle after every Lua update.
 
 REPORT BUGS WITH:
 Car + config | Map | Weather | What you did | What happened | Console error (screenshot)
-Build: v________ · branch/commit if known
+Build: v0.2.0 · testing/main
 ```
 
 ---
@@ -139,9 +140,10 @@ Build: v________ · branch/commit if known
 
 - **Respawn required** after Lua/UI updates (cached apps / old stream name).
 - **Only one** thermals mod at a time.
-- **Pitwall** is dense; Classic or Crew is enough for casual driving.
-- **Alpha:** street / wet / truck bands still open; locked bands listed in listing.
+- **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
+- **Beta:** street / wet / truck bands still open; locked bands listed in listing.
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
+- Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 
 ---
 
@@ -149,7 +151,7 @@ Build: v________ · branch/commit if known
 
 | Role | Name | Date |
 |------|------|------|
-| Built / synced by | | |
+| Built / synced by | | 2026-08-27 |
 | Smoke test by | | |
 | OK to send to testers | ☐ Yes · ☐ No — blocker: _________________ |
 

@@ -32,7 +32,8 @@ Do not run A and B mixed. Do not run ReSpin wheel μ + any third-party node-wear
 Node wear is designed from BeamNG docs/APIs and in-house tests only.
 No copy or port from other node-based tire mods.
 
-## Current experimental pack (Phase 0–1 + node spike)
+## Current private tester pack (0.2.0 Beta — Phase 0–1 + node spike)
+
 
 **Friction coherence A1 LOCKED** — Node owns contact feel; soft scalar is
 display / stint aging only (no wearPenalty while spike on).
@@ -49,7 +50,7 @@ display / stint aging only (no wearPenalty while spike on).
   friction/mass (Phase 2: `wd.treadNodes` sector). See `tools/V2_NODE_WEAR_SPIKE.md`.
 - **A3 Classic + Crew HUD bridge** — `condition` / `zoneCondition` mirror node
   peak / O\|M\|I for display only; grip wearPenalty ignores them while spike is on.
-- Public Repo release deprioritized; `-dev` + private MP / small group first.
+- Public Repo update deprioritized; private tester **`0.2.0` (Beta)** + `-dev` / small group first.
 
 ## Lock policy
 

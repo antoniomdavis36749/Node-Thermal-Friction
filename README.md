@@ -1,11 +1,12 @@
 ﻿# Node-Thermal Friction
 
-> **Experimental / private build** (continues the AGPL ReSpin lineage). Public Repo
-> release is paused. Active work is small-group and private MP toward **V2**
-> (thermal-core + clean-room node wear). See `tools/V2_FRICTION_CONTRACT.md`
-> and `tools/V2_NODE_WEAR_SPIKE.md`.
-> Scalar flatspot removed; scalar tread wear off; node-wear spike on; lock is native.
-> **Pitwall Heavy** (`tireWearThermalsHeavy`) is a **dev/testers-only** telemetry panel — not planned for public release builds. Classic / Crew (Medium) apps are the player-facing HUDs.
+> **Private tester `0.2.0` (Beta)** — V2 node wear + thermals locked for small-group /
+> private MP. Public BeamNG Repo update still paused. See
+> `tools/V2_FRICTION_CONTRACT.md` and `tools/V2_NODE_WEAR_SPIKE.md`.
+> Friction **A1**: node μ owns contact feel; soft scalar ×0.15 ages Cond; flatspot
+> removed; lock is native. Soft life A3b + Soft→Med→Hard Belasco ladder locked.
+> **Pitwall Heavy** is **dev/testers-only** (git / `-dev`; not in release zip). Classic /
+> Crew are the player-facing HUDs.
 
 A variation / continuation of earlier open-source BeamNG.drive tire thermals/wear mods.
 Upstream authors are listed under **Credits** below.

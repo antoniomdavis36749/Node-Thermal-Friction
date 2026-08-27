@@ -1,4 +1,4 @@
-# V2 node-wear spike (experimental)
+# V2 node-wear spike (private tester / engineering)
 
 Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 
@@ -307,6 +307,7 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Med/Hard 22 km CLOSED** (2026-08-27) — Soft≈Med≈Hard on node Cond under shared slick
   curve (Hard fronts ~4.9–5.9%); do not retune A3b. Belasco Soft→Med→Hard ladder done.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
-- Pack / private tester share — paused until asked.
+- **Private tester `0.2.0` (Beta)** — checklist + pack ready; public Repo still paused.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
+- Deferred: mild scalar-**rate** curve (pre-prod); Cond→grip fade (post-prod).

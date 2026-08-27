@@ -2,8 +2,8 @@
 
 **Reminder:** Follow this process. Do **not** rush hot-path splits. One cold module at a time, verify locals, sync `-dev`, respawn, smoke-test.
 
-**V2 experimental:** Public release paused. Scalar flatspot removed. Friction/node-wear
-ownership: `tools/V2_FRICTION_CONTRACT.md`.
+**V2 private tester `0.2.0` (Beta):** Public Repo update paused. Scalar flatspot removed.
+Friction/node-wear ownership: `tools/V2_FRICTION_CONTRACT.md`.
 
 ---
 
@@ -223,9 +223,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 ## Optional next steps (when continuing)
 
 - Soft-scalar Sport A/B **CLOSED** — `SCALAR_TREAD_WEAR_SCALE` **0.15 LOCKED**
+  (optional later: mild scalar-**rate** curve for endurance Cond aging — pre-prod polish)
 - Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
   Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
-  (`tools/V2_FRICTION_CONTRACT.md`). A2/A3 deferred.
+  (`tools/V2_FRICTION_CONTRACT.md`). Cond→grip fade (A2-curve) = **post-production**.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -233,12 +234,13 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Soft life A3b CLOSED / LOCKED** — slick `col×` **0.05→0.14** + arm **2.0°**;
   GT3 Soft/Med/Hard Belasco 22 km Soft≈Med≈Hard on node Cond — **ladder CLOSED**.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
-- Pack / private share — paused until asked
+- **Private tester pack `0.2.0` (Beta)** — checklist + zip ready; public Repo still paused
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
   chunk 127 / grip ~108; all under warn (≥190). No further peel this pass.
 - Pitwall polish: A1 `sc|nd` stream + ABS?/cole→slipE capture hints (GT3 edge aid)
+
 
 ---
 
@@ -252,4 +254,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-27 (Soft/Med/Hard Belasco 22 km ladder CLOSED).*
+*Last updated: 2026-08-27 (private tester 0.2.0 Beta; Soft/Med/Hard ladder CLOSED).*

@@ -16,10 +16,11 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 | Field | Value |
 | --- | --- |
 | **Title** | Node-Thermal Friction |
-| **Tagline** | EXPERIMENTAL — private/small-group. Node wear + thermals friction toward V2. |
-| **Version** | 0.2.0-exp |
+| **Tagline** | Private tester — V2 node wear + thermals (friction A1). Public Repo paused. |
+| **Version** | 0.2.0 |
 | **Zip filename** | `TireWearThermalsReSpin.zip` (stable Repo id; display title is Node-Thermal Friction) |
-| **Prefix** | Experimental |
+| **Prefix** | Beta |
+
 | **Category** | Utility / Gameplay (confirm on upload form) |
 
 ---
@@ -50,8 +51,9 @@ Vehicle mod: [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23
 [B]Features[/B]
 • Per-tire profiles (classification → dedicated heat/wear/grip pack). Not a car-wide universal tire config
 • Tire thermals driven by slip, load, camber, brakes, and surface
-• Wear that feeds back into grip over a stint
+• V2 friction: thermal wheel μ + clean-room node contact wear (Policy A / coherence A1). Soft scalar ages Cond; node μ owns contact feel
 • Compound-aware behaviour (street → sport → race / slick spectrum)
+
 • Locked ReSpin slick ladder (Hard C2 / Medium C3 / Soft C4) with Soft > Medium > Hard wear rates
 • Locked street Sport heat and Sport Plus heat+wear (live Belasco / Track ~15°C, ~22 km protocol)
 • 20" Sport compounds classify as Sport (name + tread routing; not utility)
@@ -80,13 +82,16 @@ Vehicle mod: [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23
 • Optional [B]Compat Tires[/B] is a [B]second Repo resource[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]) — cannot ship inside this zip or the UI apps vanish
 • Compatibility tires also need the matching car mod for meshes only (Scintilla GT3 Racing Parts / Pigniteon ETK Racing). ReSpin does not redistribute those meshes.
 
-[B]Known limitations (Alpha)[/B]
+[B]Known limitations (Beta — street/wet still open)[/B]
 • Street / utility / wet compounds still need broader surface A/B. Locked from live Track ~15°C stints: race Soft/Med/Hard, street Sport heat, Sport Plus heat+wear. Track Day heat locked for now.
 • Graining is experimental (cold out-lap); not a locked band
 • UI layout can be imperfect on vehicles with more than four wheels
 • Dev Pitwall (testers): dense diagnostics + node-spike debug — not a public player feature
 • Some third-party race tires use unconventional friction; use the optional Respin clones or wait for upstream fixes
 • AWD Soft can still spike one front under heavy brake soak — treated as a harsh-drive ceiling, not a compound miss
+• Scalar flatspot removed — lock/camber damage is node-sector wear, not a separate flat % bar
+• Wear that feeds grip: node contact μ (events) + thermal curve; soft scalar ages Cond for HUD / leak clocks (coherence A1)
+
 
 [HR][/HR]
 [B]Links[/B]

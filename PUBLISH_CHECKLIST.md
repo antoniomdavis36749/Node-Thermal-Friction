@@ -1,7 +1,8 @@
 # BeamNG Repo publish checklist
 
-> **Deferred:** Public Repo publish is paused while the pack is **experimental /
-> private (V2)**. Use this checklist only if you deliberately resume a public zip.
+> **Deferred:** Public BeamNG Repo **update** is still paused. Private tester **`0.2.0`
+> (Beta)** is the current small-group drop (`RELEASE_CHECKLIST_TESTERS.md`). Use this
+> checklist only if you deliberately resume a public zip upload.
 
 Branches: **`testing/main`** (active polish) → merge to **`main`** (GitHub default / Repo source link)  
 Working folder: `Tire-Wear-and-Thermals-ReSpin-dev` (local git sync under `mods/unpacked/`)  
@@ -16,7 +17,7 @@ Guidelines: https://www.beamng.com/game/support/policies/modding-guidelines/
 
 ---
 
-## Calibration band (0.2.0-exp) — locked where noted; flatspot removed
+## Calibration band (0.2.0 Beta / private tester) — locked where noted; flatspot removed
 
 Street Sport heat and Sport Plus heat+wear locked on the same Belasco Track ~15°C / ~22 km protocol. Race slick band from 0.1.1 still held.
 
@@ -94,7 +95,8 @@ Do **not** reuse Redux’s resource identity. This is a new listing derived from
 - [x] BeamNG forum username confirmed on the Repo upload form (handle not stored in this tree)
 - [x] Icon / preview images — locked heroes + four-UI gallery + ducts
 - [ ] Category confirmed on upload form
-- [x] Prefix: Alpha (street/truck/wet still open; race slicks + Sport / Sport Plus heat locked)
+- [x] Prefix: Beta (private tester); street/truck/wet still open; race slicks + Sport / Sport Plus heat locked
+
 
 ## D. Technical readiness
 
