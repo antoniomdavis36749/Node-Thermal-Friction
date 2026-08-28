@@ -294,7 +294,12 @@ function M.install(F, deps)
         -- Prefer scalarTreadCondition (never node-min'd); fall back to pre-min condition.
         data.conditionScalar = data.scalarTreadCondition or scalarCond
         data.conditionNode = nodeCond
-        data.condition = min(data.conditionScalar or scalarCond, nodeCond)
+        local hybrid = min(data.conditionScalar or scalarCond, nodeCond)
+        data.condition = hybrid
+        -- Share of Cond drop attributable to node (0=scalar-led, 100=fully node-led).
+        local drop = max(0.5, 100 - hybrid)
+        local scV = data.conditionScalar or scalarCond
+        data.conditionNodeLead = max(0, min(100, (scV - hybrid) / drop * 100))
     end
 
     local function clearHudBridgeA3(data)
@@ -302,6 +307,7 @@ function M.install(F, deps)
         data.condition = 100
         data.conditionScalar = 100
         data.conditionNode = 100
+        data.conditionNodeLead = 0
         if not data.zoneCondition then data.zoneCondition = { 100, 100, 100 } end
         data.zoneCondition[1], data.zoneCondition[2], data.zoneCondition[3] = 100, 100, 100
     end

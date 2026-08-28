@@ -75,7 +75,7 @@ function M.install(F, deps)
                 name = tostring(wd.name or "unknown"),
                 temp = { ENV_TEMP, ENV_TEMP, ENV_TEMP, ENV_TEMP, ENV_TEMP, ENV_TEMP, ENV_TEMP, ENV_TEMP },
                 tempCategory = "Normal",
-                working_temp = WORKING_TEMP, condition = 100, conditionScalar = 100, conditionNode = 100,
+                working_temp = WORKING_TEMP, condition = 100, conditionScalar = 100, conditionNode = 100, conditionNodeLead = 0,
                 zoneCondition = { 100, 100, 100 },
                 tyreGrip = 1, longGrip = 1, latGrip = 1, camber = 0, toe = 0, pressure = 25,
                 initialPressure = 25, optimalPressure = 25, coldPressure = 25, targetHotPressure = 25,
@@ -165,6 +165,7 @@ function M.install(F, deps)
                     entry.condition = (w.isBroken) and -1 or cond
                     entry.conditionScalar = (w.isBroken) and -1 or (data.conditionScalar or cond)
                     entry.conditionNode = (w.isBroken) and -1 or (data.conditionNode or cond)
+                    entry.conditionNodeLead = (w.isBroken) and -1 or (data.conditionNodeLead or 0)
                     if not entry.zoneCondition then entry.zoneCondition = { cond, cond, cond } end
                     local zc = data.zoneCondition or entry.zoneCondition
                     entry.zoneCondition[1], entry.zoneCondition[2], entry.zoneCondition[3] = zc[1] or cond, zc[2] or cond, zc[3] or cond

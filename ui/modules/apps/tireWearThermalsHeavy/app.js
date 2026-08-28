@@ -360,7 +360,7 @@ angular.module("beamng.apps")
                                     <span class="tth-cap-dim">
                                          · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}
                                          · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
-                                         · {{ a1LeadingLabel(w) }}
+                                         · {{ a1NodeLeadLabel(w) }}
                                     </span>
                                 </span>
                             </div>
@@ -616,7 +616,7 @@ angular.module("beamng.apps")
                                     <span class="tth-cap-dim"> hybrid</span>
                                     · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 100).toFixed(0) }}
                                     · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
-                                    <span class="tth-cap-dim"> · {{ a1LeadingLabel(w) }}</span>
+                                    <span class="tth-cap-dim"> · {{ a1NodeLeadLabel(w) }}</span>
                                 </span>
                             </div>
                             <div class="tth-stat-row">
@@ -884,19 +884,40 @@ angular.module("beamng.apps")
                     return scope.fmtSigned(n, 1);
                 };
 
-                // A1 hybrid: which side of min(sc, nd) is driving Cond.
-                scope.a1LeadingLabel = function (w) {
-                    if (!w) return 'A1';
+                // A1 hybrid: share of Cond drop from node (0=scalar-led, 100=fully node-led).
+                scope.a1NodeLeadPct = function (w) {
+                    if (!w) return 0;
+                    if (w.conditionNodeLead !== undefined && w.conditionNodeLead !== null
+                        && isFinite(Number(w.conditionNodeLead)) && Number(w.conditionNodeLead) >= 0) {
+                        return Math.max(0, Math.min(100, Number(w.conditionNodeLead)));
+                    }
                     var sc = (w.conditionScalar !== undefined && w.conditionScalar !== null)
                         ? Number(w.conditionScalar)
                         : Number(w.condition);
                     var nd = (w.conditionNode !== undefined && w.conditionNode !== null)
                         ? Number(w.conditionNode)
                         : (100 - (Number(w.nodeWearPeak) || 0) * 100);
+                    var cond = Number(w.condition);
                     if (!isFinite(sc)) sc = 100;
                     if (!isFinite(nd)) nd = 100;
-                    if (Math.abs(sc - nd) < 0.75) return 'tie';
-                    return sc < nd ? 'scalar' : 'node';
+                    if (!isFinite(cond)) cond = Math.min(sc, nd);
+                    var drop = Math.max(0.5, 100 - cond);
+                    return Math.max(0, Math.min(100, ((sc - cond) / drop) * 100));
+                };
+
+                scope.a1NodeLeadLabel = function (w) {
+                    var pct = Math.round(scope.a1NodeLeadPct(w));
+                    var cond = Number(w && w.condition);
+                    if (!isFinite(cond)) cond = 100;
+                    if (cond >= 99.5 && pct < 5) return 'fresh';
+                    if (pct >= 85) return 'node ' + pct + '%';
+                    if (pct <= 15) return 'scalar';
+                    return 'mix n' + pct + '%';
+                };
+
+                // Kept for any leftover call sites.
+                scope.a1LeadingLabel = function (w) {
+                    return scope.a1NodeLeadLabel(w);
                 };
 
                 // GT3/ABS: hard scrub with slipE but ω too high for lock arm → cole falls back / idle.
