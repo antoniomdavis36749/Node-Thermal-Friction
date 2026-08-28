@@ -37,6 +37,16 @@ local CAMBER_SLIP_F_REF = 180 -- was 500; camber scrub slipF << lock, REF starve
 local CAMBER_SLIP_F_MIN = 40 -- N
 local LOCK_RING_HALF_WIDTH = 2
 local LOCK_RING_OFFSET_WEIGHT = { [0] = 1.0, [1] = 0.45, [2] = 0.22 }
+-- Drift prototype (purpose/profile drift only): sustained-slip node arm while spinning
+-- (lock requires ω<14 — RWD drift never arms). Camber guard mutes undriven/park scallop.
+local ENABLE_DRIFT_SLIP_ARM = true
+local DRIFT_SLIP_ARM = 0.32 -- sustained slide (above lock arm 0.18)
+local DRIFT_OMEGA_MIN = 18 -- rad/s; spinning, not lock
+local DRIFT_LOAD_MIN = 800
+local DRIFT_SLIP_RATE = 0.022 -- A/B: was 0.012 (too quiet @~5% peak); toward lock loudness
+
+local DRIFT_PROP_DRIVEN = 40 -- |propulsionTorque| Nm; below = undriven (camber mute)
+local DRIFT_CAMBER_PARK_OMEGA = 4 -- rad/s; nearly stopped → mute camber
 
 local function isSlickOrCircuit(data)
     if not data then return false end
@@ -47,6 +57,16 @@ local function isSlickOrCircuit(data)
     end
     local mods = data.interpolatedMods
     return mods and mods.purpose == "circuit" or false
+end
+
+local function isDriftPurpose(data)
+    if not data then return false end
+    local mods = data.interpolatedMods
+    if mods and mods.purpose == "drift" then return true end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    return (string.find(p1, "drift", 1, true) ~= nil)
+        or (string.find(p2, "drift", 1, true) ~= nil)
 end
 
 local function camberArmDegForWheel(data)
@@ -451,10 +471,22 @@ function M.install(F, deps)
                 local cid = wd.lastTreadContactNode
                 local slip = w.dynamicSlipEnergy or w.slipEnergy or 0
                 local ang = abs(wd.angularVelocity or 0)
+                local loadN = w.loadRaw or wd.downForce or 0
                 local lockArm = cid and slip > 0.18 and ang < 14.0
+                local isDrift = isDriftPurpose(data)
+                local driftArm = ENABLE_DRIFT_SLIP_ARM and isDrift and cid
+                    and slip >= DRIFT_SLIP_ARM and ang >= DRIFT_OMEGA_MIN
+                    and loadN > DRIFT_LOAD_MIN and not lockArm
                 local armDeg = camberArmDegForWheel(data)
                 local camAbs = abs(w.camber or 0)
-                local camArm = cid and camAbs >= armDeg and (w.loadRaw or 0) > 800 and slip > 0.08
+                local camArm = cid and camAbs >= armDeg and loadN > 800 and slip > 0.08
+                -- Drift-only camber guard: setup camber on undriven/parked fronts must not farm Cond.
+                if camArm and isDrift then
+                    local propAbs = abs(wd.propulsionTorque or 0)
+                    if propAbs < DRIFT_PROP_DRIVEN or ang < DRIFT_CAMBER_PARK_OMEGA then
+                        camArm = false
+                    end
+                end
                 local gate = "idle"
                 if not cid then
                     gate = "no-node"
@@ -462,6 +494,10 @@ function M.install(F, deps)
                     gate = "lock+cam"
                 elseif lockArm then
                     gate = "lock"
+                elseif driftArm and camArm then
+                    gate = "drift+cam"
+                elseif driftArm then
+                    gate = "drift"
                 elseif camArm then
                     gate = "camber"
                 end
@@ -491,12 +527,40 @@ function M.install(F, deps)
                         rate = 0.024 * min(1.45, slipCap / 0.45)
                         src = "slipE"
                     end
-                    local loadN = max(200, w.loadRaw or wd.downForce or 2000)
-                    rate = rate * min(1.30, loadN / 4000)
+                    rate = rate * min(1.30, max(200, loadN) / 4000)
                     for _, tgt in ipairs(collectRingTargets(wd, energyCid, LOCK_RING_HALF_WIDTH)) do
                         addWear(tgt.cid, i, rate * tgt.weight, dt)
                     end
                     data.nodeLockEnergySrc = src
+                elseif driftArm then
+                    local energyCid = cid
+                    local rate = 0
+                    local src = "slipE"
+                    local usedCole = false
+                    if ENABLE_LOCK_ENERGY_COLE then
+                        local ps = getProbeState()
+                        local peek = ps and ps.peek and ps.peek(wheelKey(i)) or nil
+                        local slipF = peek and (peek.slipForceMax or 0) or 0
+                        local slipHits = peek and (peek.slipHits or 0) or 0
+                        local peakCid = peek and (peek.peakCid or 0) or 0
+                        if slipF >= LOCK_SLIP_F_MIN and slipHits > 0 then
+                            local slipCap = min(1.4, slipF / max(1.0, LOCK_SLIP_F_REF))
+                            rate = DRIFT_SLIP_RATE * min(1.45, max(0.15, slipCap) / 0.45)
+                            if peakCid > 0 then energyCid = peakCid end
+                            src = "cole"
+                            usedCole = true
+                        end
+                    end
+                    if not usedCole then
+                        local slipCap = min(1.4, slip)
+                        rate = DRIFT_SLIP_RATE * min(1.45, max(0.20, slipCap) / 0.45)
+                        src = "slipE"
+                    end
+                    rate = rate * min(1.30, max(200, loadN) / 4000)
+                    for _, tgt in ipairs(collectRingTargets(wd, energyCid, LOCK_RING_HALF_WIDTH)) do
+                        addWear(tgt.cid, i, rate * tgt.weight, dt)
+                    end
+                    data.nodeLockEnergySrc = "drift:" .. src
                 else
                     data.nodeLockEnergySrc = "idle"
                 end

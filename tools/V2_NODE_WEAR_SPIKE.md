@@ -94,6 +94,9 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | Soft life (Soft slick Belasco 22 km) | A3b curve **0.05→0.14** + arm **2.0°**: fronts ~**5.5–7%** Cond drop (**LOCKED**) | Retune Sport `CAMBER_COL_BASE` or Soft C4 heat for Soft life |
 | Medium 22 km (same curve) | Fronts ~**5.5–6%** Cond, **node-led**; Soft≈Med on Cond (scalar still Med-healthier sc) | Expect Soft≫Med Cond from camber alone — curve is slick-wide |
 | Hard 22 km (same curve) | Fronts ~**4.9–5.9%** Cond (94.1/95.1); Soft≈Med≈Hard on node Cond — **ladder CLOSED** | Retune A3b from Hard (scalar separates compounds; node Cond won’t) |
+| Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
+| Drift prototype (1)+(2) | **purpose/profile drift only:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.022** (was 0.012 — ~5% peak too quiet). Camber guard **PASS** on ±5.6° fronts | Soft life / Sport; lock rates; treat 0.022 as final without tester drift sessions |
+
 | Soft camber soft confirm (stress arc) | ~3.2 km loaded; Soft louder than Sport — expected | Retune from Soft stress vs Sport low-toe alone |
 | Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
 | Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
@@ -311,3 +314,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
 - Deferred: mild scalar-**rate** curve (pre-prod); Cond→grip fade (post-prod).
+- **Drift prototype** (2026-08-28): sustained-slip arm + undriven/park camber mute —
+  **drift purpose/profile only**. Camber guard PASS; slip rate **0.022** pending real
+  drift-tester sessions (owner not a drifter — revisit protocol with feedback).

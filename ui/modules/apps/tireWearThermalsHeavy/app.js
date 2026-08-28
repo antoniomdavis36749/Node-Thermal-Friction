@@ -604,7 +604,7 @@ angular.module("beamng.apps")
                             </div>
                             <div class="tth-stat-row">
                                 <span class="tth-label">Spike / gate:</span>
-                                <span class="tth-value" ng-style="{'color': (w.nodeGate==='lock' || w.nodeGate==='lock+cam') ? '#f59e0b' : '#f1f5f9'}">
+                                <span class="tth-value" ng-style="{'color': (w.nodeGate==='lock' || w.nodeGate==='lock+cam' || w.nodeGate==='drift' || w.nodeGate==='drift+cam') ? '#f59e0b' : '#f1f5f9'}">
                                     {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} · {{ w.nodeGate || 'idle' }}
                                     <span class="tth-cap-dim" ng-if="absHint(w)"> · {{ absHint(w) }}</span>
                                 </span>
@@ -903,7 +903,7 @@ angular.module("beamng.apps")
                 scope.absHint = function (w) {
                     if (!w) return '';
                     var gate = w.nodeGate || 'idle';
-                    if (gate === 'lock' || gate === 'lock+cam') return '';
+                    if (gate === 'lock' || gate === 'lock+cam' || gate === 'drift' || gate === 'drift+cam') return '';
                     var slip = Number(w.slipEnergy) || 0;
                     var omega = Number(w.nodeOmega) || 0;
                     var lockSrc = w.nodeLockEnergySrc || 'idle';
