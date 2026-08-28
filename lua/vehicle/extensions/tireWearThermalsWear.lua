@@ -100,10 +100,17 @@ function M.install(F, deps)
         local zoneWearDelta = { 0, 0, 0 }
         -- Soft scalar tread (Friction coherence A1): ages HUD Cond/zones via min(scalar, node);
         -- does NOT feed grip wearPenalty while node spike on. Leak/puncture may still use Cond.
-        -- LOCKED 0.15: Sport Belasco clean ~22 km (Track 15°C) — FR ~0.9% in band;
-        -- unloaded corners softer; 0.45 overshot ~2.5–4%. Do not nudge without new A/B.
+        -- Base ×0.15 LOCKED (Sport Belasco clean ~22 km FR ~0.9%). Mild life curve around that
+        -- center: slower when fresh, faster late — Cond/leak clocks only (no μ).
         local ENABLE_SCALAR_TREAD_WEAR = true
-        local SCALAR_TREAD_WEAR_SCALE = 0.15 -- LOCKED vs pre-spike full rate (A1 display aging)
+        local ENABLE_SCALAR_RATE_CURVE = true
+        local SCALAR_TREAD_WEAR_SCALE = 0.15 -- mid-life center (LOCKED Sport band reference)
+        local SCALAR_SCALE_EARLY = 0.12 -- fresh (lifeUsed→0)
+        local SCALAR_SCALE_LATE = 0.22 -- late life ceiling
+        local SCALAR_LIFE_EARLY_END = 0.03 -- 3% used → reach center
+        local SCALAR_LIFE_LATE_START = 0.12 -- 12% used → start late ramp
+        local SCALAR_LIFE_LATE_FULL = 0.30 -- 30% used → full late rate
+        if data.scalarTreadCondition == nil then data.scalarTreadCondition = 100 end
         if ENABLE_SCALAR_TREAD_WEAR and not isAirborne then
                 local tempWearPenalty = 1.0
                 if tempDistWeighted > 1.0 then
@@ -131,7 +138,24 @@ function M.install(F, deps)
                 end
         
                 wear = tempDistToWearMult(tempDistWeighted) * (slidingWear + (vehNotParked * abs(propulsionTorque * 0.008 - brakeTorque * 0.025) * 0.3 * TORQUE_ENERGY_MULTIPLIER) * 0.08 + angularVel * 0.0005 * (ctw.rollingWearCoef or 1.0)) * (wearRate * cycleWearMultiplier / max(0.7, min(1.3, tyreWidth / 0.2))) * (1.0 + min(0.75, (w.suspStress or 0) * 0.35 * bottomOutSens)) * surfaceWearScale * dt
-                wear = wear * SCALAR_TREAD_WEAR_SCALE
+                -- Mild scalar-rate curve from dedicated scalar life (never hybrid / node peak).
+                local scalarScale = SCALAR_TREAD_WEAR_SCALE
+                if ENABLE_SCALAR_RATE_CURVE then
+                    local lifeUsed = max(0, min(1, (100 - (data.scalarTreadCondition or 100)) * 0.01))
+                    if lifeUsed <= SCALAR_LIFE_EARLY_END then
+                        local t = lifeUsed / max(1e-6, SCALAR_LIFE_EARLY_END)
+                        scalarScale = SCALAR_SCALE_EARLY + (SCALAR_TREAD_WEAR_SCALE - SCALAR_SCALE_EARLY) * t
+                    elseif lifeUsed <= SCALAR_LIFE_LATE_START then
+                        scalarScale = SCALAR_TREAD_WEAR_SCALE
+                    else
+                        local t = (lifeUsed - SCALAR_LIFE_LATE_START)
+                            / max(1e-6, SCALAR_LIFE_LATE_FULL - SCALAR_LIFE_LATE_START)
+                        scalarScale = SCALAR_TREAD_WEAR_SCALE
+                            + (SCALAR_SCALE_LATE - SCALAR_TREAD_WEAR_SCALE) * min(1, t)
+                    end
+                end
+                data.scalarWearScale = scalarScale
+                wear = wear * scalarScale
 
                 -- Path A2: secondary contact (kerb+asphalt) mild wear bump when ID2 rougher — spike excluded upstream
                 do
@@ -165,10 +189,14 @@ function M.install(F, deps)
                 data.zoneCondition[zi] = max(0, min(100, (data.zoneCondition[zi] or 100) - (zoneWearDelta[zi] or 0)))
             end
             data.condition = max(0, min(100, (data.zoneCondition[1] + data.zoneCondition[2] + data.zoneCondition[3]) / 3))
+            -- True scalar life (A1 sc): never min'd with node — drives rate curve + Pitwall sc
+            data.scalarTreadCondition = max(0, min(100, (data.scalarTreadCondition or 100) - wear))
         else
             -- Thermal-first: hold full tread so grip curves stay temp/PSI/surface-driven
             data.zoneCondition[1], data.zoneCondition[2], data.zoneCondition[3] = 100, 100, 100
             data.condition = 100
+            data.scalarTreadCondition = 100
+            data.scalarWearScale = SCALAR_TREAD_WEAR_SCALE
         end
         local scaleWearModifier = (mods.wearRate or 0.0005) * 2000
 

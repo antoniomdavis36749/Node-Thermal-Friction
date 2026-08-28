@@ -6,7 +6,9 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 
 | Flag | File | Default | Role |
 | --- | --- | --- | --- |
-| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **true** (soft ×0.15 **LOCKED**) | Everyday tread/zone %; HUD `min(scalar, node)` |
+| `ENABLE_SCALAR_TREAD_WEAR` | `tireWearThermalsWear.lua` | **true** (soft ×0.15 center + **mild rate curve**) | Everyday tread/zone %; HUD `min(scalar, node)` |
+| `ENABLE_SCALAR_RATE_CURVE` | same | **true** | Scale from `scalarTreadCondition` life: 0.12→0.15→0.22 |
+
 | `ENABLE_NODE_WEAR_SPIKE` | `tireWearThermalsNodeWear.lua` | **true** | Contact-node friction/mass wear |
 | `ENABLE_RING_WEAR` | same | **true** | Phase 2 sector spread on tread ring |
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
@@ -297,10 +299,12 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 
 ## Next
 
-- Soft scalar tread **LOCKED** at ×0.15 (Sport Belasco clean 22 km: FR ~0.9% in band;
-  0.45 overshot). A3 `min(scalar, node)` held.
+- Soft scalar tread **LOCKED** mid-life center ×0.15 (Sport Belasco clean 22 km: FR ~0.9%
+  in band; 0.45 overshot). **Mild rate curve on** (2026-08-28): early 0.12 → mid 0.15 →
+  late 0.22 from dedicated `scalarTreadCondition` (never node-min'd). A3 `min(sc, nd)` held.
+  Spot-check Sport ~22 km sc still ~0.7–1.0% band; endurance sc should age faster late.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
-  (no wearPenalty while spike on). A2/A3 (restore wearPenalty / scalar off) out of scope.
+  (no wearPenalty while spike on). Cond→grip fade = **post-production**.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
   fallback intentional.
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + **GT3 Soft confirm**
@@ -313,7 +317,4 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Private tester `0.2.0` (Beta)** — checklist + pack ready; public Repo still paused.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
-- Deferred: mild scalar-**rate** curve (pre-prod); Cond→grip fade (post-prod).
-- **Drift prototype** (2026-08-28): sustained-slip arm + undriven/park camber mute —
-  **drift purpose/profile only**. Camber guard PASS; slip rate **0.022** pending real
-  drift-tester sessions (owner not a drifter — revisit protocol with feedback).
+- Deferred: Cond→grip fade (post-prod). Drift rate revisit with tester sessions.

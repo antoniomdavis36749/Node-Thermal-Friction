@@ -346,6 +346,8 @@ function M.install(F, deps)
                 temp = { skinStart, skinStart, skinStart, carcassStart, carcassStart, carcassStart, carcassStart, carcassStart },
                 spawnAge = 0, -- seconds since init; drives SPAWN_CONV_GRACE_S
                 condition = 100,
+                scalarTreadCondition = 100, -- A1 pure scalar life (rate curve + sc); never node-min'd
+                scalarWearScale = 0.15,
                 zoneCondition = { 100, 100, 100 }, -- Outer / Middle / Inner wear (per-zone)
                 flatSpot = 0,
                 nodeWearPeak = 0,

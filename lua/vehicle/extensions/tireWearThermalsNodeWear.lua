@@ -290,10 +290,11 @@ function M.install(F, deps)
         data.zoneCondition[1] = min(s1, n1)
         data.zoneCondition[2] = min(s2, n2)
         data.zoneCondition[3] = min(s3, n3)
-        -- Keep pre-min scalar for Pitwall A1 audit (sc vs nd vs Cond).
-        data.conditionScalar = scalarCond
+        -- Keep dedicated scalar life for Pitwall A1 audit (sc vs nd vs Cond) + rate curve.
+        -- Prefer scalarTreadCondition (never node-min'd); fall back to pre-min condition.
+        data.conditionScalar = data.scalarTreadCondition or scalarCond
         data.conditionNode = nodeCond
-        data.condition = min(scalarCond, nodeCond)
+        data.condition = min(data.conditionScalar or scalarCond, nodeCond)
     end
 
     local function clearHudBridgeA3(data)

@@ -39,8 +39,8 @@ No copy or port from other node-based tire mods.
 display / stint aging only (no wearPenalty while spike on).
 
 - Scalar **flatspot removed**.
-- Soft **scalar tread/zone wear on** (`ENABLE_SCALAR_TREAD_WEAR`, scale **0.15 LOCKED** —
-  Sport Belasco clean ~22 km) — HUD uses
+- Soft **scalar tread/zone wear on** (`ENABLE_SCALAR_TREAD_WEAR`, mid-life scale **0.15** +
+  mild **rate curve** 0.12→0.15→0.22 from `scalarTreadCondition`) — HUD uses
   `min(scalar, node)`; soft scalar must **not** feed grip `wearPenalty` while
   `ENABLE_NODE_WEAR_SPIKE` (node spike owns contact μ). Leak / puncture may still
   use Cond thresholds as today.

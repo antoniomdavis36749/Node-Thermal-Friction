@@ -222,8 +222,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ## Optional next steps (when continuing)
 
-- Soft-scalar Sport A/B **CLOSED** — `SCALAR_TREAD_WEAR_SCALE` **0.15 LOCKED**
-  (optional later: mild scalar-**rate** curve for endurance Cond aging — pre-prod polish)
+- Soft-scalar Sport A/B **CLOSED** — mid-life center `SCALAR_TREAD_WEAR_SCALE` **0.15**;
+  **mild rate curve on** (0.12→0.15→0.22 by scalar life) — Cond/leak only, A1 held
 - Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
   Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
   (`tools/V2_FRICTION_CONTRACT.md`). Cond→grip fade (A2-curve) = **post-production**.
