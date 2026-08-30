@@ -1792,7 +1792,7 @@ end
 -- A2 mild scalar-only Cond→grip fade (default on). A/B off with flag.
 -- Never feeds HUD min(sc,nd) or node peak into wearPenalty while spike on.
 local ENABLE_SCALAR_GRIP_FADE = true
-local SCALAR_GRIP_FADE_START = 0.40 -- lifeUsed before fade begins
+local SCALAR_GRIP_FADE_START = 0.30 -- lifeUsed before fade (sc < 70%); was 0.40 / sc < 60%
 local SCALAR_GRIP_FADE_FLOOR = 0.90 -- wearPenalty at lifeUsed ≈ 1 (mild; not old 0.75)
 
 F.CalculateTyreGrip = function(wheelID, localEnvTemp)

@@ -217,7 +217,7 @@ HUD Cond / zones + leak thresholds. Baseline profile grip still treats `conditio
 | --- | --- |
 | Source | `data.scalarTreadCondition` only (never `min(sc,nd)` / node peak) |
 | `lifeUsed` | `(100 − sc) × 0.01` |
-| Shape | Full grip until `lifeUsed ≥ 0.40`; floor **0.90** at life≈1 |
+| Shape | Full grip until `lifeUsed ≥ 0.30` (**sc &lt; 70%**); floor **0.90** at life≈1 |
 | Spike off | Legacy `condition`→wearPenalty (0.75 paved / loose curve) |
 | A/B | Set flag **false** to restore pre-A2 (no scalar wearPenalty while spike on) |
 
@@ -332,7 +332,8 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   Spot-check Sport ~22 km sc still ~0.7–1.0% band; endurance sc should age faster late.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; node μ owns contact scallop.
 - **A2 mild scalar grip fade ON** (2026-08-30) — `ENABLE_SCALAR_GRIP_FADE` default true;
-  fade from `scalarTreadCondition` only: start `lifeUsed ≥ 0.40`, floor **0.90** at life≈1.
+  fade from `scalarTreadCondition` only: start `lifeUsed ≥ 0.30` (**sc &lt; 70%**), floor **0.90**.
+  (Nudged from 0.40 / sc&lt;60% — earlier but still mid-life.)
   Confirm: fresh Sport no felt fade; worn scalar mild loss; hard lock on fresh → node peak
   hurts contact, scalar fade ≈ none.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
