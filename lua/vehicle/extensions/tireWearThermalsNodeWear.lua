@@ -32,8 +32,8 @@ local CAMBER_COL_SLICK_SCALE_MAX = 0.14
 -- after 0.26→0.40 fronts Cond ~92% / peak ~8%, node-led. Soft life / Sport unchanged.
 local CAMBER_COL_TRACKDAY_SCALE_MIN = 0.26
 local CAMBER_COL_TRACKDAY_SCALE_MAX = 0.40
--- Sport Plus estimated from Track Day (one confirm 22 km): slightly louder than TD
--- (Plus is one step street-ward). Pre-mute Plus not run; expect node-led if col×1.0.
+-- Sport Plus LOCKED (Belasco 22 km confirm): fronts Cond ~90% / peak ~6–11%;
+-- slightly louder than TD (Plus one step street-ward). Soft / Sport (non-Plus) ×1.0.
 local CAMBER_COL_SPORTPLUS_SCALE_MIN = 0.30
 local CAMBER_COL_SPORTPLUS_SCALE_MAX = 0.45
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
