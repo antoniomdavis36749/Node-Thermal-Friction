@@ -15,7 +15,9 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
 | `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**CLOSED / rates LOCKED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
 | `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (**LOCKED** Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
-| `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street stay **1.0°** |
+| `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (A/B) | Track Day profile only; street arm 1.0° held |
+| `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day stay **1.0°** |
+
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
 
@@ -318,3 +320,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
 - Deferred: Cond→grip fade (post-prod). Drift rate revisit with tester sessions.
+- **Track Day camber A/B** (2026-08-29): col× **0.26→0.40** by camF — retest Belasco 22 km;
+  expect fronts well under ~25% peak / Cond ~74%. Soft life / Sport unchanged.

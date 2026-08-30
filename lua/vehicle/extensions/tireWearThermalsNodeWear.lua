@@ -28,6 +28,10 @@ local CAMBER_COL_BASE = 0.006
 -- Curve quiet at mild race camber; high camF scrub still costs more than lean.
 local CAMBER_COL_SLICK_SCALE_MIN = 0.05
 local CAMBER_COL_SLICK_SCALE_MAX = 0.14
+-- Track Day only (street purpose, track_day profile): mild col× — full street ×1.0 was
+-- ~25% front peak / Cond ~74% @ 22 km (node 99%). Soft life slick curve stays LOCKED.
+local CAMBER_COL_TRACKDAY_SCALE_MIN = 0.26
+local CAMBER_COL_TRACKDAY_SCALE_MAX = 0.40
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
@@ -59,6 +63,14 @@ local function isSlickOrCircuit(data)
     return mods and mods.purpose == "circuit" or false
 end
 
+local function isTrackDayProfile(data)
+    if not data then return false end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    return (string.find(p1, "track_day", 1, true) ~= nil)
+        or (string.find(p2, "track_day", 1, true) ~= nil)
+end
+
 local function isDriftPurpose(data)
     if not data then return false end
     local mods = data.interpolatedMods
@@ -74,11 +86,18 @@ local function camberArmDegForWheel(data)
 end
 
 -- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
+-- Track Day: milder street-track curve (profile only). Sport/other street stay ×1.0.
 local function camberColScaleForWheel(data, camberFrac)
-    if not isSlickOrCircuit(data) then return 1.0 end
     local t = max(0, min(1, camberFrac or 0))
-    return CAMBER_COL_SLICK_SCALE_MIN
-        + (CAMBER_COL_SLICK_SCALE_MAX - CAMBER_COL_SLICK_SCALE_MIN) * t
+    if isSlickOrCircuit(data) then
+        return CAMBER_COL_SLICK_SCALE_MIN
+            + (CAMBER_COL_SLICK_SCALE_MAX - CAMBER_COL_SLICK_SCALE_MIN) * t
+    end
+    if isTrackDayProfile(data) then
+        return CAMBER_COL_TRACKDAY_SCALE_MIN
+            + (CAMBER_COL_TRACKDAY_SCALE_MAX - CAMBER_COL_TRACKDAY_SCALE_MIN) * t
+    end
+    return 1.0
 end
 
 -- Continuous: 1.0°≈0.04 · 2°≈0.29 · 3°≈0.54 · ~5°≈1.0 (cap 1.15).

@@ -237,6 +237,7 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Private tester pack `0.2.0` (Beta)** — checklist + zip ready; public Repo still paused
 - **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — revisit with
   tester drift sessions (not locked)
+- **Track Day camber A/B** — col× **0.26→0.40** (profile only); 22 km retest pending
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
