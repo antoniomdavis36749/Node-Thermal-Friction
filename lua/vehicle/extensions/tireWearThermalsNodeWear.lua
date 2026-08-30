@@ -44,6 +44,12 @@ local CAMBER_COL_SPORT_SCALE_MAX = 0.58
 -- Mild mute → target Cond ~90–93%; louder than Sport (more street). Profile "standard" only.
 local CAMBER_COL_STANDARD_SCALE_MIN = 0.52
 local CAMBER_COL_STANDARD_SCALE_MAX = 0.68
+-- Vintage LOCKED (est. mild, one step street-ward of Standard). Profile/spectrum "vintage*".
+local CAMBER_COL_VINTAGE_SCALE_MIN = 0.58
+local CAMBER_COL_VINTAGE_SCALE_MAX = 0.74
+-- Truck/commercial LOCKED (est. mild; purpose commercial or *truck* / light_truck).
+local CAMBER_COL_TRUCK_SCALE_MIN = 0.62
+local CAMBER_COL_TRUCK_SCALE_MAX = 0.78
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
@@ -111,6 +117,29 @@ local function isStandardProfile(data)
         or (string.find(p2, "standard", 1, true) ~= nil)
 end
 
+local function isVintageProfile(data)
+    if not data then return false end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    return (string.find(p1, "vintage", 1, true) ~= nil)
+        or (string.find(p2, "vintage", 1, true) ~= nil)
+end
+
+-- Commercial spectrum + light_truck standalones (*truck* / light_truck in profile).
+local function isTruckOrCommercialProfile(data)
+    if not data then return false end
+    local mods = data.interpolatedMods
+    if mods and mods.purpose == "commercial" then return true end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    local function truckish(p)
+        if p == "" then return false end
+        if string.find(p, "light_truck", 1, true) then return true end
+        return string.find(p, "truck", 1, true) ~= nil
+    end
+    return truckish(p1) or truckish(p2)
+end
+
 local function isDriftPurpose(data)
     if not data then return false end
     local mods = data.interpolatedMods
@@ -126,7 +155,7 @@ local function camberArmDegForWheel(data)
 end
 
 -- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
--- Track Day / Sport Plus / Sport / Standard LOCKED street-track curves. Else ×1.0.
+-- Street-track ladder LOCKED through Truck; else ×1.0 (UTV/utility/rally/etc.).
 local function camberColScaleForWheel(data, camberFrac)
     local t = max(0, min(1, camberFrac or 0))
     if isSlickOrCircuit(data) then
@@ -148,6 +177,14 @@ local function camberColScaleForWheel(data, camberFrac)
     if isStandardProfile(data) then
         return CAMBER_COL_STANDARD_SCALE_MIN
             + (CAMBER_COL_STANDARD_SCALE_MAX - CAMBER_COL_STANDARD_SCALE_MIN) * t
+    end
+    if isVintageProfile(data) then
+        return CAMBER_COL_VINTAGE_SCALE_MIN
+            + (CAMBER_COL_VINTAGE_SCALE_MAX - CAMBER_COL_VINTAGE_SCALE_MIN) * t
+    end
+    if isTruckOrCommercialProfile(data) then
+        return CAMBER_COL_TRUCK_SCALE_MIN
+            + (CAMBER_COL_TRUCK_SCALE_MAX - CAMBER_COL_TRUCK_SCALE_MIN) * t
     end
     return 1.0
 end

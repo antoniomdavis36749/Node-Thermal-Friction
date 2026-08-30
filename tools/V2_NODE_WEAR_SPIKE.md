@@ -19,6 +19,8 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `CAMBER_COL_SPORTPLUS_SCALE_MIN/MAX` | same | **0.30 / 0.45** (**LOCKED**) | Sport Plus profile only; est. from TD, Belasco 22 km confirm |
 | `CAMBER_COL_SPORT_SCALE_MIN/MAX` | same | **0.40 / 0.58** (**LOCKED**) | Plain Sport only (not Plus); Belasco 22 km confirm |
 | `CAMBER_COL_STANDARD_SCALE_MIN/MAX` | same | **0.52 / 0.68** (**LOCKED**) | Standard profile; est. from 22 km ×1.0 Cond ~85–88% |
+| `CAMBER_COL_VINTAGE_SCALE_MIN/MAX` | same | **0.58 / 0.74** (**LOCKED**) | Vintage profile/spectrum; est. one step street-ward of Standard |
+| `CAMBER_COL_TRUCK_SCALE_MIN/MAX` | same | **0.62 / 0.78** (**LOCKED**) | Commercial / *truck* / light_truck; est. mild |
 | `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day/Plus stay **1.0°** |
 
 
@@ -108,6 +110,8 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | Sport camber **LOCKED** | col× **0.40→0.58**: fronts Cond ~**93–94%** / peak ~**3–7%** (22 km confirm; cooler than opt) | Soft life / Plus / Track Day |
 | Standard 22 km (×1.0) | Fronts Cond ~**85–88%**, peak ~**12–15%**, cold vs opt 60 | Leave standard on full street ×1.0 |
 | Standard camber **LOCKED** | col× **0.52→0.68** est. from ×1.0 run (target Cond ~90–93%) | Soft life / Sport ladder |
+| Vintage camber **LOCKED** | col× **0.58→0.74** est. mild (street-ward of Standard) | Soft life / Standard |
+| Truck/commercial camber **LOCKED** | col× **0.62→0.78** est. mild | Soft life / Standard |
 
 
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
@@ -338,4 +342,8 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Sport camber CLOSED / LOCKED** (2026-08-29) — col× **0.40→0.58**; 22 km fronts Cond
   ~93–94% / peak ~3–7% (stint cooler than opt 66 — quieter than Plus Cond drop; OK).
 - **Standard camber CLOSED / LOCKED** (2026-08-30) — col× **0.52→0.68** from 22 km ×1.0
-  (fronts Cond ~85–88%); target ~90–93%. Optional spot-check only.
+  (fronts Cond ~85–88%); target ~90–93%. Spot-check skipped.
+- **Vintage camber CLOSED / LOCKED** (2026-08-30) — col× **0.58→0.74** est. mild
+  (one step street-ward of Standard). Drift still on hold (no better tester pool).
+- **Truck/commercial camber CLOSED / LOCKED** (2026-08-30) — col× **0.62→0.78** est.
+  mild (`purpose=commercial` or *truck* / light_truck).

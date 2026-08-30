@@ -239,8 +239,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Sport Plus camber CLOSED / LOCKED** — col× **0.30→0.45**; 22 km fronts ~90% / peak ~6–11%
 - **Sport camber CLOSED / LOCKED** — col× **0.40→0.58**; 22 km fronts ~93–94% / peak ~3–7%
 - **Standard camber CLOSED / LOCKED** — col× **0.52→0.68** (est. from 22 km ×1.0 Cond ~85–88%)
-- **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — revisit with
-  tester drift sessions (not locked)
+- **Vintage camber CLOSED / LOCKED** — col× **0.58→0.74** (est. mild, street-ward of Standard)
+- **Truck/commercial camber CLOSED / LOCKED** — col× **0.62→0.78** (est. mild)
+- **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — on hold
+  (tester pool; not locked)
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
