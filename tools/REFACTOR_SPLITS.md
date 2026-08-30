@@ -223,10 +223,14 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 ## Optional next steps (when continuing)
 
 - Soft-scalar Sport A/B **CLOSED** — mid-life center `SCALAR_TREAD_WEAR_SCALE` **0.15**;
-  **mild rate curve on** (0.12→0.15→0.22 by scalar life) — Cond/leak only, A1 held
+  **mild rate curve on** (0.12→0.15→0.22 by scalar life) — Cond/leak + A2 fade source
 - Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
-  Cond/zones display + leak/puncture thresholds only; wearPenalty skipped while spike on
-  (`tools/V2_FRICTION_CONTRACT.md`). Cond→grip fade (A2-curve) = **post-production**.
+  Cond/zones display + leak/puncture thresholds; baseline grip ignores HUD Cond while spike on
+  (`tools/V2_FRICTION_CONTRACT.md`)
+- **A2 mild scalar grip fade ON** — `ENABLE_SCALAR_GRIP_FADE` default true; `lifeUsed ≥ 0.40`
+  → floor **0.90** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
+- **Open bands awaiting captures** — drag → wet → street heat protocols documented; do not
+  invent LOCKED numbers (agent cannot drive)
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -258,11 +262,11 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 ## Related docs
 
 - `RELEASE_CHECKLIST_TESTERS.md` — pre-tester zip smoke
-- `tools/V2_FRICTION_CONTRACT.md` — friction policy A + coherence A1
-- `tools/V2_NODE_WEAR_SPIKE.md` — node spike + soft scalar flags
+- `tools/V2_FRICTION_CONTRACT.md` — friction policy A + coherence A1 + A2 fade
+- `tools/V2_NODE_WEAR_SPIKE.md` — node spike + soft scalar flags + open-band protocols
 - `tools/scripts/Count-LuaLocals.py` — local scope audit
 - `tools/scripts/Pack-Release.ps1` — release zip
 
 ---
 
-*Last updated: 2026-08-27 (private tester 0.2.0 Beta; Soft/Med/Hard ladder CLOSED).*
+*Last updated: 2026-08-30 (A2 scalar grip fade ON; open bands awaiting captures).*

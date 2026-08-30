@@ -35,21 +35,26 @@ No copy or port from other node-based tire mods.
 ## Current private tester pack (0.2.0 Beta — Phase 0–1 + node spike)
 
 
-**Friction coherence A1 LOCKED** — Node owns contact feel; soft scalar is
-display / stint aging only (no wearPenalty while spike on).
+**Friction coherence A1 LOCKED** — Node owns contact scallop feel (relative μ/mass).
+HUD Cond = `min(scalar, node)` display hybrid.
+
+**A2 mild scalar grip fade ON** (`ENABLE_SCALAR_GRIP_FADE`, default **true**) —
+while spike on, `wearPenalty` fades from **`scalarTreadCondition` only** (life clock;
+never HUD `min(sc,nd)` or node peak). Shape: full grip until `lifeUsed ≥ 0.40`, then
+soft fade to floor **0.90** at life≈1 (mild; not old 0.75). Spike off keeps legacy
+condition→wearPenalty. A/B: set flag false.
 
 - Scalar **flatspot removed**.
 - Soft **scalar tread/zone wear on** (`ENABLE_SCALAR_TREAD_WEAR`, mid-life scale **0.15** +
   mild **rate curve** 0.12→0.15→0.22 from `scalarTreadCondition`) — HUD uses
-  `min(scalar, node)`; soft scalar must **not** feed grip `wearPenalty` while
-  `ENABLE_NODE_WEAR_SPIKE` (node spike owns contact μ). Leak / puncture may still
-  use Cond thresholds as today.
+  `min(scalar, node)`; node spike owns contact μ; A2 adds mild stint-life fade from
+  scalar only. Leak / puncture may still use Cond thresholds as today.
 - Grain / blister still thermal-side.
 - **Brake lock fade disabled** — native lock.
 - **Node wear spike on** (`ENABLE_NODE_WEAR_SPIKE`) — Policy A tread-ring
   friction/mass (Phase 2: `wd.treadNodes` sector). See `tools/V2_NODE_WEAR_SPIKE.md`.
 - **A3 Classic + Crew HUD bridge** — `condition` / `zoneCondition` mirror node
-  peak / O\|M\|I for display only; grip wearPenalty ignores them while spike is on.
+  peak / O\|M\|I for display; A2 grip fade ignores those fields (scalar life only).
 - Public Repo update deprioritized; private tester **`0.2.0` (Beta)** + `-dev` / small group first.
 
 ## Lock policy
@@ -68,4 +73,4 @@ display / stint aging only (no wearPenalty while spike on).
   (park → lock → hold → cruise ~40 → reset); front lock wear a bit hotter than Bolide
   teens band — note only, no rate change. Clean-room / no foreign code.
 - [x] Thermal and node layers do not both absolute-write μ (thermal = wheel baseline; node = relative contact)
-- [x] Pitwall shows one coherent story (Cond = display hybrid `min(scalar,node)`; grip = thermal + node relative μ, no wearPenalty while spike on)
+- [x] Pitwall shows one coherent story (Cond = display hybrid `min(scalar,node)`; grip = thermal + node relative μ + mild A2 scalar-life fade)

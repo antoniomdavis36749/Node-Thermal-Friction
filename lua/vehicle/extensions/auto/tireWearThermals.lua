@@ -1789,6 +1789,12 @@ F.getProfileBaselineGrip = function(profileLower, x)
     return c[1] + x * ((c[2] or 0) + x * ((c[3] or 0) + x * (c[4] or 0)))
 end
 
+-- A2 mild scalar-only Cond→grip fade (default on). A/B off with flag.
+-- Never feeds HUD min(sc,nd) or node peak into wearPenalty while spike on.
+local ENABLE_SCALAR_GRIP_FADE = true
+local SCALAR_GRIP_FADE_START = 0.40 -- lifeUsed before fade begins
+local SCALAR_GRIP_FADE_FLOOR = 0.90 -- wearPenalty at lifeUsed ≈ 1 (mild; not old 0.75)
+
 F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local data = tyreData[wheelID]
     local w = wheelCache[wheelID]
@@ -1808,8 +1814,9 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local sensitivity = mods.pressureSensitivity or 0.5
 
     local avgTemp = F.EffectiveTyreTemp(data.temp, w.combinedBias, currentPSI / optP, localEnvTemp, mods)
-    -- Friction coherence A1: Cond may mirror node peak for HUD; soft scalar must not
-    -- feed wearPenalty while spike on (node μ owns contact feel — no double tax).
+    -- A1 held for HUD hybrid: Cond may mirror node peak for display. Baseline profile
+    -- grip still treats condition as 100 while spike on (node μ owns contact scallop).
+    -- A2: wearPenalty may apply mild fade from scalarTreadCondition only (flagged).
     local nodeSpikeOwnsWear = F.isNodeWearSpikeEnabled and F.isNodeWearSpikeEnabled()
     local cond = data.condition or 100
     if nodeSpikeOwnsWear then cond = 100 end
@@ -1837,9 +1844,21 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local isLooseSurface = flags.loose
     local gmName = flags.gmName or (groundModel.nameLower or "")
 
-    -- WEAR GRIP PENALTY — A1: skipped while ENABLE_NODE_WEAR_SPIKE (soft scalar ≠ grip tax)
+    -- WEAR GRIP PENALTY
+    -- Spike on + ENABLE_SCALAR_GRIP_FADE: mild fade from scalarTreadCondition only
+    -- (life clock; never min(sc,nd) / node peak). Spike off: legacy condition path.
     local wearPenalty = 1.0
-    if not nodeSpikeOwnsWear then
+    if nodeSpikeOwnsWear then
+        if ENABLE_SCALAR_GRIP_FADE then
+            local sc = data.scalarTreadCondition
+            if sc == nil then sc = 100 end
+            local lifeUsed = max(0, min(1, (100 - sc) * 0.01))
+            if lifeUsed > SCALAR_GRIP_FADE_START then
+                local t = (lifeUsed - SCALAR_GRIP_FADE_START) / (1.0 - SCALAR_GRIP_FADE_START)
+                wearPenalty = lerp(1.0, SCALAR_GRIP_FADE_FLOOR, max(0, min(1, t)))
+            end
+        end
+    else
         if isLooseSurface then
             local minGripFactor = lerp(0.30, 0.55, 1.0 - treadCoef) 
             wearPenalty = lerp(minGripFactor, 1.0, x)

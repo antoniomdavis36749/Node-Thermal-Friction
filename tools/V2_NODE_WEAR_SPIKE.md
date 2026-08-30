@@ -26,6 +26,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
+| `ENABLE_SCALAR_GRIP_FADE` | `auto/tireWearThermals.lua` | **true** (A2 mild) | Stint-life `wearPenalty` from `scalarTreadCondition` only while spike on |
 
 Grain / blister remain thermal-side for now.
 
@@ -169,8 +170,8 @@ Respawn vehicle after syncing `-dev` so Lua + Pitwall UI pick up both fixes.
 - **`ON · idle` after lock / at cruise** — Gate is `idle` when slip/ω gates are open; spike module is still enabled (`ON`). Only **`OFF · off`** means `ENABLE_NODE_WEAR_SPIKE` is false.
 - **Tread % / Cond after lock** — With **A3 HUD bridge** on, Pitwall/Classic/Crew
   `condition` = `min(scalarCond, nodeCond)` where `nodeCond = 100×(1−peak)`. Pitwall
-  streams **sc** / **nd** so captures show which side won. Grip still ignores Cond
-  wearPenalty while spike on (A1).
+  streams **sc** / **nd** so captures show which side won. A2 grip fade uses **sc**
+  (`scalarTreadCondition`) only — never HUD Cond / node peak.
 - **Peaks unchanged while cruising** — Node spike does not heal; only **vehicle reset** clears peak and restores nodes.
 
 **Dev workflow:**
@@ -195,7 +196,7 @@ Under **NODE SPIKE**, each corner shows a circular **Wear map**:
 
 Not a player feature — Pitwall remains excluded from public zip.
 
-## A3 HUD bridge (Classic + Crew) — Friction coherence **A1 LOCKED**
+## A3 HUD bridge (Classic + Crew) — Friction coherence **A1 LOCKED** + **A2 fade ON**
 
 When `ENABLE_HUD_BRIDGE_A3` and node spike are on:
 
@@ -206,10 +207,19 @@ When `ENABLE_HUD_BRIDGE_A3` and node spike are on:
 
 Classic canvas + Crew zone strip both read the same stream fields. Driver UI removed.
 
-**A1 LOCKED:** Node owns contact feel; soft scalar ×0.15 ages HUD Cond / zones only.
-Grip path treats `condition` / `zoneCondition` as **100** for wearPenalty while spike on
-(node μ already owns contact feel — no double tax). Soft scalar ages the **% bar** and
-leak/puncture thresholds without stacking a second grip tax.
+**A1 LOCKED:** Node owns contact scallop feel (relative μ/mass). Soft scalar ×0.15 ages
+HUD Cond / zones + leak thresholds. Baseline profile grip still treats `condition` /
+`zoneCondition` as **100** while spike on (no double tax from HUD hybrid / node peak).
+
+**A2 mild scalar grip fade ON** (`ENABLE_SCALAR_GRIP_FADE`, default **true**):
+
+| | |
+| --- | --- |
+| Source | `data.scalarTreadCondition` only (never `min(sc,nd)` / node peak) |
+| `lifeUsed` | `(100 − sc) × 0.01` |
+| Shape | Full grip until `lifeUsed ≥ 0.40`; floor **0.90** at life≈1 |
+| Spike off | Legacy `condition`→wearPenalty (0.75 paved / loose curve) |
+| A/B | Set flag **false** to restore pre-A2 (no scalar wearPenalty while spike on) |
 
 ## Gated lock energy swap (`ENABLE_LOCK_ENERGY_COLE`) — **CLOSED / LOCKED**
 
@@ -320,8 +330,11 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   in band; 0.45 overshot). **Mild rate curve on** (2026-08-28): early 0.12 → mid 0.15 →
   late 0.22 from dedicated `scalarTreadCondition` (never node-min'd). A3 `min(sc, nd)` held.
   Spot-check Sport ~22 km sc still ~0.7–1.0% band; endurance sc should age faster late.
-- **Friction coherence A1 LOCKED** — Cond = display hybrid; grip = thermal + node μ
-  (no wearPenalty while spike on). Cond→grip fade = **post-production**.
+- **Friction coherence A1 LOCKED** — Cond = display hybrid; node μ owns contact scallop.
+- **A2 mild scalar grip fade ON** (2026-08-30) — `ENABLE_SCALAR_GRIP_FADE` default true;
+  fade from `scalarTreadCondition` only: start `lifeUsed ≥ 0.40`, floor **0.90** at life≈1.
+  Confirm: fresh Sport no felt fade; worn scalar mild loss; hard lock on fresh → node peak
+  hurts contact, scalar fade ≈ none.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
   fallback intentional.
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + **GT3 Soft confirm**
@@ -350,4 +363,43 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   same kinematics gates + camber mute. Rate **0.017** provisional (was 0.022; ~16% Cond
   @ 65s burnout). **Parked / non-blocking:** feel revisit only if tester feedback arrives;
   do not hold other work or release on this checkbox.
-- Deferred: Cond→grip fade (post-prod).
+
+## Open bands (awaiting user captures)
+
+Do **not** claim LOCKED or invent band numbers until captures land. Do **not** retune Soft
+life / camber ladder / drift rate from these protocols. Order: drag → wet → street heat.
+
+### Drag — **awaiting capture**
+
+| Step | Action |
+| --- | --- |
+| 0 | Parked baseline: classify, cold temps, PSI vs hot tgt, Cond/sc/nd, gate idle |
+| 1 | Drag config (or drag-purpose tires): **1–2 launches** + short top-end |
+| 2 | Capture: classify, temps vs opt, long grip feel, Cond/gate, PSI; note drive soft-cap vs burnout heat |
+| Watch | Do not retune Sport camber / A1 / Soft life from drag |
+
+**Status:** protocol ready; **awaiting user in-game captures** (agent cannot drive).
+
+### Wet — **awaiting capture** (after drag)
+
+| Step | Action |
+| --- | --- |
+| 0 | Parked baseline dry → rain/wet pad: classify, drainage/surface flags, PSI, Cond |
+| 1 | One abuse: wet braking / corner load on known rain or wet surface |
+| 2 | Capture: grip/drainage feel vs dry, temps, Cond/gate, surface scale sanity |
+| Watch | Rain pad already sanity-passed; open = grip/drainage band notes or lock — no Soft life retune |
+
+**Status:** protocol ready; **awaiting user captures** (after drag).
+
+### Street heat — **awaiting capture** (after wet)
+
+| Step | Action |
+| --- | --- |
+| 0 | Parked baseline Standard or Sport: cold temps vs opt, PSI |
+| 1 | One abuse: cruise warm-up / mild street heat (not camber 22 km ladder) |
+| 2 | Capture: warm-up time to working band, Hot flash?, blister 0, Cond quiet |
+| Watch | Camber ladder already LOCKED; this band is cruise heat only |
+
+**Status:** protocol ready; **awaiting user captures** (after wet).
+
+Light commercial leftovers only if drag/wet/street heat done (PSI seed already closed false UNDER).
