@@ -17,7 +17,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (**LOCKED** Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
 | `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (**LOCKED**) | Track Day profile only; street arm 1.0° held |
 | `CAMBER_COL_SPORTPLUS_SCALE_MIN/MAX` | same | **0.30 / 0.45** (**LOCKED**) | Sport Plus profile only; est. from TD, Belasco 22 km confirm |
-
+| `CAMBER_COL_SPORT_SCALE_MIN/MAX` | same | **0.40 / 0.58** (est.; confirm 22 km) | Plain Sport only (not Plus) |
 | `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day/Plus stay **1.0°** |
 
 
