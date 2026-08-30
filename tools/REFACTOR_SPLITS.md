@@ -227,8 +227,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - Friction coherence **A1 CLOSED / LOCKED** — node owns contact μ; soft scalar =
   Cond/zones display + leak/puncture thresholds; baseline grip ignores HUD Cond while spike on
   (`tools/V2_FRICTION_CONTRACT.md`)
-- **A2 mild scalar grip fade ON** — `ENABLE_SCALAR_GRIP_FADE` default true; `lifeUsed ≥ 0.40`
-  → floor **0.90** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
+- **A2 mild scalar grip fade ON** — `ENABLE_SCALAR_GRIP_FADE` default true; `lifeUsed ≥ 0.30`
+  (**sc &lt; 70%**) → floor **0.90** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
 - **Open bands awaiting captures** — drag → wet → street heat protocols documented; do not
   invent LOCKED numbers (agent cannot drive)
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;

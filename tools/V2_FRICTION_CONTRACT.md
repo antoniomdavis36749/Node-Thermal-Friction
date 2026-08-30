@@ -40,7 +40,7 @@ HUD Cond = `min(scalar, node)` display hybrid.
 
 **A2 mild scalar grip fade ON** (`ENABLE_SCALAR_GRIP_FADE`, default **true**) —
 while spike on, `wearPenalty` fades from **`scalarTreadCondition` only** (life clock;
-never HUD `min(sc,nd)` or node peak). Shape: full grip until `lifeUsed ≥ 0.40`, then
+never HUD `min(sc,nd)` or node peak). Shape: full grip until `lifeUsed ≥ 0.30` (**sc &lt; 70%**), then
 soft fade to floor **0.90** at life≈1 (mild; not old 0.75). Spike off keeps legacy
 condition→wearPenalty. A/B: set flag false.
 
