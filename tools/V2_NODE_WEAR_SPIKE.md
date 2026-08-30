@@ -115,7 +115,7 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 
 
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
-| Drift prototype (1)+(2) | **drift compound OR plain Sport:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.017** provisional (was 0.022 — ~16% Cond @ 65s burnout). Native BX Pro mounts Sport. Not Sport Plus. | Soft life / Plus; lock rates; re-check timed burnout |
+| Drift prototype (1)+(2) | **drift compound OR plain Sport:** gate `drift` + undriven camber mute; rate **0.017** provisional. Feel revisit **only** if tester feedback lands — **non-blocking** for release. | Soft life / Plus; lock rates |
 | Soft camber soft confirm (stress arc) | ~3.2 km loaded; Soft louder than Sport — expected | Retune from Soft stress vs Sport low-toe alone |
 | Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
 | Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
@@ -348,5 +348,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   mild (`purpose=commercial` or *truck* / light_truck).
 - **Drift arm widened to plain Sport** (2026-08-30) — native drift configs mount Sport;
   same kinematics gates + camber mute. Rate **0.017** provisional (was 0.022; ~16% Cond
-  @ 65s burnout → aim ~10–12% @ 60s).
-- Deferred: Cond→grip fade (post-prod). Drift rate confirm after 0.017 burnout re-check.
+  @ 65s burnout). **Parked / non-blocking:** feel revisit only if tester feedback arrives;
+  do not hold other work or release on this checkbox.
+- Deferred: Cond→grip fade (post-prod).

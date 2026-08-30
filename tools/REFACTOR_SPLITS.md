@@ -243,8 +243,9 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Truck/commercial camber CLOSED / LOCKED** — col× **0.62→0.78** (est. mild)
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
-- **Drift prototype** — gate `drift` on **drift compound OR plain Sport** (BX Pro native);
-  undriven camber mute; rate **0.017** provisional (was 0.022 @ 65s burnout loud)
+- **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
+  mute; rate **0.017** provisional. **Non-blocking** for release — feel revisit only if
+  tester feedback lands (may not before next drop)
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /

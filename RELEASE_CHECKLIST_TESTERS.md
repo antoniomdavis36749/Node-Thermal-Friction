@@ -144,6 +144,8 @@ Build: v0.2.0 · testing/main
 - **Beta:** street / wet / truck bands still open; locked bands listed in listing.
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
+- **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.
+  Feel feedback welcome — **not a release blocker** if quiet before next drop.
 
 ---
 
