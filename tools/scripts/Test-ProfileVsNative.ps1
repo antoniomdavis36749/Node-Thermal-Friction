@@ -238,7 +238,7 @@ foreach ($r in $vn) {
 
 # ===== STANDALONE_MODIFIERS (key purpose tires) =====
 $sa = @(
-  @{ id='drag';           p='drag';           gm=1.18; dry=1.08; lat=0.92; long=1.12; tOpt=72; plat=12; wc=62; wh=55; fl=0.28; ad=0.58; comp=0.85; slip=16.2; work=6.6; sc=$SOFTCAP_OFF; ch=$CHAR_DRAG },
+  @{ id='drag';           p='drag';           gm=1.18; dry=1.08; lat=0.92; long=1.18; tOpt=72; plat=12; wc=62; wh=55; fl=0.28; ad=0.58; comp=0.85; slip=16.2; work=6.6; sc=$SOFTCAP_OFF; ch=$CHAR_DRAG },
   @{ id='drift';          p='drift';          gm=0.88; dry=1.00; lat=0.92; long=0.95; tOpt=75; plat=14; wc=65; wh=65; fl=0.28; ad=0.48; comp=0.40; slip=10.0; work=3.6; sc=$SOFTCAP_OFF; ch=$CHAR_DRIFT },
   @{ id='vintage';        p='vintage';        gm=0.94; dry=1.00; lat=1.00; long=1.00; tOpt=58; plat=16; wc=58; wh=55; fl=0.26; ad=0.28; comp=0.60; slip=6.6; work=5.6; sc=$SOFTCAP_VINTAGE; ch=$CHAR_NEUTRAL },
   @{ id='crawler';        p='crawler';        gm=0.78; dry=0.94; lat=1.00; long=1.00; tOpt=48; plat=18; wc=58; wh=50; fl=0.26; ad=0.28; comp=0.85; slip=5.775; work=3.3; sc=$SOFTCAP_STREET; ch=$CHAR_NEUTRAL },

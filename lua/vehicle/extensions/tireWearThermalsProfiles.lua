@@ -356,7 +356,8 @@ local STANDALONE_MODIFIERS = {
     drag = {
         adhesion = 0.58, airConductionRate = 0.018, airCoolingRate = 0.0175, brakeGainRate = 1.5,
         casingCompliance = 0.85, coreCoolRate = 0.021, coreVelCoolRate = 0.004, skinCoreConductance = 0.12,
-        gripMultiplier = 1.18, longGripMult = 1.12, latGripMult = 0.92, loadSensitivity = 0.055,
+        -- longGripMult 1.18 LOCKED (2026-08-30): native PASS + ~1400 hp mod launch; lat/dry untouched.
+        gripMultiplier = 1.18, longGripMult = 1.18, latGripMult = 0.92, loadSensitivity = 0.055,
         optimalPressure = 16, optimalTemp = 72, pressureSensitivity = 0.35, rollingRes = 1.55,
         staticCoolingRate = 0.08, slipHeatRate = 16.2, workHeatRate = 6.6, wearRate = 0.0018,
         treadInertia = 0.231, carcassInertia = 0.374, thermalReactionRate = 2.1, tempPlateau = 12,

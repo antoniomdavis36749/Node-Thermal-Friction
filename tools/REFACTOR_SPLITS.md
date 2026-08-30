@@ -229,8 +229,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   (`tools/V2_FRICTION_CONTRACT.md`)
 - **A2 mild scalar grip fade ON** — `ENABLE_SCALAR_GRIP_FADE` default true; `lifeUsed ≥ 0.30`
   (**sc &lt; 70%**) → floor **0.90** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
-- **Open bands awaiting captures** — drag → wet → street heat protocols documented; do not
-  invent LOCKED numbers (agent cannot drive)
+- **Drag CLOSED / LOCKED** — `longGripMult` **1.18** (native PASS + ~1400 hp mod launch;
+  rear long ~151%).
+- **Wet CLOSED / LOCKED** — ASPHALT_WET park/accel/brake/cruise **PASS / no nudge**.
+  Remaining open: **street heat** (warm-up cruise).
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -269,4 +271,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (A2 scalar grip fade ON; open bands awaiting captures).*
+*Last updated: 2026-08-30 (A2 ON; drag long + wet LOCKED; street heat open).*

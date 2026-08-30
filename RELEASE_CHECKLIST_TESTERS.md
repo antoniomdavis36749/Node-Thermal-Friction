@@ -3,7 +3,7 @@
 Use this **before every build** you hand to testers (Discord, forum, `-dev` sync, or zip).  
 Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does it work?”** list.
 
-**Current version (update when you ship):** `0.2.0` · **Build date:** 2026-08-27 · **Git branch:** `testing/main`
+**Current version (update when you ship):** `0.2.0` · **Build date:** 2026-08-30 · **Git branch:** `testing/main`
 
 **Status:** Private tester (Beta) — public Repo publish still paused (see README + `tools/V2_FRICTION_CONTRACT.md`).
 
@@ -11,13 +11,13 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 
 ## 1. What changed (5 bullets max — paste to testers)
 
-1. **V2 node wear** — clean-room contact-node μ/mass (lock + camber); Soft life A3b slick camber curve locked
-2. **Friction A1** — node owns contact feel; soft scalar ×0.15 ages Cond/zones only (no Cond grip double-tax)
-3. Soft→Med→Hard Belasco ~22 km ladder closed (node Cond Soft≈Med≈Hard under shared slick curve)
-4. Scalar flatspot removed; brake lock fade off — native lock
+1. **A2** mild scalar Cond→grip fade (`sc` &lt; 70% → floor 0.90); A1 node μ unchanged
+2. **Drag** `longGripMult` **1.18 LOCKED** (native + ~1400 hp mod launch held)
+3. **Wet** band **LOCKED** (ASPHALT_WET park/accel/brake/cruise PASS / no nudge)
+4. Commercial PSI hot-tgt seed from native cold (drag rear false UNDER fixed earlier)
 5. **Pitwall Heavy** = DEV only (`-dev` / git); player zip ships **Classic + Crew** only
 
-**Calibration touched?** ☐ No (default) · ☑ Yes — Soft life A3b + Soft/Med/Hard 22 km; Sport soft scalar ×0.15 held
+**Calibration touched?** ☐ No (default) · ☑ Yes — drag long 1.18; wet closed; A2 ON; street heat still open
 
 ---
 
@@ -86,7 +86,7 @@ Only run the rows that match **what you changed**. Skip the rest.
 | Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | |
 | Hard track lap — Soft/Med/Hard band still plausible | ☐ | |
 | Spinout / lockup — **Leak** only (flatspot removed); node peak teens on hard lock | ☐ | |
-| Wet asphalt — grip drops, no ice-like behavior | ☐ | |
+| Wet asphalt — grip drops, no ice-like behavior | ☐ | **LOCKED** 2026-08-30 — no nudge |
 | FWD/AWD Soft front — no runaway Cold PSI fill at highway speed | ☐ | |
 | Brake duct sliders save in `.pc` and affect Pitwall duct % | ☐ | |
 
@@ -113,11 +113,12 @@ Compat tires zip (if changed): pack from **ReSpin Tires** repo separately.
 ## 6. Copy-paste for testers (Discord / forum)
 
 ```
-ReSpin private tester — v0.2.0 · 2026-08-27 (Beta)
+ReSpin private tester — v0.2.0 · 2026-08-30 (Beta)
 
 CHANGES:
-• V2 node wear (lock/camber contact μ) + Soft life slick camber curve
-• Friction A1: node feel + soft scalar Cond aging (no flatspot bar)
+• A2 mild scalar grip fade (sc < 70% → floor 0.90); A1 held
+• Drag longGripMult 1.18 LOCKED (native + ~1400 hp)
+• Wet band LOCKED; street heat warm-up still open
 • Classic / Crew HUDs in zip; Dev Pitwall only on -dev
 
 INSTALL:
@@ -131,7 +132,7 @@ IMPORTANT: Respawn vehicle after every Lua update.
 
 REPORT BUGS WITH:
 Car + config | Map | Weather | What you did | What happened | Console error (screenshot)
-Build: v0.2.0 · testing/main
+Build: v0.2.0 · testing/main · 2026-08-30
 ```
 
 ---
@@ -141,7 +142,7 @@ Build: v0.2.0 · testing/main
 - **Respawn required** after Lua/UI updates (cached apps / old stream name).
 - **Only one** thermals mod at a time.
 - **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
-- **Beta:** street / wet / truck bands still open; locked bands listed in listing.
+- **Beta:** street heat warm-up still open; wet + drag long locked 2026-08-30. Other locked bands in listing.
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 - **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.
@@ -153,9 +154,9 @@ Build: v0.2.0 · testing/main
 
 | Role | Name | Date |
 |------|------|------|
-| Built / synced by | | 2026-08-27 |
+| Built / synced by | Auto | 2026-08-30 |
 | Smoke test by | | |
-| OK to send to testers | ☐ Yes · ☐ No — blocker: _________________ |
+| OK to send to testers | ☑ Yes · ☐ No — blocker: _________________ |
 
 ---
 

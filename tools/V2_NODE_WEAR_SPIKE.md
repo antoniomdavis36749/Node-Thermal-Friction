@@ -368,9 +368,9 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 ## Open bands (awaiting user captures)
 
 Do **not** claim LOCKED or invent band numbers until captures land. Do **not** retune Soft
-life / camber ladder / drift rate from these protocols. Order: drag → wet → street heat.
+life / camber ladder / drift rate / **drag long** / **wet** from these protocols. Remaining: street heat.
 
-### Drag — **awaiting capture**
+### Drag — **CLOSED / LOCKED** (2026-08-30)
 
 | Step | Action |
 | --- | --- |
@@ -379,9 +379,10 @@ life / camber ladder / drift rate from these protocols. Order: drag → wet → 
 | 2 | Capture: classify, temps vs opt, long grip feel, Cond/gate, PSI; note drive soft-cap vs burnout heat |
 | Watch | Do not retune Sport camber / A1 / Soft life from drag |
 
-**Status:** protocol ready; **awaiting user in-game captures** (agent cannot drive).
+**Status:** native launches **PASS** (~130% dyn). **`longGripMult` 1.18 LOCKED** — ~1400 hp mod launch
+held (park after: rear long ~151%, stint max ~101–103°C, Cond 100). Lat/dry untouched. Satisfied.
 
-### Wet — **awaiting capture** (after drag)
+### Wet — **CLOSED / LOCKED** (2026-08-30)
 
 | Step | Action |
 | --- | --- |
@@ -390,9 +391,11 @@ life / camber ladder / drift rate from these protocols. Order: drag → wet → 
 | 2 | Capture: grip/drainage feel vs dry, temps, Cond/gate, surface scale sanity |
 | Watch | Rain pad already sanity-passed; open = grip/drainage band notes or lock — no Soft life retune |
 
-**Status:** protocol ready; **awaiting user captures** (after drag).
+**Status:** park / accel / brake / cruise on **ASPHALT_WET** **PASS / no nudge** (μ slide 0.70→0.55,
+wet grip softer than dry, spin on accel sane, lock fade off, rainState often 0 with surface wet).
+No profile retune. Satisfied.
 
-### Street heat — **awaiting capture** (after wet)
+### Street heat — **awaiting capture**
 
 | Step | Action |
 | --- | --- |
@@ -401,6 +404,6 @@ life / camber ladder / drift rate from these protocols. Order: drag → wet → 
 | 2 | Capture: warm-up time to working band, Hot flash?, blister 0, Cond quiet |
 | Watch | Camber ladder already LOCKED; this band is cruise heat only |
 
-**Status:** protocol ready; **awaiting user captures** (after wet).
+**Status:** protocol ready; **awaiting user captures**. Drag + wet closed.
 
-Light commercial leftovers only if drag/wet/street heat done (PSI seed already closed false UNDER).
+Light commercial leftovers only if street heat done (PSI seed already closed false UNDER).
