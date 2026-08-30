@@ -59,8 +59,9 @@ local CAMBER_SLIP_F_REF = 180 -- was 500; camber scrub slipF << lock, REF starve
 local CAMBER_SLIP_F_MIN = 40 -- N
 local LOCK_RING_HALF_WIDTH = 2
 local LOCK_RING_OFFSET_WEIGHT = { [0] = 1.0, [1] = 0.45, [2] = 0.22 }
--- Drift prototype (purpose/profile drift only): sustained-slip node arm while spinning
--- (lock requires ω<14 — RWD drift never arms). Camber guard mutes undriven/park scallop.
+-- Drift prototype: sustained-slip node arm while spinning (lock needs ω<14 — RWD
+-- never arms). Eligible: drift compound OR plain Sport (native BX Pro drift configs
+-- mount Sport, no rear drift tire option). Camber guard mutes undriven/park scallop.
 local ENABLE_DRIFT_SLIP_ARM = true
 local DRIFT_SLIP_ARM = 0.32 -- sustained slide (above lock arm 0.18)
 local DRIFT_OMEGA_MIN = 18 -- rad/s; spinning, not lock
@@ -148,6 +149,11 @@ local function isDriftPurpose(data)
     local p2 = data.profile2Lower or ""
     return (string.find(p1, "drift", 1, true) ~= nil)
         or (string.find(p2, "drift", 1, true) ~= nil)
+end
+
+-- Drift slip arm + camber guard: true drift compound, or plain Sport (not Plus).
+local function driftSlipArmEligible(data)
+    return isDriftPurpose(data) or isSportProfile(data)
 end
 
 local function camberArmDegForWheel(data)
@@ -588,15 +594,15 @@ function M.install(F, deps)
                 local ang = abs(wd.angularVelocity or 0)
                 local loadN = w.loadRaw or wd.downForce or 0
                 local lockArm = cid and slip > 0.18 and ang < 14.0
-                local isDrift = isDriftPurpose(data)
-                local driftArm = ENABLE_DRIFT_SLIP_ARM and isDrift and cid
+                local driftEligible = driftSlipArmEligible(data)
+                local driftArm = ENABLE_DRIFT_SLIP_ARM and driftEligible and cid
                     and slip >= DRIFT_SLIP_ARM and ang >= DRIFT_OMEGA_MIN
                     and loadN > DRIFT_LOAD_MIN and not lockArm
                 local armDeg = camberArmDegForWheel(data)
                 local camAbs = abs(w.camber or 0)
                 local camArm = cid and camAbs >= armDeg and loadN > 800 and slip > 0.08
-                -- Drift-only camber guard: setup camber on undriven/parked fronts must not farm Cond.
-                if camArm and isDrift then
+                -- Drift/Sport camber guard: setup camber on undriven/parked fronts must not farm Cond.
+                if camArm and driftEligible then
                     local propAbs = abs(wd.propulsionTorque or 0)
                     if propAbs < DRIFT_PROP_DRIVEN or ang < DRIFT_CAMBER_PARK_OMEGA then
                         camArm = false
