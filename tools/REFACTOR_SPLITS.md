@@ -238,6 +238,7 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Track Day camber CLOSED / LOCKED** — col× **0.26→0.40**; 22 km fronts ~92% / peak ~8%
 - **Sport Plus camber CLOSED / LOCKED** — col× **0.30→0.45**; 22 km fronts ~90% / peak ~6–11%
 - **Sport camber CLOSED / LOCKED** — col× **0.40→0.58**; 22 km fronts ~93–94% / peak ~3–7%
+- **Standard camber CLOSED / LOCKED** — col× **0.52→0.68** (est. from 22 km ×1.0 Cond ~85–88%)
 - **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — revisit with
   tester drift sessions (not locked)
 - Grip refactor — **only** with regression scripts + tester sign-off

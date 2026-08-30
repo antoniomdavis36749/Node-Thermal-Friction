@@ -106,6 +106,8 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | Track Day camber **LOCKED** | col× **0.26→0.40**: fronts Cond ~**92%** / peak ~**8%** (22 km A/B) | Soft life / Sport (non-Plus) |
 | Sport Plus camber **LOCKED** | col× **0.30→0.45**: fronts Cond ~**90%** / peak ~**6–11%** (22 km confirm) | Soft life / Sport / Track Day |
 | Sport camber **LOCKED** | col× **0.40→0.58**: fronts Cond ~**93–94%** / peak ~**3–7%** (22 km confirm; cooler than opt) | Soft life / Plus / Track Day |
+| Standard 22 km (×1.0) | Fronts Cond ~**85–88%**, peak ~**12–15%**, cold vs opt 60 | Leave standard on full street ×1.0 |
+| Standard camber **LOCKED** | col× **0.52→0.68** est. from ×1.0 run (target Cond ~90–93%) | Soft life / Sport ladder |
 
 
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
@@ -335,3 +337,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   Cond ~90% / peak ~6–11%. Heat lock held (blister 0); FL stint-max Hot flash note only.
 - **Sport camber CLOSED / LOCKED** (2026-08-29) — col× **0.40→0.58**; 22 km fronts Cond
   ~93–94% / peak ~3–7% (stint cooler than opt 66 — quieter than Plus Cond drop; OK).
+- **Standard camber CLOSED / LOCKED** (2026-08-30) — col× **0.52→0.68** from 22 km ×1.0
+  (fronts Cond ~85–88%); target ~90–93%. Optional spot-check only.

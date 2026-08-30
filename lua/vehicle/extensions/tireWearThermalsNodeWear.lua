@@ -40,6 +40,10 @@ local CAMBER_COL_SPORTPLUS_SCALE_MAX = 0.45
 -- Louder scale than Plus but Cond drop can undershoot Plus if Sport stays Cold/cruise.
 local CAMBER_COL_SPORT_SCALE_MIN = 0.40
 local CAMBER_COL_SPORT_SCALE_MAX = 0.58
+-- Standard LOCKED (est. from Belasco 22 km @ ×1.0: fronts Cond ~85–88% / peak ~12–15%).
+-- Mild mute → target Cond ~90–93%; louder than Sport (more street). Profile "standard" only.
+local CAMBER_COL_STANDARD_SCALE_MIN = 0.52
+local CAMBER_COL_STANDARD_SCALE_MAX = 0.68
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
@@ -99,6 +103,14 @@ local function isSportProfile(data)
     return plainSport(p1) or plainSport(p2)
 end
 
+local function isStandardProfile(data)
+    if not data then return false end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    return (string.find(p1, "standard", 1, true) ~= nil)
+        or (string.find(p2, "standard", 1, true) ~= nil)
+end
+
 local function isDriftPurpose(data)
     if not data then return false end
     local mods = data.interpolatedMods
@@ -114,7 +126,7 @@ local function camberArmDegForWheel(data)
 end
 
 -- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
--- Track Day / Sport Plus LOCKED; Sport (non-Plus) estimated. Other street stay ×1.0.
+-- Track Day / Sport Plus / Sport / Standard LOCKED street-track curves. Else ×1.0.
 local function camberColScaleForWheel(data, camberFrac)
     local t = max(0, min(1, camberFrac or 0))
     if isSlickOrCircuit(data) then
@@ -132,6 +144,10 @@ local function camberColScaleForWheel(data, camberFrac)
     if isSportProfile(data) then
         return CAMBER_COL_SPORT_SCALE_MIN
             + (CAMBER_COL_SPORT_SCALE_MAX - CAMBER_COL_SPORT_SCALE_MIN) * t
+    end
+    if isStandardProfile(data) then
+        return CAMBER_COL_STANDARD_SCALE_MIN
+            + (CAMBER_COL_STANDARD_SCALE_MAX - CAMBER_COL_STANDARD_SCALE_MIN) * t
     end
     return 1.0
 end
