@@ -50,6 +50,25 @@ function M.install(F, deps)
         return max(0.1, (absPa - 101325) / 6894.757)
     end
 
+    -- Hot tgt from this group's native cold fill (not a flat spectrum absolute).
+    -- Profile optimalPressure is the design hot when cold ≈ opt/1.06 (highway ~104→110).
+    -- When stock fill is far (drag rears ~82 vs design ~104), keep the same rise on cold.
+    -- Captures 2026-08-30: flat 110 falsely marked drag rears UNDER while Cold.
+    local HOT_OVER_COLD = 1.06
+    local NATIVE_COLD_BAND = 0.12
+    local HOT_RISE_MIN = 1.5
+    local HOT_RISE_MAX = 12.0
+    F.seedHotTargetPSI = function(coldPSI, profileOptPSI)
+        coldPSI = max(1.0, tonumber(coldPSI) or 25.0)
+        local opt = max(1.0, tonumber(profileOptPSI) or coldPSI)
+        local designCold = opt / HOT_OVER_COLD
+        if abs(coldPSI - designCold) <= designCold * NATIVE_COLD_BAND then
+            return opt
+        end
+        local rise = max(HOT_RISE_MIN, min(HOT_RISE_MAX, opt - designCold))
+        return coldPSI + rise
+    end
+
     -- Tuning-menu cold fill ($tirepressure_F / _R, else $tirepressure). nil if unset.
     F.getTuneColdFillPSI = function(isFront)
         local v = getV()

@@ -51,7 +51,10 @@ local M = {}
     loadSensitivity     Grip loss under overload vs static wheel load.
     pressureSensitivity Scales mild + outer pressure→grip penalties (band widths are
                              topology globals; higher = pickier compound).
-    optimalPressure     Absolute hot PSI target for best patch (also UI hot target).
+    optimalPressure     Design hot PSI for the compound band. UI/grip hot tgt is
+                             seeded from native cold fill per pressure group
+                             (seedHotTargetPSI): keep spectrum absolute when cold ≈
+                             opt/1.06; else cold + same rise (fixes drag rear UNDER).
     casingCompliance    Sidewall flex 0–1 (camber window, pressure expand).
     waterDrainage       0–1 Wet aquaplane resistance (higher = better).
     wetGripScale        Extra wet-paved multiplier (after hydro model).

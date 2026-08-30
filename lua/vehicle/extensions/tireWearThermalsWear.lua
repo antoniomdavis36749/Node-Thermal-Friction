@@ -18,6 +18,9 @@ function M.install(F, deps)
     local getNativeGroupPressurePSI = deps.getNativeGroupPressurePSI
     local isTirePressureInflateActive = deps.isTirePressureInflateActive
     local applyHotPressureWriteback = deps.applyHotPressureWriteback
+    local seedHotTargetPSI = deps.seedHotTargetPSI or function(cold, opt)
+        return max(1.0, opt or cold or 25.0)
+    end
     local MISSING = deps.missing
     local getVehicleMass = deps.getVehicleMass
     local getWheelCount = deps.getWheelCount
@@ -373,6 +376,11 @@ function M.install(F, deps)
                         if nativePSI <= (coldNow + 0.25) or data.coldFillAdopt then
                             local coldAlpha = min(1.0, dt / max(0.5, topo.pressureColdRefreshTau or 2.5))
                             data.coldPressurePSI = coldNow * (1.0 - coldAlpha) + nativePSI * coldAlpha
+                            -- Keep hot tgt tied to this group's cold fill (drag rear ≠ flat 110).
+                            data.targetHotPressurePSI = seedHotTargetPSI(
+                                data.coldPressurePSI,
+                                mods and mods.optimalPressure
+                            )
                             if abs((data.coldPressurePSI or nativePSI) - nativePSI) < 0.2 then
                                 data.coldFillAdopt = nil
                             end

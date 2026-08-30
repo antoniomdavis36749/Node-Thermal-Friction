@@ -351,7 +351,8 @@ function M.install(F, deps)
                     end
 
                     local optTemp = data.working_temp or WORKING_TEMP
-                    local avgT = EffectiveTyreTemp(data.temp, w.combinedBias or 0, (entry.pressure or 0) / (interpolatedMods and interpolatedMods.optimalPressure or 25), localizedEnvTemp, interpolatedMods)
+                    local hotTgt = math.max(1.0, entry.targetHotPressure or entry.optimalPressure or 25)
+                    local avgT = EffectiveTyreTemp(data.temp, w.combinedBias or 0, (entry.pressure or 0) / hotTgt, localizedEnvTemp, interpolatedMods)
                     local tempRatio = avgT / (optTemp > 0 and optTemp or 1)
                     if tempRatio < 0.80 then
                         entry.tempCategory = "Cold"
@@ -366,7 +367,6 @@ function M.install(F, deps)
                         data.stintMaxAvgTemp = avgT
                     end
                     entry.stintMaxAvgTemp = math.floor((data.stintMaxAvgTemp or 0) * 10) / 10
-                    local hotTgt = math.max(1.0, entry.targetHotPressure or entry.optimalPressure or 25)
                     entry.pressureRatio = math.floor((entry.pressure / hotTgt) * 1000) / 1000
                     local skinAvg = ((entry.temp[1] or 0) + (entry.temp[2] or 0) + (entry.temp[3] or 0)) / 3.0
                     entry.skinCarcassGap = math.floor((skinAvg - (entry.carcassAvg or skinAvg)) * 10) / 10

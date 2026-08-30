@@ -250,7 +250,8 @@ local THERMAL_TOPOLOGY = {
     -- Pass 7g: after 7f free-belt cut (skin flat, carcass +5°C), route more RR/flex heat
     --   to skin for WCU Scintilla GT3 under-opt test (0.21→0.28).
     hystSkinShare = 0.28,            -- RR/flex→skin (front warm without carcass cook)
-    -- Pressure→grip bands (ratio error = currentPSI/optimalPressure - 1). Absolute PSI target;
+    -- Pressure→grip bands (ratio error = currentPSI/hotTgt - 1). Hot tgt is seeded from
+    -- native cold fill per pressure group (seedHotTargetPSI); spectrum optimalPressure is design.
     -- stock BeamNG cold fills often sit at/above opt, then Gay-Lussac warm pushes further over —
     -- so the normal OVER band is wider than under. pressureSensitivity scales mild + outer only.
     -- Neutral deadband near opt (no perfect-zone grip bonus); mild/outer still punish miss.
@@ -1802,7 +1803,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local initialPressurePSI = max(1.0, data.coldPressurePSI or wd.pressure or 25.0)
     local currentPSI = data.currentPressurePSI or initialPressurePSI
     
-    local optP = max(1.0, mods.optimalPressure or 25.0)
+    local optP = max(1.0, data.targetHotPressurePSI or mods.optimalPressure or 25.0)
     local pOffset = (currentPSI / optP) - 1.0
     local sensitivity = mods.pressureSensitivity or 0.5
 
@@ -2501,6 +2502,7 @@ Wheel.install(F, {
     getNativeGroupPressurePSI = function(wd) return F.getNativeGroupPressurePSI(wd) end,
     getTuneColdFillPSI = function(front) return F.getTuneColdFillPSI(front) end,
     setNativeGroupPressurePSI = function(wd, psi) return F.setNativeGroupPressurePSI(wd, psi) end,
+    seedHotTargetPSI = function(cold, opt) return F.seedHotTargetPSI(cold, opt) end,
     remapSlickSoftness = function(s) return F.remapSlickSoftness(s) end,
     isRemoteMpVehicle = function() return F.isRemoteMpVehicle() end,
 })
@@ -2522,6 +2524,7 @@ Wear.install(F, {
     getNativeGroupPressurePSI = function(wd) return F.getNativeGroupPressurePSI(wd) end,
     isTirePressureInflateActive = function() return F.isTirePressureInflateActive() end,
     applyHotPressureWriteback = function(wd, pa, dt, mx, db) return F.applyHotPressureWriteback(wd, pa, dt, mx, db) end,
+    seedHotTargetPSI = function(cold, opt) return F.seedHotTargetPSI(cold, opt) end,
 })
 
 NodeWear.install(F, {

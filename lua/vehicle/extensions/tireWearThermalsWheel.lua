@@ -35,6 +35,9 @@ function M.install(F, deps)
     local getNativeGroupPressurePSI = deps.getNativeGroupPressurePSI
     local getTuneColdFillPSI = deps.getTuneColdFillPSI
     local setNativeGroupPressurePSI = deps.setNativeGroupPressurePSI
+    local seedHotTargetPSI = deps.seedHotTargetPSI or function(cold, opt)
+        return max(1.0, opt or cold or 25.0)
+    end
     local remapSlickSoftness = deps.remapSlickSoftness
     local isRemoteMpVehicle = deps.isRemoteMpVehicle
 
@@ -374,7 +377,8 @@ function M.install(F, deps)
                 lastLongGripRaw = 1, lastLatGripRaw = 1,
                 lockFade = 0,
                 coldPressurePSI = coldPSI,
-                targetHotPressurePSI = mods and mods.optimalPressure or coldPSI,
+                -- Per pressure-group: hot tgt seeded from native cold (spectrum opt = design).
+                targetHotPressurePSI = seedHotTargetPSI(coldPSI, mods and mods.optimalPressure),
                 luaPressurePSI = coldPSI,
                 nativePressurePSI = coldPSI,
                 lastNativePSI = coldPSI,

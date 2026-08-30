@@ -241,6 +241,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Standard camber CLOSED / LOCKED** — col× **0.52→0.68** (est. from 22 km ×1.0 Cond ~85–88%)
 - **Vintage camber CLOSED / LOCKED** — col× **0.58→0.74** (est. mild, street-ward of Standard)
 - **Truck/commercial camber CLOSED / LOCKED** — col× **0.62→0.78** (est. mild)
+- **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
+  group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
 - **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — on hold
   (tester pool; not locked)
 - Grip refactor — **only** with regression scripts + tester sign-off
