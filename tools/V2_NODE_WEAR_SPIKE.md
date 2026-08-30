@@ -115,7 +115,7 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 
 
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
-| Drift prototype (1)+(2) | **drift compound OR plain Sport:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.022**. Native BX Pro drift configs mount Sport (no rear drift tire) — Sport widened on purpose. Not Sport Plus. | Soft life / Plus; lock rates; 60s burnout est. OK |
+| Drift prototype (1)+(2) | **drift compound OR plain Sport:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.017** provisional (was 0.022 — ~16% Cond @ 65s burnout). Native BX Pro mounts Sport. Not Sport Plus. | Soft life / Plus; lock rates; re-check timed burnout |
 | Soft camber soft confirm (stress arc) | ~3.2 km loaded; Soft louder than Sport — expected | Retune from Soft stress vs Sport low-toe alone |
 | Soft/Med ~22 km Cond drop | Often **node-led** (nd &lt; sc) after spike work — Pitwall **sc\|nd** | Blame `SCALAR_TREAD_WEAR_SCALE` 0.15 (Sport street lock is separate) |
 | Hard-brake soak | Rim/carcass soak from native brakes; separate from node lock flats | Confuse soak heat with node peak |
@@ -334,7 +334,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Private tester `0.2.0` (Beta)** — checklist + pack ready; public Repo still paused.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
-- Deferred: Cond→grip fade (post-prod). Drift rate revisit after Sport-widen + burnout/est.
 - **Track Day camber CLOSED / LOCKED** (2026-08-29) — col× **0.26→0.40**; 22 km fronts
   Cond ~92% / peak ~8%. Soft life / Sport unchanged.
 - **Sport Plus camber CLOSED / LOCKED** (2026-08-29) — col× **0.30→0.45**; 22 km fronts
@@ -344,8 +343,10 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - **Standard camber CLOSED / LOCKED** (2026-08-30) — col× **0.52→0.68** from 22 km ×1.0
   (fronts Cond ~85–88%); target ~90–93%. Spot-check skipped.
 - **Vintage camber CLOSED / LOCKED** (2026-08-30) — col× **0.58→0.74** est. mild
-  (one step street-ward of Standard). Drift still on hold (no better tester pool).
+  (one step street-ward of Standard).
 - **Truck/commercial camber CLOSED / LOCKED** (2026-08-30) — col× **0.62→0.78** est.
   mild (`purpose=commercial` or *truck* / light_truck).
 - **Drift arm widened to plain Sport** (2026-08-30) — native drift configs mount Sport;
-  same kinematics gates + camber mute; rate **0.022** still provisional.
+  same kinematics gates + camber mute. Rate **0.017** provisional (was 0.022; ~16% Cond
+  @ 65s burnout → aim ~10–12% @ 60s).
+- Deferred: Cond→grip fade (post-prod). Drift rate confirm after 0.017 burnout re-check.

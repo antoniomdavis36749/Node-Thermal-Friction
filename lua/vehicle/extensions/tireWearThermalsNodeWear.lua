@@ -66,7 +66,7 @@ local ENABLE_DRIFT_SLIP_ARM = true
 local DRIFT_SLIP_ARM = 0.32 -- sustained slide (above lock arm 0.18)
 local DRIFT_OMEGA_MIN = 18 -- rad/s; spinning, not lock
 local DRIFT_LOAD_MIN = 800
-local DRIFT_SLIP_RATE = 0.022 -- A/B: was 0.012 (too quiet @~5% peak); toward lock loudness
+local DRIFT_SLIP_RATE = 0.017 -- provisional: was 0.022 (~16% Cond @ 65s burnout); aim ~10–12% @ 60s
 
 local DRIFT_PROP_DRIVEN = 40 -- |propulsionTorque| Nm; below = undriven (camber mute)
 local DRIFT_CAMBER_PARK_OMEGA = 4 -- rad/s; nearly stopped → mute camber
