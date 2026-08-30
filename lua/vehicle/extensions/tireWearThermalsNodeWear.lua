@@ -36,8 +36,8 @@ local CAMBER_COL_TRACKDAY_SCALE_MAX = 0.40
 -- slightly louder than TD (Plus one step street-ward). Soft / Sport (non-Plus) separate.
 local CAMBER_COL_SPORTPLUS_SCALE_MIN = 0.30
 local CAMBER_COL_SPORTPLUS_SCALE_MAX = 0.45
--- Sport (non-Plus) estimated from Plus/TD ladder: louder than Plus (more street).
--- One Belasco 22 km confirm; plain "sport" only (not sport_plus).
+-- Sport LOCKED (Belasco 22 km): fronts Cond ~93–94% / peak ~3–7% (cooler than opt).
+-- Louder scale than Plus but Cond drop can undershoot Plus if Sport stays Cold/cruise.
 local CAMBER_COL_SPORT_SCALE_MIN = 0.40
 local CAMBER_COL_SPORT_SCALE_MAX = 0.58
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this

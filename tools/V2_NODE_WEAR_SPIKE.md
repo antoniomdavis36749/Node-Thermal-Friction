@@ -17,7 +17,8 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (**LOCKED** Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
 | `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (**LOCKED**) | Track Day profile only; street arm 1.0° held |
 | `CAMBER_COL_SPORTPLUS_SCALE_MIN/MAX` | same | **0.30 / 0.45** (**LOCKED**) | Sport Plus profile only; est. from TD, Belasco 22 km confirm |
-| `CAMBER_COL_SPORT_SCALE_MIN/MAX` | same | **0.40 / 0.58** (est.; confirm 22 km) | Plain Sport only (not Plus) |
+| `CAMBER_COL_SPORT_SCALE_MIN/MAX` | same | **0.40 / 0.58** (**LOCKED**) | Plain Sport only (not Plus); Belasco 22 km confirm |
+
 | `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day/Plus stay **1.0°** |
 
 
@@ -104,7 +105,8 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | Track Day 22 km (pre-mute ×2) | Fronts Cond ~**71–75%**, peak ~**25–29%**, **node 93–99%**; sc100 | Leave Track Day on full street col×1.0 |
 | Track Day camber **LOCKED** | col× **0.26→0.40**: fronts Cond ~**92%** / peak ~**8%** (22 km A/B) | Soft life / Sport (non-Plus) |
 | Sport Plus camber **LOCKED** | col× **0.30→0.45**: fronts Cond ~**90%** / peak ~**6–11%** (22 km confirm) | Soft life / Sport / Track Day |
-| Sport camber (est.) | col× **0.40→0.58** from Plus/TD ladder — **one** Belasco 22 km confirm | Leave plain Sport on ×1.0 without checking |
+| Sport camber **LOCKED** | col× **0.40→0.58**: fronts Cond ~**93–94%** / peak ~**3–7%** (22 km confirm; cooler than opt) | Soft life / Plus / Track Day |
+
 
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
 | Drift prototype (1)+(2) | **purpose/profile drift only:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.022** (was 0.012 — ~5% peak too quiet). Camber guard **PASS** on ±5.6° fronts | Soft life / Sport; lock rates; treat 0.022 as final without tester drift sessions |
@@ -331,4 +333,5 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   Cond ~92% / peak ~8%. Soft life / Sport unchanged.
 - **Sport Plus camber CLOSED / LOCKED** (2026-08-29) — col× **0.30→0.45**; 22 km fronts
   Cond ~90% / peak ~6–11%. Heat lock held (blister 0); FL stint-max Hot flash note only.
-- **Sport camber est.** — col× **0.40→0.58** (plain sport only); one Belasco 22 km confirm.
+- **Sport camber CLOSED / LOCKED** (2026-08-29) — col× **0.40→0.58**; 22 km fronts Cond
+  ~93–94% / peak ~3–7% (stint cooler than opt 66 — quieter than Plus Cond drop; OK).
