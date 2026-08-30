@@ -28,10 +28,14 @@ local CAMBER_COL_BASE = 0.006
 -- Curve quiet at mild race camber; high camF scrub still costs more than lean.
 local CAMBER_COL_SLICK_SCALE_MIN = 0.05
 local CAMBER_COL_SLICK_SCALE_MAX = 0.14
--- Track Day only (street purpose, track_day profile): mild col× — full street ×1.0 was
--- ~25% front peak / Cond ~74% @ 22 km (node 99%). Soft life slick curve stays LOCKED.
+-- Track Day LOCKED (Belasco 22 km ×2 + A/B): pre-mute peak ~25–29% / Cond ~71–75%;
+-- after 0.26→0.40 fronts Cond ~92% / peak ~8%, node-led. Soft life / Sport unchanged.
 local CAMBER_COL_TRACKDAY_SCALE_MIN = 0.26
 local CAMBER_COL_TRACKDAY_SCALE_MAX = 0.40
+-- Sport Plus estimated from Track Day (one confirm 22 km): slightly louder than TD
+-- (Plus is one step street-ward). Pre-mute Plus not run; expect node-led if col×1.0.
+local CAMBER_COL_SPORTPLUS_SCALE_MIN = 0.30
+local CAMBER_COL_SPORTPLUS_SCALE_MAX = 0.45
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
 local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
@@ -71,6 +75,14 @@ local function isTrackDayProfile(data)
         or (string.find(p2, "track_day", 1, true) ~= nil)
 end
 
+local function isSportPlusProfile(data)
+    if not data then return false end
+    local p1 = data.profile1Lower or ""
+    local p2 = data.profile2Lower or ""
+    return (string.find(p1, "sport_plus", 1, true) ~= nil)
+        or (string.find(p2, "sport_plus", 1, true) ~= nil)
+end
+
 local function isDriftPurpose(data)
     if not data then return false end
     local mods = data.interpolatedMods
@@ -86,7 +98,8 @@ local function camberArmDegForWheel(data)
 end
 
 -- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
--- Track Day: milder street-track curve (profile only). Sport/other street stay ×1.0.
+-- Track Day LOCKED / Sport Plus estimated: street-track curves (profile only).
+-- Sport (non-Plus) and other street stay ×1.0.
 local function camberColScaleForWheel(data, camberFrac)
     local t = max(0, min(1, camberFrac or 0))
     if isSlickOrCircuit(data) then
@@ -96,6 +109,10 @@ local function camberColScaleForWheel(data, camberFrac)
     if isTrackDayProfile(data) then
         return CAMBER_COL_TRACKDAY_SCALE_MIN
             + (CAMBER_COL_TRACKDAY_SCALE_MAX - CAMBER_COL_TRACKDAY_SCALE_MIN) * t
+    end
+    if isSportPlusProfile(data) then
+        return CAMBER_COL_SPORTPLUS_SCALE_MIN
+            + (CAMBER_COL_SPORTPLUS_SCALE_MAX - CAMBER_COL_SPORTPLUS_SCALE_MIN) * t
     end
     return 1.0
 end

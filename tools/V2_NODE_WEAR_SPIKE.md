@@ -15,8 +15,10 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
 | `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**CLOSED / rates LOCKED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
 | `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (**LOCKED** Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
-| `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (A/B) | Track Day profile only; street arm 1.0° held |
-| `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day stay **1.0°** |
+| `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (**LOCKED**) | Track Day profile only; street arm 1.0° held |
+| `CAMBER_COL_SPORTPLUS_SCALE_MIN/MAX` | same | **0.30 / 0.45** (est. from TD; confirm 22 km) | Sport Plus profile only |
+| `CAMBER_DEG_ARM_SLICK` | same | **2.0°** (**LOCKED** with Soft life) | Slick/circuit arm floor; Sport/street/Track Day/Plus stay **1.0°** |
+
 
 | `ENABLE_NODE_COLLISION_PROBE` | `tireWearThermalsNodeProbe.lua` | **true** | Read-only Pitwall colE / slipF (+ feeds gated swap) |
 | `ENABLE_BRAKE_LOCK_FADE` | `auto/tireWearThermals.lua` | **false** | Lock stays native |
@@ -99,7 +101,8 @@ raising **n**/peak. Pitwall capture shows **`ABS?/no-lock`** when slipE is high 
 | Medium 22 km (same curve) | Fronts ~**5.5–6%** Cond, **node-led**; Soft≈Med on Cond (scalar still Med-healthier sc) | Expect Soft≫Med Cond from camber alone — curve is slick-wide |
 | Hard 22 km (same curve) | Fronts ~**4.9–5.9%** Cond (94.1/95.1); Soft≈Med≈Hard on node Cond — **ladder CLOSED** | Retune A3b from Hard (scalar separates compounds; node Cond won’t) |
 | Track Day 22 km (pre-mute ×2) | Fronts Cond ~**71–75%**, peak ~**25–29%**, **node 93–99%**; sc100 | Leave Track Day on full street col×1.0 |
-| Track Day camber A/B | Profile-only col× **0.26→0.40**; arm 1.0°; target fronts quieter than ~25% peak | Soft life / Sport / Plus camber |
+| Track Day camber **LOCKED** | col× **0.26→0.40**: fronts Cond ~**92%** / peak ~**8%** (22 km A/B) | Soft life / Sport / Plus (Plus has own est. curve) |
+| Sport Plus camber (est.) | col× **0.30→0.45** from TD success — **one** Belasco 22 km confirm | Assume Plus needs full street ×1.0 without checking |
 | Drift smoke / high-camber fronts (pre-proto) | Sport-on-drift: rears Hot ~130°C peak **~3%**; fronts Cold ±5° camber peak **14–23%** | Treat as intentional — lock gate misses spinning slip; street camber farms undriven |
 | Drift prototype (1)+(2) | **purpose/profile drift only:** gate `drift` = sustained slip + ω≥18; camber muted if undriven/park. Rate **0.022** (was 0.012 — ~5% peak too quiet). Camber guard **PASS** on ±5.6° fronts | Soft life / Sport; lock rates; treat 0.022 as final without tester drift sessions |
 | Soft camber soft confirm (stress arc) | ~3.2 km loaded; Soft louder than Sport — expected | Retune from Soft stress vs Sport low-toe alone |
@@ -321,5 +324,6 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
 - GT3: ABS edge notes + Pitwall `ABS?/no-lock` / `cole→slipE` hints.
 - Deferred: Cond→grip fade (post-prod). Drift rate revisit with tester sessions.
-- **Track Day camber A/B** (2026-08-29): col× **0.26→0.40** by camF — retest Belasco 22 km;
-  expect fronts well under ~25% peak / Cond ~74%. Soft life / Sport unchanged.
+- **Track Day camber CLOSED / LOCKED** (2026-08-29) — col× **0.26→0.40**; 22 km fronts
+  Cond ~92% / peak ~8%. Soft life / Sport unchanged.
+- **Sport Plus camber est.** — col× **0.30→0.45**; one Belasco 22 km confirm pending.

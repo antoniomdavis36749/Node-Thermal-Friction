@@ -235,9 +235,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   GT3 Soft/Med/Hard Belasco 22 km Soft≈Med≈Hard on node Cond — **ladder CLOSED**.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
 - **Private tester pack `0.2.0` (Beta)** — checklist + zip ready; public Repo still paused
+- **Track Day camber CLOSED / LOCKED** — col× **0.26→0.40**; 22 km fronts ~92% / peak ~8%
+- **Sport Plus camber est.** — col× **0.30→0.45** (from TD); one 22 km confirm
 - **Drift prototype** — gate `drift` + undriven camber mute; rate **0.022** — revisit with
   tester drift sessions (not locked)
-- **Track Day camber A/B** — col× **0.26→0.40** (profile only); 22 km retest pending
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
