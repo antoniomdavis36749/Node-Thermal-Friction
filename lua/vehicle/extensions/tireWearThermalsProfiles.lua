@@ -168,6 +168,8 @@ local M = {}
   WEAR / SURFACE DAMAGE
     wearRate            Base structural wear rate.
     rollingWearCoef     Distance/rolling wear vs ω (1.0 = current tiny term; slick C4 >1).
+    scalarTreadWearScale  Optional per-profile soft-scalar mid (Cond/sc clock only).
+                        Omit → global Sport-locked ×0.15. C5 supersoft open band uses 1.0.
     coldWearMult        Wear multiplier when well below opt.
     hotWearMult         Wear multiplier when above opt.
     grainTempRatio      Graining starts below opt × this (street Sport/Plus 0.88; default 0.75).
@@ -743,12 +745,14 @@ local SLICK_SPECTRUM_POINTS = {
     { softness = 0.875, profile = "supersoft_slick", mods = {
         -- Supersoft C5: one 0.075 step past Soft C4 (qualify). Peakier, hotter, shorter life.
         -- Stock JBeam 1.0 still remaps to 0.80 C4; this anchor is only softnessCoef=0.875.
+        -- OPEN BAND 2026-08-30: scalarTreadWearScale 1.0 — F1-style ~10–15 lap life (Belasco).
+        -- Soft C4 wear + Sport global ×0.15 untouched. Confirm ~8–12 laps then lock/nudge.
         adhesion = 0.565, airConductionRate = 0.017625, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.205, coreCoolRate = 0.031, coreVelCoolRate = 0.0078, skinCoreConductance = 0.138,
         gripMultiplier = 1.11, longGripMult = 1, latGripMult = 0.69, loadSensitivity = 0.135,
         optimalPressure = 25.5, optimalTemp = 80, pressureSensitivity = 1.275, rollingRes = 1.39,
         staticCoolingRate = 0.060, slipHeatRate = 19.5, workHeatRate = 10.7, wearRate = 0.00355,
-        rollingWearCoef = 92,
+        rollingWearCoef = 92, scalarTreadWearScale = 1.0,
         treadInertia = 0.3171, carcassInertia = 0.5134, thermalReactionRate = 1.615, tempPlateau = 14,
         coldWidth = 43, hotWidth = 43, gripFloor = 0.17, coldWearMult = 2.73,
         hotWearMult = 6.025, grainTempRatio = 0.78, blisterTempRatio = 1.59, waterDrainage = 0,

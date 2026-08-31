@@ -414,3 +414,15 @@ feel OK — **no further commercial band work**.
 
 **A2 feel (optional / user-owned):** extended Belasco supersoft to exercise `sc` &lt; 70% fade —
 not a release blocker; report only if fade feels wrong.
+
+### Supersoft C5 life — **OPEN** (2026-08-30)
+
+| Step | Action |
+| --- | --- |
+| 0 | Respawn cold supersoft (softnessCoef 0.875 / Qualify) |
+| 1 | Belasco ~**8–12 laps** (~F1 C5 10–15 lap ceiling) |
+| 2 | Capture: Cond/`sc\|nd`, blister, dyn grip; note A2 if `sc` &lt; 70% |
+| Watch | Soft C4 wear LOCKED; Sport global scalar ×0.15 LOCKED — do not retune from C5 |
+
+**Status:** `mods.scalarTreadWearScale = 1.0` on `supersoft_slick` only (prior 51 km / 12 laps
+Cond ~88% at global ×0.15 was immortal). Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.

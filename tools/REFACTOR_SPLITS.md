@@ -251,6 +251,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
 - **Commercial leftovers CLOSED** (2026-08-30) — feel OK; no further commercial band work
+- **Supersoft C5 life OPEN** — `scalarTreadWearScale` **1.0** (F1-style ~10–15 lap); Soft C4
+  + Sport ×0.15 untouched. Confirm Belasco ~8–12 laps
 - **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
   mute; rate **0.017** provisional. **HELD / non-blocking** — feel revisit only if
   tester feedback lands (may not before next drop)
@@ -274,4 +276,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (tester drop refreshed; commercial closed; drift held; A2 feel optional).*
+*Last updated: 2026-08-30 (C5 life open at scalarTreadWearScale 1.0; drift held).*

@@ -105,6 +105,8 @@ function M.install(F, deps)
         -- does NOT feed grip wearPenalty while node spike on. Leak/puncture may still use Cond.
         -- Base ×0.15 LOCKED (Sport Belasco clean ~22 km FR ~0.9%). Mild life curve around that
         -- center: slower when fresh, faster late — Cond/leak clocks only (no μ).
+        -- Optional mods.scalarTreadWearScale overrides mid (C5 supersoft open band = 1.0);
+        -- early/late scale proportionally so the curve shape holds.
         local ENABLE_SCALAR_TREAD_WEAR = true
         local ENABLE_SCALAR_RATE_CURVE = true
         local SCALAR_TREAD_WEAR_SCALE = 0.15 -- mid-life center (LOCKED Sport band reference)
@@ -113,6 +115,15 @@ function M.install(F, deps)
         local SCALAR_LIFE_EARLY_END = 0.03 -- 3% used → reach center
         local SCALAR_LIFE_LATE_START = 0.12 -- 12% used → start late ramp
         local SCALAR_LIFE_LATE_FULL = 0.30 -- 30% used → full late rate
+        local scalarMid = SCALAR_TREAD_WEAR_SCALE
+        do
+            local profileMid = mods and mods.scalarTreadWearScale
+            if type(profileMid) == "number" and profileMid > 0 then
+                scalarMid = profileMid
+            end
+        end
+        local scalarEarly = scalarMid * (SCALAR_SCALE_EARLY / SCALAR_TREAD_WEAR_SCALE)
+        local scalarLate = scalarMid * (SCALAR_SCALE_LATE / SCALAR_TREAD_WEAR_SCALE)
         if data.scalarTreadCondition == nil then data.scalarTreadCondition = 100 end
         if ENABLE_SCALAR_TREAD_WEAR and not isAirborne then
                 local tempWearPenalty = 1.0
@@ -142,19 +153,18 @@ function M.install(F, deps)
         
                 wear = tempDistToWearMult(tempDistWeighted) * (slidingWear + (vehNotParked * abs(propulsionTorque * 0.008 - brakeTorque * 0.025) * 0.3 * TORQUE_ENERGY_MULTIPLIER) * 0.08 + angularVel * 0.0005 * (ctw.rollingWearCoef or 1.0)) * (wearRate * cycleWearMultiplier / max(0.7, min(1.3, tyreWidth / 0.2))) * (1.0 + min(0.75, (w.suspStress or 0) * 0.35 * bottomOutSens)) * surfaceWearScale * dt
                 -- Mild scalar-rate curve from dedicated scalar life (never hybrid / node peak).
-                local scalarScale = SCALAR_TREAD_WEAR_SCALE
+                local scalarScale = scalarMid
                 if ENABLE_SCALAR_RATE_CURVE then
                     local lifeUsed = max(0, min(1, (100 - (data.scalarTreadCondition or 100)) * 0.01))
                     if lifeUsed <= SCALAR_LIFE_EARLY_END then
                         local t = lifeUsed / max(1e-6, SCALAR_LIFE_EARLY_END)
-                        scalarScale = SCALAR_SCALE_EARLY + (SCALAR_TREAD_WEAR_SCALE - SCALAR_SCALE_EARLY) * t
+                        scalarScale = scalarEarly + (scalarMid - scalarEarly) * t
                     elseif lifeUsed <= SCALAR_LIFE_LATE_START then
-                        scalarScale = SCALAR_TREAD_WEAR_SCALE
+                        scalarScale = scalarMid
                     else
                         local t = (lifeUsed - SCALAR_LIFE_LATE_START)
                             / max(1e-6, SCALAR_LIFE_LATE_FULL - SCALAR_LIFE_LATE_START)
-                        scalarScale = SCALAR_TREAD_WEAR_SCALE
-                            + (SCALAR_SCALE_LATE - SCALAR_TREAD_WEAR_SCALE) * min(1, t)
+                        scalarScale = scalarMid + (scalarLate - scalarMid) * min(1, t)
                     end
                 end
                 data.scalarWearScale = scalarScale
@@ -199,7 +209,7 @@ function M.install(F, deps)
             data.zoneCondition[1], data.zoneCondition[2], data.zoneCondition[3] = 100, 100, 100
             data.condition = 100
             data.scalarTreadCondition = 100
-            data.scalarWearScale = SCALAR_TREAD_WEAR_SCALE
+            data.scalarWearScale = scalarMid
         end
         local scaleWearModifier = (mods.wearRate or 0.0005) * 2000
 
