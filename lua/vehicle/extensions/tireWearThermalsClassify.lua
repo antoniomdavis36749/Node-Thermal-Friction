@@ -59,8 +59,22 @@ function M.install(F, deps)
             local v2 = p2.mods[k]
             targetTable[k] = v2 and lerp(v1, v2, factor) or v1
         end
+        -- Keys only on p2: lerp from a numeric default when factor < 1 so Soft-adjacent
+        -- does not inherit full supersoft-only knobs (e.g. scalarTreadWearScale 1.0).
         for k, v2 in pairs(p2.mods) do
-            if targetTable[k] == nil then targetTable[k] = v2 end
+            if targetTable[k] == nil then
+                if type(v2) == "number" then
+                    local v1 = DEFAULT_MODS[k]
+                    if k == "scalarTreadWearScale" then v1 = 0.15 end
+                    if type(v1) == "number" then
+                        targetTable[k] = lerp(v1, v2, factor)
+                    else
+                        targetTable[k] = v2
+                    end
+                else
+                    targetTable[k] = v2
+                end
+            end
         end
     
         return p1.profile, p2.profile, factor

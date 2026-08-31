@@ -427,6 +427,11 @@ not a release blocker; report only if fade feels wrong.
 **Status:** `mods.scalarTreadWearScale = 1.0` on `supersoft_slick` only (prior 51 km / 12 laps
 Cond ~88% at global ×0.15 was immortal). Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.
 
+**Confirm gate:** Pitwall **opt ≈ 80°C** (C5). **opt 82°C** = Soft C4 (`softnessCoef` 1.0→0.80) —
+label may still read `soft + supersoft` as spectrum neighbors; C5 scale will not apply. Use
+**GT3 ReSpin Qualify Supersoft** (`softnessCoef` 0.875). Soft C4 keeps `scalarTreadWearScale` 0.15
+until its own band opens.
+
 ### Slick scalar life ladder (future — one compound at a time)
 
 **Process:** C5 is worst-case baseline. After C5 locks, open **C4 → C3 → C2** one at a time.

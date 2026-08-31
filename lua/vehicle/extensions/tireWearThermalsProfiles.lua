@@ -735,7 +735,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 1.08, longGripMult = 1, latGripMult = 0.70, loadSensitivity = 0.13,
         optimalPressure = 26, optimalTemp = 82, pressureSensitivity = 1.2, rollingRes = 1.22,
         staticCoolingRate = 0.060, slipHeatRate = 17.5, workHeatRate = 9.8, wearRate = 0.00255,
-        rollingWearCoef = 70,
+        -- Explicit 0.15 until C4 scalar life band opens (~0.95 est.); keeps Soft↔C5 lerp honest.
+        rollingWearCoef = 70, scalarTreadWearScale = 0.15,
         treadInertia = 0.3444, carcassInertia = 0.5576, thermalReactionRate = 1.55, tempPlateau = 14,
         coldWidth = 44, hotWidth = 44, gripFloor = 0.18, coldWearMult = 2.35,
         hotWearMult = 4.70, grainTempRatio = 0.78, blisterTempRatio = 1.62, waterDrainage = 0,
