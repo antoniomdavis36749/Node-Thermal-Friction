@@ -250,9 +250,11 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Truck/commercial camber CLOSED / LOCKED** — col× **0.62→0.78** (est. mild)
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
+- **Commercial leftovers CLOSED** (2026-08-30) — feel OK; no further commercial band work
 - **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
-  mute; rate **0.017** provisional. **Non-blocking** for release — feel revisit only if
+  mute; rate **0.017** provisional. **HELD / non-blocking** — feel revisit only if
   tester feedback lands (may not before next drop)
+- **A2 feel** — optional user Belasco supersoft to `sc` &lt; 70%; not a ship blocker
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
@@ -272,4 +274,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (A2 ON; drag long + wet + street heat LOCKED).*
+*Last updated: 2026-08-30 (tester drop refreshed; commercial closed; drift held; A2 feel optional).*
