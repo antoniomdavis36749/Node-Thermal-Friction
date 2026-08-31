@@ -413,7 +413,11 @@ function M.install(F, deps)
             purpose, classifyReason = "street", "sport_plus_name"
         elseif isRaceLikeName and not string.find(nameLower, "gravel", 1, true) then
             -- Remap BeamNG 0.5/0.8/1.0 soft tiers onto densified 0.50/0.65/0.80 spectrum
-            -- (explicit 0.875 SKU is C5 supersoft; 1.0 stays C4)
+            -- (explicit 0.875 SKU is C5 supersoft; 1.0 stays C4).
+            -- Name wins when JBeam softnessCoef is missing/clamped: Respin *_supersoft_* → C5.
+            if string.find(nameLower, "supersoft", 1, true) then
+                softnessCoef = 0.875
+            end
             local sc = F.remapSlickSoftness(softnessCoef)
             rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(SLICK_SPECTRUM_POINTS, "softness", sc, mods)
             purpose, classifyReason = "circuit", "slick_spectrum"
