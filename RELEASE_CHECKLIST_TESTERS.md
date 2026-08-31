@@ -12,12 +12,12 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 ## 1. What changed (5 bullets max — paste to testers)
 
 1. **A2** mild scalar Cond→grip fade (`sc` &lt; 70% → floor 0.90); A1 node μ unchanged
-2. **Drag** `longGripMult` **1.18 LOCKED** (native + ~1400 hp mod launch held)
-3. **Wet** band **LOCKED** (ASPHALT_WET park/accel/brake/cruise PASS / no nudge)
-4. Commercial PSI hot-tgt seed from native cold (drag rear false UNDER fixed earlier)
-5. **Pitwall Heavy** = DEV only (`-dev` / git); player zip ships **Classic + Crew** only
+2. **Drag** `longGripMult` **1.18 LOCKED** (native + ~1400 hp)
+3. **Wet + street heat LOCKED** (ASPHALT_WET PASS; Sport cruise warm-up Normal ~70 vs opt 66)
+4. Commercial PSI hot-tgt seed + leftovers **CLOSED** (feel OK)
+5. **Pitwall Heavy** = DEV only (`-dev` / git); zip = Classic + Crew only
 
-**Calibration touched?** ☐ No (default) · ☑ Yes — drag long 1.18; wet + street heat closed; A2 ON
+**Calibration touched?** ☐ No (default) · ☑ Yes — drag/wet/street heat/commercial closed; A2 ON; drift held
 
 ---
 
@@ -118,8 +118,8 @@ ReSpin private tester — v0.2.0 · 2026-08-30 (Beta)
 CHANGES:
 • A2 mild scalar grip fade (sc < 70% → floor 0.90); A1 held
 • Drag longGripMult 1.18 LOCKED (native + ~1400 hp)
-• Wet + street heat LOCKED; drag longGripMult 1.18 LOCKED
-• Classic / Crew HUDs in zip; Dev Pitwall only on -dev
+• Wet + street heat LOCKED; commercial leftovers CLOSED
+• Drift rate 0.017 held / non-blocking; Classic+Crew in zip (Pitwall = -dev)
 
 INSTALL:
 • Disable other tire-thermals mods and the public ReSpin Repo copies (39082/39083) if you use -dev.
@@ -142,7 +142,9 @@ Build: v0.2.0 · testing/main · 2026-08-30
 - **Respawn required** after Lua/UI updates (cached apps / old stream name).
 - **Only one** thermals mod at a time.
 - **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
-- **Beta:** drag long + wet + street heat locked 2026-08-30. Other locked bands in listing.
+- **Beta:** drag long + wet + street heat + commercial leftovers locked/closed 2026-08-30.
+  Other locked bands in listing. Public Repo still paused.
+- **A2:** fade starts `sc` &lt; 70%; optional long-stint confirm — not a ship blocker.
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 - **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.

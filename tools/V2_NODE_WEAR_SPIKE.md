@@ -407,4 +407,10 @@ No profile retune. Satisfied.
 **Status:** Sport park Cold (~26°C vs opt 66) → **~10 min cruise ~44 mph** → **Normal ~70°C**
 (inside ±18 plateau), Cond ~100, blister 0, PSI toward hot tgt. **PASS / no nudge.** Satisfied.
 
-Light commercial leftovers only if needed (PSI seed already closed false UNDER).
+### Light commercial leftovers — **CLOSED** (2026-08-30)
+
+PSI hot-tgt seed already fixed drag-rear false UNDER; camber truck curve LOCKED; user confirmed
+feel OK — **no further commercial band work**.
+
+**A2 feel (optional / user-owned):** extended Belasco supersoft to exercise `sc` &lt; 70% fade —
+not a release blocker; report only if fade feels wrong.
