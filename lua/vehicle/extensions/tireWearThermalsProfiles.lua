@@ -676,7 +676,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 0.96, longGripMult = 1, latGripMult = 0.74, loadSensitivity = 0.11,
         optimalPressure = 28, optimalTemp = 90, pressureSensitivity = 0.95, rollingRes = 0.98,
         staticCoolingRate = 0.060, slipHeatRate = 13.5, workHeatRate = 7.8, wearRate = 0.00115,
-        rollingWearCoef = 50,
+        -- Predictive scalar life OPEN (est. ~45–55 lap EOL): do not retune wearRate/rolling from this.
+        rollingWearCoef = 50, scalarTreadWearScale = 1.35,
         treadInertia = 0.4536, carcassInertia = 0.7344, thermalReactionRate = 1.25, tempPlateau = 14,
         coldWidth = 48, hotWidth = 48, gripFloor = 0.20, coldWearMult = 1.86,
         hotWearMult = 3.15, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -690,7 +691,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 0.99, longGripMult = 1, latGripMult = 0.73, loadSensitivity = 0.115,
         optimalPressure = 27.5, optimalTemp = 87, pressureSensitivity = 1.0, rollingRes = 1.00,
         staticCoolingRate = 0.060, slipHeatRate = 14.0, workHeatRate = 8.1, wearRate = 0.00130,
-        rollingWearCoef = 55,
+        -- Mid Hard↔Med predictive scalar (wearProd-adjusted est.).
+        rollingWearCoef = 55, scalarTreadWearScale = 1.10,
         treadInertia = 0.4263, carcassInertia = 0.6902, thermalReactionRate = 1.335, tempPlateau = 14,
         coldWidth = 47, hotWidth = 47, gripFloor = 0.20, coldWearMult = 1.905,
         hotWearMult = 3.225, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -706,7 +708,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 1.02, longGripMult = 1, latGripMult = 0.72, loadSensitivity = 0.12,
         optimalPressure = 27, optimalTemp = 84, pressureSensitivity = 1.05, rollingRes = 1.02,
         staticCoolingRate = 0.060, slipHeatRate = 15.0, workHeatRate = 8.6, wearRate = 0.00135,
-        rollingWearCoef = 42,
+        -- Predictive scalar life OPEN (est. ~30–40 lap EOL).
+        rollingWearCoef = 42, scalarTreadWearScale = 1.85,
         treadInertia = 0.399, carcassInertia = 0.646, thermalReactionRate = 1.42, tempPlateau = 14,
         coldWidth = 46, hotWidth = 46, gripFloor = 0.20, coldWearMult = 1.95,
         hotWearMult = 3.30, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -720,7 +723,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 1.05, longGripMult = 1, latGripMult = 0.71, loadSensitivity = 0.125,
         optimalPressure = 26.5, optimalTemp = 83, pressureSensitivity = 1.125, rollingRes = 1.05,
         staticCoolingRate = 0.060, slipHeatRate = 15.5, workHeatRate = 8.9, wearRate = 0.00155,
-        rollingWearCoef = 48,
+        -- Mid Med↔Soft predictive scalar (wearProd-adjusted est.).
+        rollingWearCoef = 48, scalarTreadWearScale = 1.50,
         treadInertia = 0.3717, carcassInertia = 0.6018, thermalReactionRate = 1.485, tempPlateau = 14,
         coldWidth = 45, hotWidth = 45, gripFloor = 0.19, coldWearMult = 1.971,
         hotWearMult = 3.375, grainTempRatio = 0.78, blisterTempRatio = 1.635, waterDrainage = 0,
@@ -735,8 +739,8 @@ local SLICK_SPECTRUM_POINTS = {
         gripMultiplier = 1.08, longGripMult = 1, latGripMult = 0.70, loadSensitivity = 0.13,
         optimalPressure = 26, optimalTemp = 82, pressureSensitivity = 1.2, rollingRes = 1.22,
         staticCoolingRate = 0.060, slipHeatRate = 17.5, workHeatRate = 9.8, wearRate = 0.00255,
-        -- Explicit 0.15 until C4 scalar life band opens (~0.95 est.); keeps Soft↔C5 lerp honest.
-        rollingWearCoef = 70, scalarTreadWearScale = 0.15,
+        -- Predictive scalar life OPEN (est. ~20–25 lap EOL). Heat/wearRate locks held.
+        rollingWearCoef = 70, scalarTreadWearScale = 0.95,
         treadInertia = 0.3444, carcassInertia = 0.5576, thermalReactionRate = 1.55, tempPlateau = 14,
         coldWidth = 44, hotWidth = 44, gripFloor = 0.18, coldWearMult = 2.35,
         hotWearMult = 4.70, grainTempRatio = 0.78, blisterTempRatio = 1.62, waterDrainage = 0,
@@ -747,7 +751,7 @@ local SLICK_SPECTRUM_POINTS = {
         -- Supersoft C5: one 0.075 step past Soft C4 (qualify). Peakier, hotter, shorter life.
         -- Stock JBeam 1.0 still remaps to 0.80 C4; this anchor is only softnessCoef=0.875.
         -- OPEN BAND 2026-08-30: scalarTreadWearScale 1.0 — F1-style ~10–15 lap life (Belasco).
-        -- Soft C4 wear + Sport global ×0.15 untouched. Confirm ~8–12 laps then lock/nudge.
+        -- Slick spectrum predictive scalars planted on all anchors; confirm C5 first (opt≈80).
         adhesion = 0.565, airConductionRate = 0.017625, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.205, coreCoolRate = 0.031, coreVelCoolRate = 0.0078, skinCoreConductance = 0.138,
         gripMultiplier = 1.11, longGripMult = 1, latGripMult = 0.69, loadSensitivity = 0.135,

@@ -251,9 +251,9 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
 - **Commercial leftovers CLOSED** (2026-08-30) — feel OK; no further commercial band work
-- **Supersoft C5 life OPEN** — `scalarTreadWearScale` **1.0** (F1-style ~10–15 lap); Soft C4
-  + Sport ×0.15 untouched. Confirm Belasco ~8–12 laps. **Then** C4→C3→C2 one at a time from
-  estimates (~0.95 / ~1.85 / ~1.35) — see `V2_NODE_WEAR_SPIKE.md` slick scalar life ladder.
+- **Slick scalar life predictive PLANTED** — C5 **1.00** (confirm first, opt≈80); C4 **0.95**;
+  C3 **1.85**; C2 **1.35**; mids **1.10 / 1.50**. Spectrum lerps between anchors. Soft/Med/Hard
+  heat+wearRate locks held.
 - **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
   mute; rate **0.017** provisional. **HELD / non-blocking** — feel revisit only if
   tester feedback lands (may not before next drop)
@@ -277,4 +277,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (C5 life open; slick C4/C3/C2 life estimates queued).*
+*Last updated: 2026-08-30 (slick spectrum predictive scalar life planted; C5 confirm first).*

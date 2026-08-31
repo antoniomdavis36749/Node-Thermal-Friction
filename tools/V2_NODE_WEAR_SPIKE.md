@@ -415,46 +415,39 @@ feel OK — **no further commercial band work**.
 **A2 feel (optional / user-owned):** extended Belasco supersoft to exercise `sc` &lt; 70% fade —
 not a release blocker; report only if fade feels wrong.
 
-### Supersoft C5 life — **OPEN** (2026-08-30)
+### Supersoft C5 life — **OPEN** (2026-08-30) — confirm first
 
 | Step | Action |
 | --- | --- |
 | 0 | Respawn cold supersoft (softnessCoef 0.875 / Qualify) |
 | 1 | Belasco ~**8–12 laps** (~F1 C5 10–15 lap ceiling) |
 | 2 | Capture: Cond/`sc\|nd`, blister, dyn grip; note A2 if `sc` &lt; 70% |
-| Watch | Soft C4 wear LOCKED; Sport global scalar ×0.15 LOCKED — do not retune from C5 |
+| Watch | Do not retune locked Soft/Med/Hard `wearRate` / heat from C5; Sport street ×0.15 default held |
 
-**Status:** `mods.scalarTreadWearScale = 1.0` on `supersoft_slick` only (prior 51 km / 12 laps
-Cond ~88% at global ×0.15 was immortal). Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.
+**Status:** C5 `scalarTreadWearScale = 1.0`. Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.
 
 **Confirm gate:** Pitwall **opt ≈ 80°C** (C5). **opt 82°C** = Soft C4 (`softnessCoef` 1.0→0.80) —
-label may still read `soft + supersoft` as spectrum neighbors; C5 scale will not apply. Use
-**GT3 ReSpin Qualify Supersoft** (`softnessCoef` 0.875). Soft C4 keeps `scalarTreadWearScale` 0.15
-until its own band opens.
+label may still read `soft + supersoft` as spectrum neighbors. Use **GT3 ReSpin Qualify Supersoft**.
 
-### Slick scalar life ladder (future — one compound at a time)
+### Slick scalar life ladder — **predictive values PLANTED** (2026-08-30)
 
-**Process:** C5 is worst-case baseline. After C5 locks, open **C4 → C3 → C2** one at a time.
-Start each open band at the **estimate below** (saves full immortal stints); short Belasco confirm
-(~half target laps or until Cond in band) → nudge → lock. Lever = `scalarTreadWearScale` only —
-do **not** retune locked Soft/Med/Hard `wearRate` / `rollingWearCoef` / heat from these bands.
-Sport global ×0.15 stays the default when the key is omitted (street).
+All `SLICK_SPECTRUM_POINTS` anchors carry `scalarTreadWearScale` so **in-between softness
+lerps on the spectrum curve** (Soft↔C5, Med↔Soft, etc. wear the blended scale). Confirm
+**one compound at a time** starting with C5 (worst case); after C5 locks, rescale the table
+by locked `s_C5` if ≠ 1.0, then short-confirm C4→C3→C2 from these estimates.
 
-**Estimate method** (Belasco ≈4.25 km/lap from 51 km/12): target end-of-usable ≈ Cond ~20%.
+Lever = `scalarTreadWearScale` only — do **not** retune locked Soft/Med/Hard `wearRate` /
+`rollingWearCoef` / heat from these bands. Street/non-slick still omit the key → global ×0.15.
 
-`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)`
+**Estimate method** (Belasco ≈4.25 km/lap): EOL ≈ Cond ~20%.
 
-where `wearProd ≈ wearRate × rollingWearCoef` (primary soft anchors), `L` = target laps to EOL,
-`s_C5 = 1.0`, `L_C5 = 12`.
+`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)` with `s_C5 = 1.0`, `L_C5 = 12`.
 
-| Compound | Profile | Target laps (EOL) | wearProd (approx) | **Est. `scalarTreadWearScale`** | Status |
-| --- | --- | --- | --- | --- | --- |
-| **C5** supersoft | `supersoft_slick` 0.875 | **10–15** (use 12) | 0.00355×92 ≈ 0.327 | **1.00** | **OPEN** |
-| **C4** soft | `soft_slick` 0.80 | **20–25** (use 22) | 0.00255×70 ≈ 0.179 | **~0.95** | queued (after C5 lock) |
-| **C3** medium | `medium_slick` 0.65 | **30–40** (use 35) | 0.00135×42 ≈ 0.057 | **~1.85** | queued |
-| **C2** hard | `hard_slick` 0.50 | **45–55** (use 50) | 0.00115×50 ≈ 0.058 | **~1.35** | queued |
-
-Notes: Med/Hard mid-anchors (0.725 / 0.575) follow the same primary when opened (or average
-with mid wearProd). C3 est. &gt; 1.0 because profile wearProd is already very low vs C5 —
-scalar raises the Cond clock toward a medium race stint, not qualify. If C5 locks at a nudged
-`s_C5` ≠ 1.0, **rescale the table** by `s_C5` before opening C4.
+| Softness | Profile | Target laps (EOL) | **`scalarTreadWearScale`** | Status |
+| --- | --- | --- | --- | --- |
+| 0.50 | hard C2 | 45–55 (50) | **1.35** | predictive planted |
+| 0.575 | hard mid | ~50 | **1.10** | predictive (curve) |
+| 0.65 | medium C3 | 30–40 (35) | **1.85** | predictive planted |
+| 0.725 | medium mid | ~35 | **1.50** | predictive (curve) |
+| 0.80 | soft C4 | 20–25 (22) | **0.95** | predictive planted |
+| 0.875 | supersoft C5 | 10–15 (12) | **1.00** | **OPEN — confirm first** |
