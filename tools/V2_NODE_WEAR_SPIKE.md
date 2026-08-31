@@ -365,10 +365,10 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   @ 65s burnout). **Parked / non-blocking:** feel revisit only if tester feedback arrives;
   do not hold other work or release on this checkbox.
 
-## Open bands (awaiting user captures)
+## Open bands
 
-Do **not** claim LOCKED or invent band numbers until captures land. Do **not** retune Soft
-life / camber ladder / drift rate / **drag long** / **wet** from these protocols. Remaining: street heat.
+Do **not** retune Soft life / camber ladder / drift rate / **drag long** / **wet** /
+**street heat** from closed protocols. Drag + wet + street heat closed 2026-08-30.
 
 ### Drag — **CLOSED / LOCKED** (2026-08-30)
 
@@ -395,7 +395,7 @@ held (park after: rear long ~151%, stint max ~101–103°C, Cond 100). Lat/dry u
 wet grip softer than dry, spin on accel sane, lock fade off, rainState often 0 with surface wet).
 No profile retune. Satisfied.
 
-### Street heat — **awaiting capture**
+### Street heat — **CLOSED / LOCKED** (2026-08-30)
 
 | Step | Action |
 | --- | --- |
@@ -404,6 +404,7 @@ No profile retune. Satisfied.
 | 2 | Capture: warm-up time to working band, Hot flash?, blister 0, Cond quiet |
 | Watch | Camber ladder already LOCKED; this band is cruise heat only |
 
-**Status:** protocol ready; **awaiting user captures**. Drag + wet closed.
+**Status:** Sport park Cold (~26°C vs opt 66) → **~10 min cruise ~44 mph** → **Normal ~70°C**
+(inside ±18 plateau), Cond ~100, blister 0, PSI toward hot tgt. **PASS / no nudge.** Satisfied.
 
-Light commercial leftovers only if street heat done (PSI seed already closed false UNDER).
+Light commercial leftovers only if needed (PSI seed already closed false UNDER).

@@ -232,7 +232,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Drag CLOSED / LOCKED** — `longGripMult` **1.18** (native PASS + ~1400 hp mod launch;
   rear long ~151%).
 - **Wet CLOSED / LOCKED** — ASPHALT_WET park/accel/brake/cruise **PASS / no nudge**.
-  Remaining open: **street heat** (warm-up cruise).
+- **Street heat CLOSED / LOCKED** — Sport park Cold → ~10 min ~44 mph cruise → Normal ~70°C
+  vs opt 66 (plateau OK); Cond ~100, blister 0.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -271,4 +272,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (A2 ON; drag long + wet LOCKED; street heat open).*
+*Last updated: 2026-08-30 (A2 ON; drag long + wet + street heat LOCKED).*

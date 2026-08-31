@@ -17,7 +17,7 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 4. Commercial PSI hot-tgt seed from native cold (drag rear false UNDER fixed earlier)
 5. **Pitwall Heavy** = DEV only (`-dev` / git); player zip ships **Classic + Crew** only
 
-**Calibration touched?** ☐ No (default) · ☑ Yes — drag long 1.18; wet closed; A2 ON; street heat still open
+**Calibration touched?** ☐ No (default) · ☑ Yes — drag long 1.18; wet + street heat closed; A2 ON
 
 ---
 
@@ -83,7 +83,7 @@ Only run the rows that match **what you changed**. Skip the rest.
 
 | Scenario | Pass | Notes |
 |----------|:----:|-------|
-| Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | |
+| Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | **Street heat LOCKED** 2026-08-30 — Sport ~10 min ~44 mph → Normal ~70 vs opt 66 |
 | Hard track lap — Soft/Med/Hard band still plausible | ☐ | |
 | Spinout / lockup — **Leak** only (flatspot removed); node peak teens on hard lock | ☐ | |
 | Wet asphalt — grip drops, no ice-like behavior | ☐ | **LOCKED** 2026-08-30 — no nudge |
@@ -118,7 +118,7 @@ ReSpin private tester — v0.2.0 · 2026-08-30 (Beta)
 CHANGES:
 • A2 mild scalar grip fade (sc < 70% → floor 0.90); A1 held
 • Drag longGripMult 1.18 LOCKED (native + ~1400 hp)
-• Wet band LOCKED; street heat warm-up still open
+• Wet + street heat LOCKED; drag longGripMult 1.18 LOCKED
 • Classic / Crew HUDs in zip; Dev Pitwall only on -dev
 
 INSTALL:
@@ -142,7 +142,7 @@ Build: v0.2.0 · testing/main · 2026-08-30
 - **Respawn required** after Lua/UI updates (cached apps / old stream name).
 - **Only one** thermals mod at a time.
 - **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
-- **Beta:** street heat warm-up still open; wet + drag long locked 2026-08-30. Other locked bands in listing.
+- **Beta:** drag long + wet + street heat locked 2026-08-30. Other locked bands in listing.
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 - **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.
