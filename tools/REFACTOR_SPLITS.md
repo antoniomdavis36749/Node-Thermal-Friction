@@ -251,9 +251,8 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
 - **Commercial leftovers CLOSED** (2026-08-30) — feel OK; no further commercial band work
-- **Slick scalar life predictive PLANTED** — C5 **1.00** (confirm first, opt≈80); C4 **0.95**;
-  C3 **1.85**; C2 **1.35**; mids **1.10 / 1.50**. Spectrum lerps between anchors. Soft/Med/Hard
-  heat+wearRate locks held.
+- **Slick scalar life OPEN (nudged)** — C5 **6.0** after 26 km Cond~93% call (was 1.0);
+  ladder ×6 (C4 **5.7** / C3 **11.1** / C2 **8.1**). Node balance parked. Re-confirm C5.
 - **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
   mute; rate **0.017** provisional. **HELD / non-blocking** — feel revisit only if
   tester feedback lands (may not before next drop)
@@ -277,4 +276,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (slick spectrum predictive scalar life planted; C5 confirm first).*
+*Last updated: 2026-08-30 (C5 scalar nudged 1.0→6.0; slick ladder ×6; node balance parked).*

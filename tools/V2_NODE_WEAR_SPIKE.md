@@ -415,39 +415,32 @@ feel OK — **no further commercial band work**.
 **A2 feel (optional / user-owned):** extended Belasco supersoft to exercise `sc` &lt; 70% fade —
 not a release blocker; report only if fade feels wrong.
 
-### Supersoft C5 life — **OPEN** (2026-08-30) — confirm first
+### Supersoft C5 life — **OPEN** (nudged 2026-08-30)
 
 | Step | Action |
 | --- | --- |
-| 0 | Respawn cold supersoft (softnessCoef 0.875 / Qualify) |
+| 0 | Respawn cold supersoft (Qualify / name contains `supersoft` → opt ≈ 80) |
 | 1 | Belasco ~**8–12 laps** (~F1 C5 10–15 lap ceiling) |
 | 2 | Capture: Cond/`sc\|nd`, blister, dyn grip; note A2 if `sc` &lt; 70% |
-| Watch | Do not retune locked Soft/Med/Hard `wearRate` / heat from C5; Sport street ×0.15 default held |
+| Watch | Do not retune locked Soft/Med/Hard `wearRate` / heat; node balance parked |
 
-**Status:** C5 `scalarTreadWearScale = 1.0`. Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.
+**Capture call (26 km):** opt **80** C5 live; Cond **~93%** (`sc`-led, ~7% loss). Target mid-stint
+for 10–15 lap EOL was ~40% loss → shortfall **~×5.8**. **Nudge `scalarTreadWearScale` 1.0→6.0**;
+full slick ladder rescaled ×6. Re-confirm ~20–25 km (expect Cond ~60–70% band) then lock/nudge.
 
-**Confirm gate:** Pitwall **opt ≈ 80°C** (C5). **opt 82°C** = Soft C4 (`softnessCoef` 1.0→0.80) —
-label may still read `soft + supersoft` as spectrum neighbors. Use **GT3 ReSpin Qualify Supersoft**.
+**Node note:** fronts node peak teens while Cond is sc-led — revisit slick node balance only after
+C5 scalar lands.
 
-### Slick scalar life ladder — **predictive values PLANTED** (2026-08-30)
+### Slick scalar life ladder — **rescaled from C5×6** (2026-08-30)
 
-All `SLICK_SPECTRUM_POINTS` anchors carry `scalarTreadWearScale` so **in-between softness
-lerps on the spectrum curve** (Soft↔C5, Med↔Soft, etc. wear the blended scale). Confirm
-**one compound at a time** starting with C5 (worst case); after C5 locks, rescale the table
-by locked `s_C5` if ≠ 1.0, then short-confirm C4→C3→C2 from these estimates.
-
-Lever = `scalarTreadWearScale` only — do **not** retune locked Soft/Med/Hard `wearRate` /
-`rollingWearCoef` / heat from these bands. Street/non-slick still omit the key → global ×0.15.
-
-**Estimate method** (Belasco ≈4.25 km/lap): EOL ≈ Cond ~20%.
-
-`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)` with `s_C5 = 1.0`, `L_C5 = 12`.
+`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)` with **`s_C5 = 6.0`**, `L_C5 = 12`.
+Spectrum lerps between anchors. Street omit key → global ×0.15.
 
 | Softness | Profile | Target laps (EOL) | **`scalarTreadWearScale`** | Status |
 | --- | --- | --- | --- | --- |
-| 0.50 | hard C2 | 45–55 (50) | **1.35** | predictive planted |
-| 0.575 | hard mid | ~50 | **1.10** | predictive (curve) |
-| 0.65 | medium C3 | 30–40 (35) | **1.85** | predictive planted |
-| 0.725 | medium mid | ~35 | **1.50** | predictive (curve) |
-| 0.80 | soft C4 | 20–25 (22) | **0.95** | predictive planted |
-| 0.875 | supersoft C5 | 10–15 (12) | **1.00** | **OPEN — confirm first** |
+| 0.50 | hard C2 | 45–55 (50) | **8.1** | predictive (×6) |
+| 0.575 | hard mid | ~50 | **6.6** | predictive (×6) |
+| 0.65 | medium C3 | 30–40 (35) | **11.1** | predictive (×6) |
+| 0.725 | medium mid | ~35 | **9.0** | predictive (×6) |
+| 0.80 | soft C4 | 20–25 (22) | **5.7** | predictive (×6) |
+| 0.875 | supersoft C5 | 10–15 (12) | **6.0** | **OPEN — re-confirm** |
