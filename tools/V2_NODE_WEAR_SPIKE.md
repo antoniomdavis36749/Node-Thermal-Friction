@@ -426,3 +426,30 @@ not a release blocker; report only if fade feels wrong.
 
 **Status:** `mods.scalarTreadWearScale = 1.0` on `supersoft_slick` only (prior 51 km / 12 laps
 Cond ~88% at global ×0.15 was immortal). Est. Cond ~15–25% by ~12 laps. **Confirm** then lock/nudge.
+
+### Slick scalar life ladder (future — one compound at a time)
+
+**Process:** C5 is worst-case baseline. After C5 locks, open **C4 → C3 → C2** one at a time.
+Start each open band at the **estimate below** (saves full immortal stints); short Belasco confirm
+(~half target laps or until Cond in band) → nudge → lock. Lever = `scalarTreadWearScale` only —
+do **not** retune locked Soft/Med/Hard `wearRate` / `rollingWearCoef` / heat from these bands.
+Sport global ×0.15 stays the default when the key is omitted (street).
+
+**Estimate method** (Belasco ≈4.25 km/lap from 51 km/12): target end-of-usable ≈ Cond ~20%.
+
+`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)`
+
+where `wearProd ≈ wearRate × rollingWearCoef` (primary soft anchors), `L` = target laps to EOL,
+`s_C5 = 1.0`, `L_C5 = 12`.
+
+| Compound | Profile | Target laps (EOL) | wearProd (approx) | **Est. `scalarTreadWearScale`** | Status |
+| --- | --- | --- | --- | --- | --- |
+| **C5** supersoft | `supersoft_slick` 0.875 | **10–15** (use 12) | 0.00355×92 ≈ 0.327 | **1.00** | **OPEN** |
+| **C4** soft | `soft_slick` 0.80 | **20–25** (use 22) | 0.00255×70 ≈ 0.179 | **~0.95** | queued (after C5 lock) |
+| **C3** medium | `medium_slick` 0.65 | **30–40** (use 35) | 0.00135×42 ≈ 0.057 | **~1.85** | queued |
+| **C2** hard | `hard_slick` 0.50 | **45–55** (use 50) | 0.00115×50 ≈ 0.058 | **~1.35** | queued |
+
+Notes: Med/Hard mid-anchors (0.725 / 0.575) follow the same primary when opened (or average
+with mid wearProd). C3 est. &gt; 1.0 because profile wearProd is already very low vs C5 —
+scalar raises the Cond clock toward a medium race stint, not qualify. If C5 locks at a nudged
+`s_C5` ≠ 1.0, **rescale the table** by `s_C5` before opening C4.
