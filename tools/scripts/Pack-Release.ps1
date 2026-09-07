@@ -1,7 +1,7 @@
 #Requires -Version 5.1
 param(
     [string]$OutDir = '',
-    [string]$ZipName = 'TireWearThermalsReSpin.zip'
+    [string]$ZipName = 'NodeThermalFriction.zip'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -44,7 +44,7 @@ with zipfile.ZipFile(dest, "w", compression=zipfile.ZIP_DEFLATED) as zf:
         zf.write(p, arcname=arc)
 print(dest)
 '@
-    $tmpPy = Join-Path $env:TEMP ('respin-zip-' + [guid]::NewGuid().ToString('N') + '.py')
+    $tmpPy = Join-Path $env:TEMP ('ntf-zip-' + [guid]::NewGuid().ToString('N') + '.py')
     Set-Content -Path $tmpPy -Value $py -Encoding UTF8
     try {
         python $tmpPy $StageDir $DestZip
@@ -68,7 +68,7 @@ print(dest)
 if ($ZipName -notmatch '\.zip$') { $ZipName = "$ZipName.zip" }
 $zipPath = Join-Path $OutDir $ZipName
 
-$stage = Join-Path $env:TEMP ("respin-pack-" + [guid]::NewGuid().ToString('N'))
+$stage = Join-Path $env:TEMP ("ntf-pack-" + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
 
 try {
@@ -88,7 +88,7 @@ try {
     $mi = Join-Path $ModRoot 'mod_info'
     if (Test-Path $mi) {
         Copy-Item -Recurse -Force $mi (Join-Path $stage 'mod_info')
-        # Core identity only. Companion tires live in Tire-Wear-and-Thermals-ReSpin-Tires.
+        # Core identity only. Companion tires live in Node-Thermal-Friction-Tires.
         $compatMi = Join-Path $stage 'mod_info\TWTRS_COMPAT'
         if (Test-Path $compatMi) { Remove-Item -Recurse -Force $compatMi }
         Get-ChildItem (Join-Path $stage 'mod_info') -Recurse -Filter 'icon-redux-reference.jpg' -ErrorAction SilentlyContinue | Remove-Item -Force
@@ -118,7 +118,7 @@ try {
     }
 
     New-ZipFromStage -StageDir $stage -DestZip $zipPath
-    Write-Host 'NOTE: this packer is core-only (no vehicles/). Companion tires: Tire-Wear-and-Thermals-ReSpin-Tires'
+    Write-Host 'NOTE: this packer is core-only (no vehicles/). Companion tires: Node-Thermal-Friction-Tires'
     Write-Host 'NOTE: zip entries use forward slashes (required by BeamNG zipFS).'
 }
 finally {

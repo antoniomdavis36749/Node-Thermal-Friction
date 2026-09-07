@@ -24,7 +24,7 @@
 
   You drive 4 Belasco laps. Script confirms CSV is writing then exits.
 
-  Soft C4 mute-removal (ReSpin Soft Slick): Phase 1 slick scales=1.0; Phase 2 cruise RR/choke=1.0.
+  Soft C4 mute-removal (NTF Soft Slick): Phase 1 slick scales=1.0; Phase 2 cruise RR/choke=1.0.
   WCU right-turn bias: expect RL hotter than RR in heavy-accel zones — track/load, not Soft C4 bug.
   while leaving the game running.
 
@@ -37,7 +37,7 @@
 #>
 $ErrorActionPreference = 'Stop'
 $gameExe = 'C:\Program Files (x86)\Steam\steamapps\common\BeamNG.drive\Bin64\BeamNG.drive.x64.exe'
-$modVs = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\tools'
+$modVs = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev\tools'
 $modOut = Join-Path $modVs 'output'
 $status = Join-Path $modOut 'wc-scintilla-lap-status.json'
 $result = Join-Path $modOut 'wc-scintilla-lap-result.txt'

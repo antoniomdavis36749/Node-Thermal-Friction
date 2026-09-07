@@ -246,22 +246,22 @@ $cases = @(
   @{ name='Street sport_plus'; tire='tire_F_245_40_18_sport_plus'; tread=0.40
     parts=@()
     expectDesc='Sport Plus'; expectPurpose='street'; expectReason='sport_plus_name' }
-  @{ name='Street track_day name'; tire='tire_F_235_40_18_Respin_track_day'; tread=0.40
+  @{ name='Street track_day name'; tire='tire_F_235_40_18_NTF_track_day'; tread=0.40
     parts=@()
     expectDesc='Track Day'; expectPurpose='street'; expectReason='track_day_name' }
   @{ name='Legacy sport_tour name maps to Track Day'; tire='tire_F_235_40_18_sport_tour'; tread=0.40
     parts=@()
     expectDesc='Track Day'; expectPurpose='street'; expectReason='track_day_name' }
-  @{ name='Street track_day JBeam tread 0.18'; tire='tire_F_235_40_18_Respin_track_day'; tread=0.18
+  @{ name='Street track_day JBeam tread 0.18'; tire='tire_F_235_40_18_NTF_track_day'; tread=0.18
     parts=@()
     expectDesc='Track Day'; expectPurpose='street'; expectReason='track_day_name' }
   @{ name='Street track_day tread unnamed'; tire='tire_F_235_40_18_standard'; tread=0.40
     parts=@()
     expectDesc='Track Day'; expectPurpose='street'; expectReason='street_spectrum' }
-  @{ name='Street Respin hard_slick C2'; tire='tire_F_235_40_18_Respin_hard_slick'; tread=0.00
+  @{ name='Street NTF hard_slick C2'; tire='tire_F_235_40_18_NTF_hard_slick'; tread=0.00
     parts=@()
     expectDesc='Slick'; expectPurpose='circuit'; expectReason='slick_spectrum' }
-  @{ name='Street Respin medium_slick C3'; tire='tire_F_235_40_18_Respin_medium_slick'; tread=0.00
+  @{ name='Street NTF medium_slick C3'; tire='tire_F_235_40_18_NTF_medium_slick'; tread=0.00
     parts=@()
     expectDesc='Slick'; expectPurpose='circuit'; expectReason='slick_spectrum' }
   @{ name='Street standard mid'; tire='tire_F_205_55_16_standard'; tread=0.60

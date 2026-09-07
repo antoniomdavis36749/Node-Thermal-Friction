@@ -29,7 +29,7 @@ function M.install(F, deps)
     end
 
     -- Progressive pressure leak via BeamNG native pressure-group API.
-    -- Used for ReSpin-owned thermal/wear leaks ONLY. Spike-strip / wd.isPunctured
+    -- Used for Node-Thermal Friction-owned thermal/wear leaks ONLY. Spike-strip / wd.isPunctured
     -- leaks are owned by stock wheels.lua — never call this while isPunctured.
     F.applyPressureLeakPa = function(wd, leakPaPerSec, dt)
         if isRemoteMpVehicle() then return nil end

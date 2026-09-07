@@ -8,7 +8,7 @@
 --   auto   — slow sensor-aided learn lap (≤10 mph) → repair → 10 aggressive AI laps
 --   manual — teleport once, arm tire CSV telemetry, AI disabled (user drives)
 --
--- Triggers (under mods/unpacked/Tire-Wear-and-Thermals-ReSpin-dev/tools/):
+-- Triggers (under mods/unpacked/Node-Thermal-Friction-dev/tools/):
 --   RUN_WC_MANUAL_TEL          → manual telemetry-only
 --   RUN_WC_GT4_TEST            → auto AI test (default)
 --   RUN_WC_GT4_TEST contents containing "manual" → manual telemetry-only
@@ -43,7 +43,7 @@ local MPH_PER_MPS = 2.2369362920544
 
 local function getToolsDir()
   -- Relative to BeamNG user folder (io.open works here; absolute Windows paths often fail in GELUA)
-  return 'mods/unpacked/Tire-Wear-and-Thermals-ReSpin-dev/tools'
+  return 'mods/unpacked/Node-Thermal-Friction-dev/tools'
 end
 
 local function getOutDir()
@@ -711,7 +711,7 @@ local function finishTest(reason)
   appendResult('statusJson=' .. statusPath())
   guihooks.trigger('toastrMsg', {
     type = reason and 'error' or 'success',
-    title = 'ReSpin Lap Test',
+    title = 'NTF Lap Test',
     msg = reason and ('Failed: ' .. reason) or ('Completed ' .. TARGET_LAPS .. ' aggressive laps'),
   })
 end
@@ -795,7 +795,7 @@ local function abortUserStop(reason)
   appendResult('telemetry=off AI=disabled phase=stopped')
   guihooks.trigger('toastrMsg', {
     type = 'warning',
-    title = 'ReSpin Lap Test',
+    title = 'NTF Lap Test',
     msg = 'Stopped — telemetry off, AI disabled',
   })
 end

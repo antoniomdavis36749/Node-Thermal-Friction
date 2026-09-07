@@ -66,6 +66,7 @@ function M.install(F, deps)
                 if type(v2) == "number" then
                     local v1 = DEFAULT_MODS[k]
                     if k == "scalarTreadWearScale" then v1 = 0.15 end
+                    if k == "nodeWearScale" then v1 = 1.0 end
                     if type(v1) == "number" then
                         targetTable[k] = lerp(v1, v2, factor)
                     else
@@ -414,7 +415,7 @@ function M.install(F, deps)
         elseif isRaceLikeName and not string.find(nameLower, "gravel", 1, true) then
             -- Remap BeamNG 0.5/0.8/1.0 soft tiers onto densified 0.50/0.65/0.80 spectrum
             -- (explicit 0.875 SKU is C5 supersoft; 1.0 stays C4).
-            -- Name wins when JBeam softnessCoef is missing/clamped: Respin *_supersoft_* → C5.
+            -- Name wins when JBeam softnessCoef is missing/clamped: NTF *_supersoft_* → C5.
             if string.find(nameLower, "supersoft", 1, true) then
                 softnessCoef = 0.875
             end

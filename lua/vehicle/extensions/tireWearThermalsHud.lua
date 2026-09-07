@@ -77,7 +77,7 @@ function M.install(F, deps)
                 tempCategory = "Normal",
                 working_temp = WORKING_TEMP, condition = 100, conditionScalar = 100, conditionNode = 100, conditionNodeLead = 0,
                 zoneCondition = { 100, 100, 100 },
-                tyreGrip = 1, longGrip = 1, latGrip = 1, camber = 0, toe = 0, pressure = 25,
+                tyreGrip = 1, longGrip = 1, latGrip = 1, wearPenalty = 1, camber = 0, toe = 0, pressure = 25,
                 initialPressure = 25, optimalPressure = 25, coldPressure = 25, targetHotPressure = 25,
                 luaPressure = 25, nativePressure = 25, pressureDelta = 0,
                 pressureRatio = 1, skinCarcassGap = 0, driveHeatGate = 0, driveHeatGateCarcass = 0,
@@ -172,6 +172,7 @@ function M.install(F, deps)
                     entry.tyreGrip = (w.isBroken) and 0 or grip
                     entry.longGrip = (w.isBroken) and 0 or longGrip
                     entry.latGrip = (w.isBroken) and 0 or latGrip
+                    entry.wearPenalty = (w.isBroken) and 0 or (data.lastWearPenalty or 1)
                     entry.lockFade = (w.isBroken) and 0 or (data.lockFade or 0)
                     entry.nodeSpikeOn = (data.nodeSpikeOn and data.nodeSpikeOn ~= 0) and 1 or 0
                     entry.nodeGate = data.nodeGate or "idle"

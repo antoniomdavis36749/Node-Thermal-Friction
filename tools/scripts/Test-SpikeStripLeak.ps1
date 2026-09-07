@@ -5,15 +5,15 @@
   Stock wheels.lua (updateWheelsGFX):
     while isPunctured: P = max(105kPa, P - punctureLeakRate * dt); setGroupPressure
 
-  Old ReSpin bug: also set leakRatePa from punctureLeakRate and called
+  Old NTF bug: also set leakRatePa from punctureLeakRate and called
   applyPressureLeakPa → double setGroupPressure → ~2x stock deflate.
 
-  Fixed ReSpin: while isPunctured, skip applyPressureLeakPa; UI-only tracking.
+  Fixed NTF: while isPunctured, skip applyPressureLeakPa; UI-only tracking.
 
   Checks:
     1) Native-only rate matches stock
     2) Old double-owner is ~2x faster
-    3) Fixed ReSpin (defer) matches native-only
+    3) Fixed NTF (defer) matches native-only
     4) Thermal leak still applies when NOT isPunctured
 #>
 $ErrorActionPreference = 'Stop'
@@ -31,23 +31,23 @@ function Invoke-NativeLeak([double]$absPa, [double]$ratePaS, [double]$dt) {
   return [math]::Max($MinAbsPa, $absPa - $ratePaS * $dt)
 }
 
-# Old ReSpin: both owners write the same rate each frame
+# Old NTF: both owners write the same rate each frame
 function Invoke-DoubleLeak([double]$absPa, [double]$ratePaS, [double]$dt) {
   $p = Invoke-NativeLeak $absPa $ratePaS $dt
   return Invoke-NativeLeak $p $ratePaS $dt
 }
 
-# Fixed ReSpin: while isPunctured, only native writes
+# Fixed NTF: while isPunctured, only native writes
 function Invoke-FixedSpikeLeak(
   [double]$absPa,
   [double]$nativeRatePaS,
-  [double]$respinLeakPaS,
+  [double]$ntfLeakPaS,
   [bool]$isPunctured,
   [double]$dt
 ) {
   $p = Invoke-NativeLeak $absPa $nativeRatePaS $dt
-  if (-not $isPunctured -and $respinLeakPaS -gt 0) {
-    $p = Invoke-NativeLeak $p $respinLeakPaS $dt
+  if (-not $isPunctured -and $ntfLeakPaS -gt 0) {
+    $p = Invoke-NativeLeak $p $ntfLeakPaS $dt
   }
   return $p
 }
@@ -74,7 +74,7 @@ for ($i = 0; $i -lt $steps; $i++) {
   $nativeP = Invoke-NativeLeak $nativeP $PunctureLeakRate $Dt
   $doubleP = Invoke-DoubleLeak $doubleP $PunctureLeakRate $Dt
   $fixedP = Invoke-FixedSpikeLeak $fixedP $PunctureLeakRate $PunctureLeakRate $true $Dt
-  # Thermal ReSpin leak with no spike puncture — still allowed
+  # Thermal NTF leak with no spike puncture — still allowed
   $thermalOnlyP = Invoke-FixedSpikeLeak $thermalOnlyP 0.0 $thermalRate $false $Dt
 }
 
@@ -139,7 +139,7 @@ if ($nativeP -ge $MinAbsPa -and $doubleP -ge $MinAbsPa) {
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine(('RESULT: {0} pass / {1} fail' -f $pass, $fail))
 if ($fail -eq 0) {
-  [void]$sb.AppendLine('VERDICT: PASS - native owns spike leak; ReSpin defer matches stock rate')
+  [void]$sb.AppendLine('VERDICT: PASS - native owns spike leak; Node-Thermal Friction defer matches stock rate')
 } else {
   [void]$sb.AppendLine('VERDICT: FAIL')
 }

@@ -1,4 +1,4 @@
-# ReSpin — tester build checklist (one page)
+# Node-Thermal Friction — tester build checklist (one page)
 
 Use this **before every build** you hand to testers (Discord, forum, `-dev` sync, or zip).  
 Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does it work?”** list.
@@ -11,7 +11,7 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 
 ## 1. What changed (5 bullets max — paste to testers)
 
-1. **A2** mild scalar Cond→grip fade (`sc` &lt; 70% → floor 0.90); A1 node μ unchanged
+1. **A2** mild scalar Cond→grip fade (`sc` &lt; 70% → floor **0.70 LOCKED**); A1 node μ unchanged
 2. **Drag** `longGripMult` **1.18 LOCKED** (native + ~1400 hp)
 3. **Wet + street heat LOCKED** (ASPHALT_WET PASS; Sport cruise warm-up Normal ~70 vs opt 66)
 4. Commercial PSI hot-tgt seed + leftovers **CLOSED** (feel OK)
@@ -25,9 +25,9 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 
 | Step | Done |
 |------|:----:|
-| Only **one** thermals mod enabled (disable Redux / Luuk / old ReSpin Repo copy) | ☐ |
-| Core: `Tire-Wear-and-Thermals-ReSpin-dev` **or** test zip — not both | ☐ |
-| Compat tires (if testing Scintilla ReSpin): `Tire-Wear-and-Thermals-ReSpin-Tires-dev` enabled | ☐ |
+| Only **one** thermals mod enabled (disable Redux / Luuk / old Node-Thermal Friction Repo copy) | ☐ |
+| Core: `Node-Thermal-Friction-dev` **or** test zip — not both | ☐ |
+| Compat tires (if testing Scintilla Node-Thermal Friction): `Node-Thermal-Friction-Tires-dev` enabled | ☐ |
 | After **any** Lua/UI change: **respawn vehicle** (reload map is not enough) | ☐ |
 | Re-add HUD apps if stream is blank: Classic / Crew (Pitwall = dev only) | ☐ |
 
@@ -36,15 +36,15 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 Load **only** what you need so other mods don’t mask bugs or change grip/temps.
 
 **Enable**
-- ReSpin core: `Tire-Wear-and-Thermals-ReSpin-dev` **or** test zip — **not both**
-- Compat tires (Scintilla ReSpin only): `Tire-Wear-and-Thermals-ReSpin-Tires-dev`
-- The **GT3 / car under test** (e.g. Scintilla GT3 ReSpin) and any JBeam pack it **requires**
-- ReSpin HUD apps if checking temps/PSI (**Pitwall = dev/testers only**; Classic or Crew for normal play)
+- Node-Thermal Friction core: `Node-Thermal-Friction-dev` **or** test zip — **not both**
+- Compat tires (Scintilla Node-Thermal Friction only): `Node-Thermal-Friction-Tires-dev`
+- The **GT3 / car under test** (e.g. Scintilla GT3 NTF) and any JBeam pack it **requires**
+- Node-Thermal Friction HUD apps if checking temps/PSI (**Pitwall = dev/testers only**; Classic or Crew for normal play)
 
 **Disable**
-- Other tire / thermal / grip mods (Redux, Luuk, duplicate ReSpin Repo zips, `-dev` leftovers)
+- Other tire / thermal / grip mods (Redux, Luuk, duplicate Node-Thermal Friction Repo zips, `-dev` leftovers)
 - Extra car packs, gameplay mods, and UI you’re not using this session
-- A second copy of the same ReSpin folder (zip + unpack, or two `-dev` paths)
+- A second copy of the same Node-Thermal Friction folder (zip + unpack, or two `-dev` paths)
 
 **Rule:** one tire-physics mod family at a time during calibration and bug reports.
 
@@ -52,7 +52,7 @@ Load **only** what you need so other mods don’t mask bugs or change grip/temps
 
 ## 3. Smoke test (you or lead tester — ~10 minutes)
 
-Spawn **one car you know well** (e.g. Scintilla GT3 ReSpin Soft). Console open (`~`) — **no red Lua errors** on spawn.
+Spawn **one car you know well** (e.g. Scintilla GT3 NTF Soft). Console open (`~`) — **no red Lua errors** on spawn.
 
 | Check | Pass |
 |-------|:----:|
@@ -95,37 +95,37 @@ Only run the rows that match **what you changed**. Skip the rest.
 ## 5. Packaging (only if sending a **zip**, not just `-dev` sync)
 
 ```powershell
-.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin_0.2.0.zip'
+.\tools\scripts\Pack-Release.ps1 -ZipName 'NodeThermalFriction_0.2.0.zip'
 ```
 
 | Check | Done |
 |-------|:----:|
-| Zip contains `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_RESPIN/` at **root** (no extra parent folder) | ☐ |
+| Zip contains `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_NTF/` at **root** (no extra parent folder) | ☐ |
 | Zip does **not** contain `tools/`, `.git/`, `.vscode/` | ☐ |
 | Zip does **not** contain `ui/modules/apps/tireWearThermalsHeavy/` (dev Pitwall) | ☐ |
-| `mod_info/TWTRS_RESPIN/info.json` **version_string** matches section 1 (`0.2.0`) | ☐ |
+| `mod_info/TWTRS_NTF/info.json` **version_string** matches section 1 (`0.2.0`) | ☐ |
 | Clean install: enable zip only → apps appear in Apps menu | ☐ |
 
-Compat tires zip (if changed): pack from **ReSpin Tires** repo separately.
+Compat tires zip (if changed): pack from **Node-Thermal Friction Tires** repo separately.
 
 ---
 
 ## 6. Copy-paste for testers (Discord / forum)
 
 ```
-ReSpin private tester — v0.2.0 · 2026-08-30 (Beta)
+NTF private tester — v0.2.0 · 2026-08-30 (Beta)
 
 CHANGES:
-• A2 mild scalar grip fade (sc < 70% → floor 0.90); A1 held
+• A2 mild scalar grip fade (sc < 70% → floor **0.70 LOCKED**); A1 held
 • Drag longGripMult 1.18 LOCKED (native + ~1400 hp)
 • Wet + street heat LOCKED; commercial leftovers CLOSED
 • Drift rate 0.017 held / non-blocking; Classic+Crew in zip (Pitwall = -dev)
 
 INSTALL:
-• Disable other tire-thermals mods and the public ReSpin Repo copies (39082/39083) if you use -dev.
-• Minimal load: ReSpin core + compat tires (if Scintilla ReSpin) + test car only — disable unrelated mods.
-• Core: Tire-Wear-and-Thermals-ReSpin-dev (or attached TireWearThermalsReSpin_0.2.0.zip).
-• Compat (Scintilla ReSpin tires only): Tire-Wear-and-Thermals-ReSpin-Tires-dev.
+• Disable other tire-thermals mods and the public Node-Thermal Friction Repo copies (39082/39083) if you use -dev.
+• Minimal load: Node-Thermal Friction core + compat tires (if Scintilla Node-Thermal Friction) + test car only — disable unrelated mods.
+• Core: Node-Thermal-Friction-dev (or attached NodeThermalFriction_0.2.0.zip).
+• Compat (Scintilla NTF tires only): Node-Thermal-Friction-Tires-dev.
 • After install: spawn car, add Node-Thermal Friction Classic or Crew.
 
 IMPORTANT: Respawn vehicle after every Lua update.
@@ -144,7 +144,7 @@ Build: v0.2.0 · testing/main · 2026-08-30
 - **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
 - **Beta:** drag long + wet + street heat + commercial leftovers locked/closed 2026-08-30.
   Other locked bands in listing. Public Repo still paused.
-- **A2:** fade starts `sc` &lt; 70%; optional long-stint confirm — not a ship blocker.
+- **A2:** fade starts `sc` &lt; 70%; floor **0.70 LOCKED** (2026-09-06).
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 - **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.

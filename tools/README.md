@@ -13,7 +13,7 @@ Helpers for soft-sims, West Coast lap telemetry, and profile transforms.
 
 ## West Coast lap / telemetry
 
-Triggers live in `tools/` (VFS: `mods/unpacked/Tire-Wear-and-Thermals-ReSpin-dev/tools`):
+Triggers live in `tools/` (VFS: `mods/unpacked/Node-Thermal-Friction-dev/tools`):
 
 - `RUN_WC_MANUAL_TEL` — manual drive + CSV telemetry
 - `RUN_WC_GT4_TEST` — auto AI Belasco test
@@ -236,14 +236,14 @@ INVALID IF: no respawn | < ~20 km | grip-map only | mixed with HS slip sample
 - **Aero heat = mechanical (realism):** native Pitwall/CSV stay. `aeroHeatScale` **1.0** — aero newtons in `downForce` heat like weight. The 0.55 mute and speed×48% fake are off. If a GT3 cooks on a straight, chase RR / high-V cool, not an aero fudge. Locked Sport/Plus/slick heat was already on 1.0.
 - **Track Day HEAT+WEAR LOCKED:** heat v3 slip/work **10.9/6.20**, opt **76**, velCool **0.80** held. Wear **0.0033** (was immortal **0.00073** at 22 km ~0.2–0.5%; first-cut above Plus **0.0028** / ~1.5%, no 0.0033 22 km confirmation). **Do not nudge Track Day heat/wear.**
 - **Graining #1:** Global thresh **0.10→0.045**, window decay **0.012→0.0035**, rolling cap **0.008→0.003**. Sport/Plus `grainTempRatio` **0.88** (Sport &lt;~58°C, Plus &lt;~67°C), `grainRate` ×2. Soft/slick packs unchanged. **Respawn**; look for grain on a cold out-lap, not at 22 km hot.
-- **Compound for A/B:** ReSpin Soft Slick (C4) F+R — hold fixed across each mute family.
+- **Compound for A/B:** NTF Soft Slick (C4) F+R — hold fixed across each mute family.
 - **Phase 1 (done):** `drivePropSlickScale` / `drivePropSlickCarcassScale` → 1.0. Rears warm into/near opt 82; fronts lag (undriven + brake).
 - **FWD Soft-like topology LOCKED:** Before damp FR/FL ~**106 / ~120** Hot vs opt **82**. After: FR ~**97** Normal (top of usable ~**95–105**); F≫R kept; Hot still possible under abuse. Scales: `drivePropFwdSoftScale` **0.58** / carcass **0.48** / softnessMin **0.72**. Soft compound knobs untouched. RWD Soft Phase1 unmute stays. Duty: `fwd_soft_drive_damp`. **Do not nudge.**
 - **WCU right-turn bias:** Belasco / West Coast has many right turns in heavy-accel zones. On RWD that spikes **RL** skin/carcass vs **RR** (~+8–12°C typical). Treat RL≫RR as **track/load asymmetry**, not a Soft C4 bug — do not chase with global cool.
 - **Phase 2 (cruise mutes):** `cruiseRrScaleFull` / `cruiseRrScalePartial` / `cruiseDriveChokeMin` → 1.0 (was 0.48 / 0.72 / 0.15). Soft C4 live A/B; watch Belasco highway straights for cook.
 - **Soft C4 wear locked:** rollingWearCoef **70** (4-lap ~95.7–96.6% / ~3.5–4% drop; path live). airCool **0.014**. Protocol: **4 laps**.
 - **Soft C4 heat ACCEPTED (locked):** Track **15°C** settle ~**62 / 73 / 80 / 90** vs opt **82**. Loaded Turn 1 FR ~**70** then dumps on the straight. RL harsh-drive cook (~90–100 carcass) is a ceiling, not a bug. F<R on high-DF RWD is realistic — do **not** chase FR to 82 with global heat. No workHeatRate polish. Live knobs: `skinVelCoolScale` **0.85**, `workHeatG0` **0.04**, `staticCoolingRate` **0.060**, `trackConductivityMult` **0.75**, Path A6 floor **0.70**, Phase1+2 unmute. **Do not nudge Soft C4 heat/wear.**
-- **Medium C3 (next):** ReSpin Medium Slick F+R. Opt **~84** (not 82). Baseline knobs — do **not** copy Soft velCool 0.85 / workHeatG0 0.04. Same Track **15°C** if comparing shape to Soft. **Protocol: 4 laps first** (same as Soft — 8 laps did not move the Soft plateau). After the 4-lap Pitwall: if FR/RL still climbing, one 8-lap confirm; if the Soft-like F<R pattern is already there, stop at 4 and judge. Capture straight settle + loaded Turn 1. Judge vs Soft shape (FR cold, RR near opt, RL cook ceiling), not “all four at 84.”
+- **Medium C3 (next):** NTF Medium Slick F+R. Opt **~84** (not 82). Baseline knobs — do **not** copy Soft velCool 0.85 / workHeatG0 0.04. Same Track **15°C** if comparing shape to Soft. **Protocol: 4 laps first** (same as Soft — 8 laps did not move the Soft plateau). After the 4-lap Pitwall: if FR/RL still climbing, one 8-lap confirm; if the Soft-like F<R pattern is already there, stop at 4 and judge. Capture straight settle + loaded Turn 1. Judge vs Soft shape (FR cold, RR near opt, RL cook ceiling), not “all four at 84.”
 - **Medium C3 WEAR+HEAT LOCKED:** Soft-like settle ~**59 / 70s / ~80 / ~83** vs opt **84** (Track 15°C). Live knobs: `skinVelCoolScale` **0.60**, `workHeatG0` **0.04**, `airCool` **0.014**, `staticCoolingRate` **0.060**, `trackConductivityMult` **0.75**, slip/work **15/8.6** (mid **15.5/8.9**), `rollingWearCoef` **42/48**. Soft 0.80 locked. **Do not nudge Medium.**
 - **Hard C2 WEAR+HEAT LOCKED (#2):** Soft-like settle ~**62 / 74 / 79 / 86** vs opt **90**; wear ~**0.9–1.4%** @~22 km. Knobs: `skinVelCoolScale` **0.50**, `workHeatG0` **0.04**, slip/work **13.5/7.8** (mid **14/8.1**), `rollingWearCoef` **50/55**. Soft+Medium locked. **Do not nudge Hard.**
 - **Wear ladder (locked):** Soft **70** ≈4% → Medium **42/48** → Hard **50/55**.

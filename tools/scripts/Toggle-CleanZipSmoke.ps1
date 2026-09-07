@@ -15,9 +15,9 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $mods = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods'
-$unpacked = Join-Path $mods 'unpacked\Tire-Wear-and-Thermals-ReSpin-dev'
-$park = 'C:\Users\anton\AppData\Local\Temp\Tire-Wear-and-Thermals-ReSpin-dev.__smoke_off'
-$zipName = 'TireWearThermalsReSpin.zip'
+$unpacked = Join-Path $mods 'unpacked\Node-Thermal-Friction-dev'
+$park = 'C:\Users\anton\AppData\Local\Temp\Node-Thermal-Friction-dev.__smoke_off'
+$zipName = 'NodeThermalFriction.zip'
 $zipDst = Join-Path $mods $zipName
 
 if (Get-Process -Name 'BeamNG.drive*' -ErrorAction SilentlyContinue) {
@@ -28,7 +28,7 @@ function Get-PackZip {
     $candidates = @(
         (Join-Path $unpacked "tools\output\$zipName"),
         (Join-Path $park "tools\output\$zipName"),
-        (Join-Path 'C:\Users\anton\AppData\Local\Temp\respin-clone-smoke\tools\output' $zipName)
+        (Join-Path 'C:\Users\anton\AppData\Local\Temp\ntf-clone-smoke\tools\output' $zipName)
     )
     foreach ($c in $candidates) {
         if (Test-Path $c) { return $c }
@@ -56,8 +56,8 @@ if ($Enable) {
     Write-Host 'Clean zip smoke ENABLED.'
     Write-Host "  zip: $zipDst"
     Write-Host "  unpacked parked at: $park"
-    Write-Host 'Restart BeamNG → Repository/Mods: ensure TireWearThermalsReSpin is ON.'
-    Write-Host 'Apps menu → add Tire Wear Thermals ReSpin (Pitwall/Classic/Crew). Apps do not auto-open.'
+    Write-Host 'Restart BeamNG → Repository/Mods: ensure NodeThermalFriction is ON.'
+    Write-Host 'Apps menu → add Tire Wear Thermals Node-Thermal Friction (Pitwall/Classic/Crew). Apps do not auto-open.'
 }
 elseif ($Restore) {
     if (Test-Path $park) {
@@ -71,7 +71,7 @@ elseif ($Restore) {
         Move-Item -Path $park -Destination $unpacked
     }
     if (Test-Path $zipDst) { Remove-Item -Force $zipDst }
-    Write-Host 'Restored unpacked ReSpin; removed smoke zip from mods/.'
+    Write-Host 'Restored unpacked Node-Thermal Friction; removed smoke zip from mods/.'
 }
 else {
     Write-Host 'Use -Enable or -Restore'

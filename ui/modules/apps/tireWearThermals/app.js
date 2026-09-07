@@ -248,11 +248,11 @@ angular.module("beamng.apps")
 
                 var boundVehId = null;
                 var boundResetGen = null;
-                function resetRespinStreamBind() {
+                function resetNtfStreamBind() {
                     boundVehId = null;
                     boundResetGen = null;
                 }
-                function acceptRespinStream(dataStream) {
+                function acceptNtfStream(dataStream) {
                     if (!dataStream || !dataStream.data || dataStream.mpRemote) return false;
                     var id = dataStream.vehId;
                     if (id === undefined || id === null) return true;
@@ -270,7 +270,7 @@ angular.module("beamng.apps")
                     }
                     return true;
                 }
-                function isRespinLifeReset(dataStream) {
+                function isNtfLifeReset(dataStream) {
                     var gen = dataStream.resetGen;
                     if (gen === undefined || gen === null) return false;
                     if (boundResetGen === null) {
@@ -285,8 +285,8 @@ angular.module("beamng.apps")
                 }
 
                 function renderData(dataStream) {
-                    if (!acceptRespinStream(dataStream)) return;
-                    isRespinLifeReset(dataStream);
+                    if (!acceptNtfStream(dataStream)) return;
+                    isNtfLifeReset(dataStream);
 
                     ctx.setTransform(1, 0, 0, 1, 0, 0); 
                     ctx.clearRect(0, 0, c.width, c.height);
@@ -301,8 +301,8 @@ angular.module("beamng.apps")
                     }
                 }
 
-                scope.$on("VehicleChange", resetRespinStreamBind);
-                scope.$on("VehicleFocusChanged", resetRespinStreamBind);
+                scope.$on("VehicleChange", resetNtfStreamBind);
+                scope.$on("VehicleFocusChanged", resetNtfStreamBind);
                 scope.$on("TireWearThermals", function (event, dataStream) {
                     renderData(dataStream);
                 });

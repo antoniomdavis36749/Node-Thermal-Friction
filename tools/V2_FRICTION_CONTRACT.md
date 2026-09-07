@@ -11,7 +11,7 @@ future node wear (local contact damage). Never two absolute friction writers.
 
 | Layer | Owns | Must not |
 | --- | --- | --- |
-| **Thermal core** (current ReSpin) | Skin/carcass/rim/air temps, ducts, PSI, compound curves, surface bias, wheel-level baseline μ via `setFrictionThermalSensitivity` | Per-node mass, local flat geometry, a second thermal model |
+| **Thermal core** (current Node-Thermal Friction) | Skin/carcass/rim/air temps, ducts, PSI, compound curves, surface bias, wheel-level baseline μ via `setFrictionThermalSensitivity` | Per-node mass, local flat geometry, a second thermal model |
 | **Node wear** (future, clean-room) | Per-tread-node wear energy, relative contact friction/mass, flats / camber scallop feel | Second PSI model, second full thermal sim, absolute overwrite of wheel μ without reading thermal baseline |
 | **UI** | Pitwall thermals + (later) wear map | Two competing tire apps as the default story |
 
@@ -25,7 +25,7 @@ future node wear (local contact damage). Never two absolute friction writers.
 - **B — Nodes own contact:** Thermal core publishes modifiers only (temps → factors).
   Node layer applies absolute contact friction. Thermal must stop writing wheel μ.
 
-Do not run A and B mixed. Do not run ReSpin wheel μ + any third-party node-wear mod.
+Do not run A and B mixed. Do not run Node-Thermal Friction wheel μ + any third-party node-wear mod.
 
 ## Clean-room
 
@@ -41,7 +41,7 @@ HUD Cond = `min(scalar, node)` display hybrid.
 **A2 mild scalar grip fade ON** (`ENABLE_SCALAR_GRIP_FADE`, default **true**) —
 while spike on, `wearPenalty` fades from **`scalarTreadCondition` only** (life clock;
 never HUD `min(sc,nd)` or node peak). Shape: full grip until `lifeUsed ≥ 0.30` (**sc &lt; 70%**), then
-soft fade to floor **0.90** at life≈1 (mild; not old 0.75). Spike off keeps legacy
+soft fade to floor **0.70** at life≈1 (**LOCKED** 2026-09-06; was mild 0.90). Spike off keeps legacy
 condition→wearPenalty. A/B: set flag false.
 
 - Scalar **flatspot removed**.
@@ -55,12 +55,14 @@ condition→wearPenalty. A/B: set flag false.
   friction/mass (Phase 2: `wd.treadNodes` sector). See `tools/V2_NODE_WEAR_SPIKE.md`.
 - **A3 Classic + Crew HUD bridge** — `condition` / `zoneCondition` mirror node
   peak / O\|M\|I for display; A2 grip fade ignores those fields (scalar life only).
+- **`nodeWearScale`** — PROFILE_POINTS performance band **CLOSED / LOCKED**: Plus **1.10** →
+  Track Day / Sport **1.0** → Standard **0.82 / 0.75**. Lock/cam/drift × scale. Separate from scalar `sc`.
 - Public Repo update deprioritized; private tester **`0.2.0` (Beta)** + `-dev` / small group first.
 
 ## Lock policy
 
 - Native pressureWheel + vehicle brakes decide lock / ABS.
-- ReSpin may only change grip via thermal/wear/surface scales written once per
+- Node-Thermal Friction may only change grip via thermal/wear/surface scales written once per
   wheel through `setFrictionThermalSensitivity`.
 - Do not reintroduce pedal / gx / brakeTorque μ collapses for production.
 - If no-ABS cars cannot lock vs stock, tune compound / frictionCoef coupling —

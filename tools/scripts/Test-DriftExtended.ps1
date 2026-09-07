@@ -1,6 +1,6 @@
 # Extended-drift test with overheat throttle + carcass sink (mirrors live mod better)
 $ErrorActionPreference = 'Stop'
-$outPath = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\tools\output\drift-extended-test.txt'
+$outPath = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev\tools\output\drift-extended-test.txt'
 
 function Lerp([double]$a,[double]$b,[double]$t){ return $a + ($b-$a)*$t }
 function Clamp([double]$v,[double]$lo,[double]$hi){

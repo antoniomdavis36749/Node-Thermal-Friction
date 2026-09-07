@@ -1,6 +1,6 @@
 $ErrorActionPreference = 'Continue'
 $user = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current'
-$vs = Join-Path $user 'mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\tools'
+$vs = Join-Path $user 'mods\unpacked\Node-Thermal-Friction-dev\tools'
 $modOut = Join-Path $vs 'output'
 
 Write-Host '=== recent logs ==='

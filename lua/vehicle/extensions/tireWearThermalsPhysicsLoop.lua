@@ -110,7 +110,7 @@ function M.install(F, deps)
                 end
 
                 -- Spike-strip (mat 32): native wheels.lua owns setGroupPressure while isPunctured.
-                -- ReSpin only mirrors UI/condition — do NOT arm leakRatePa for applyPressureLeakPa.
+                -- Node-Thermal Friction only mirrors UI/condition — do NOT arm leakRatePa for applyPressureLeakPa.
                 w.isPunctured = wd.isPunctured and true or false
                 local mat1, mat2 = wd.contactMaterialID1, wd.contactMaterialID2
                 if (mat1 == SPIKE_STRIP_MATERIAL_ID or mat2 == SPIKE_STRIP_MATERIAL_ID or w.isPunctured)

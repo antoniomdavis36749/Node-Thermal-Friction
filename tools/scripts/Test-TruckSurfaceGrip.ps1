@@ -1,6 +1,6 @@
 # Post-fix truck x non-asphalt grip matrix (matches live applyProfileSurfaceBias)
 $ErrorActionPreference = 'Stop'
-$out = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\tools\output\truck-surface-grip-test.txt'
+$out = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev\tools\output\truck-surface-grip-test.txt'
 
 function Lerp([double]$a,[double]$b,[double]$t){ return $a+($b-$a)*$t }
 function Clamp([double]$v,[double]$lo,[double]$hi){ if($v -lt $lo){return $lo}; if($v -gt $hi){return $hi}; return $v }

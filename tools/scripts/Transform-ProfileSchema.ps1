@@ -1,6 +1,6 @@
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
-$path = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\lua\vehicle\extensions\auto\tireWearThermals.lua'
+$path = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev\lua\vehicle\extensions\auto\tireWearThermals.lua'
 $src = [IO.File]::ReadAllText($path)
 
 $bak = "$path.bak-schema"

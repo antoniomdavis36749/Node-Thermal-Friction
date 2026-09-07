@@ -15,7 +15,7 @@ local fire = tryRequire("fire")
 
 -- BeamNG spike-strip ground material ID (wheels.lua updateWheelsGFX puncture path).
 -- OWNERSHIP: native wheels.lua owns spike pressure writes (wd.isPunctured →
--- setGroupPressure at wd.punctureLeakRate). ReSpin only tracks UI/condition and
+-- setGroupPressure at wd.punctureLeakRate). Node-Thermal Friction only tracks UI/condition and
 -- must NOT call applyPressureLeakPa for the same group while isPunctured.
 local SPIKE_STRIP_MATERIAL_ID = 32
 -- sounds.lua scales slipEnergy ≈ *5e-6 for a 0..1 working range
@@ -305,7 +305,7 @@ local THERMAL_TOPOLOGY = {
     pressureColdRefreshParkedOnly = true, -- never adopt native while rolling (cold slicks never leave 8K window)
     pressureColdRefreshMaxSpeed = 4.0, -- m/s vehicle speed; hop/airborne frames are NOT "parked"
     -- Safe hot PSI → native pressure-group write-back (Gay-Lussac → soft-body stiffness).
-    -- Native BeamNG has no thermo→PSI; ReSpin rate-limits so warm tires stiffen without slam/TPMS fight.
+    -- Native BeamNG has no thermo→PSI; Node-Thermal Friction rate-limits so warm tires stiffen without slam/TPMS fight.
     pressureHotWritebackEnable = true,       -- master switch (ON with conservative rate/deadband)
     pressureHotWritebackMaxPsiS = 0.35,      -- max |ΔPSI|/s toward Lua hot target (slow approach)
     pressureHotWritebackRecoverPsiS = 2.5,   -- faster pull-down when native is well above thermal PSI
@@ -404,7 +404,7 @@ local stintDistanceM = 0 -- mod trip meter (m); resets on initTyreData / vehicle
 local telem = {
     csvEnabled = false,    -- Optional CSV dump (user can enable)
     interval = 1.0,        -- Seconds between samples when enabled
-    armMarker = "mods/unpacked/Tire-Wear-and-Thermals-ReSpin-dev/tools/TELEMETRY_CSV_ARMED",
+    armMarker = "mods/unpacked/Node-Thermal-Friction-dev/tools/TELEMETRY_CSV_ARMED",
     timer = 0,
     path = nil,
     csvBuffer = {},
@@ -1789,11 +1789,13 @@ F.getProfileBaselineGrip = function(profileLower, x)
     return c[1] + x * ((c[2] or 0) + x * ((c[3] or 0) + x * (c[4] or 0)))
 end
 
--- A2 mild scalar-only Cond→grip fade (default on). A/B off with flag.
+-- A2 scalar-only Cond→grip fade (default on). A/B off with flag.
 -- Never feeds HUD min(sc,nd) or node peak into wearPenalty while spike on.
+-- EOL floor LOCKED 0.70 (2026-09-06): Belasco med+soft ~68 km fronts sc~35% → A2×0.85.
+-- Mild 0.90 left C5 near-new at cliff; do not raise without a new feel pass.
 local ENABLE_SCALAR_GRIP_FADE = true
 local SCALAR_GRIP_FADE_START = 0.30 -- lifeUsed before fade (sc < 70%); was 0.40 / sc < 60%
-local SCALAR_GRIP_FADE_FLOOR = 0.90 -- wearPenalty at lifeUsed ≈ 1 (mild; not old 0.75)
+local SCALAR_GRIP_FADE_FLOOR = 0.70 -- wearPenalty at lifeUsed ≈ 1 (LOCKED; was mild 0.90)
 
 F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     local data = tyreData[wheelID]
@@ -1866,6 +1868,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
             wearPenalty = lerp(0.75, 1.0, x)
         end
     end
+    data.lastWearPenalty = wearPenalty
     tyreGrip = tyreGrip * wearPenalty
 
     -- Profile-owned thermal grip curve (ambient does not shift the compound peak)
@@ -2085,7 +2088,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
 end
 
 -- Brake lock fade: DISABLED (V2 experimental). Lock is native BeamNG
--- (brake torque vs patch μ). ReSpin only writes thermal/wear scales via
+-- (brake torque vs patch μ). Node-Thermal Friction only writes thermal/wear scales via
 -- setFrictionThermalSensitivity — not a lock controller.
 -- Set ENABLE_BRAKE_LOCK_FADE true only for A/B debug; keep false for normal use.
 local ENABLE_BRAKE_LOCK_FADE = false

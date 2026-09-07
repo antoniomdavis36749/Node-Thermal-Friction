@@ -358,8 +358,8 @@ angular.module("beamng.apps")
                                 <span class="tth-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(1) }}%
                                     <span class="tth-cap-dim">
-                                         · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}
-                                         · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                         · sc {{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}%
+                                         · nd {{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}%
                                          · {{ a1NodeLeadLabel(w) }}
                                     </span>
                                 </span>
@@ -373,6 +373,9 @@ angular.module("beamng.apps")
                                 <span class="tth-label">Dynamic Grip:</span>
                                 <span class="tth-value" ng-style="{'color': getGripColor(w.tyreGrip)}">
                                     {{ ((w.tyreGrip || 0) * 100).toFixed(2) }}%
+                                    <span class="tth-cap-dim" ng-if="w.wearPenalty !== undefined">
+                                        · A2×{{ (w.wearPenalty || 1).toFixed(2) }}
+                                    </span>
                                 </span>
                             </div>
 
@@ -589,7 +592,7 @@ angular.module("beamng.apps")
                             </div>
                             <div class="tth-section-label">NODE SPIKE</div>
                             <div class="tth-cap-dim" style="margin: 0 0 4px 0; font-size: 10px;">
-                                A1: Cond = min(scalar,node) · grip = node μ (no wearPenalty)
+                                A1: Cond = min(sc%,nd%) · A2 fade from sc only · node μ scallop
                             </div>
                             <div class="tth-capture-line">
                                 {{ w.name }} · {{ (w.nodeSpikeOn === 1 || w.nodeSpikeOn === true) ? 'ON' : 'OFF' }} {{ w.nodeGate || 'idle' }}
@@ -614,8 +617,8 @@ angular.module("beamng.apps")
                                 <span class="tth-value" style="font-size: 14px;">
                                     {{ (w.condition !== undefined ? w.condition : 100).toFixed(0) }}%
                                     <span class="tth-cap-dim"> hybrid</span>
-                                    · sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 100).toFixed(0) }}
-                                    · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                    · sc {{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 100).toFixed(0) }}%
+                                    · nd {{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}%
                                     <span class="tth-cap-dim"> · {{ a1NodeLeadLabel(w) }}</span>
                                 </span>
                             </div>
@@ -762,10 +765,10 @@ angular.module("beamng.apps")
                 }
 
                 // Client-side smooth motion: Lua ~30 Hz; RAF lerps display toward targets.
-                // Digest is throttled (~20 Hz): full $digest every RAF stalls CEF under Heavy binding load.
+                // Digest throttled harder than Crew (~10 Hz): Heavy bindings stall CEF at 20 Hz.
                 var LERP_K = 12;
                 var LERP_EPS = 0.05;
-                var DIGEST_INTERVAL_MS = 50; // ~20 Hz Angular updates; RAF still lerps at display rate
+                var DIGEST_INTERVAL_MS = 100; // ~10 Hz Angular updates; RAF still lerps at display rate
                 var rafId = null;
                 var lastRafTs = 0;
                 var lastDigestTs = 0;
@@ -802,7 +805,7 @@ angular.module("beamng.apps")
                     yawRateDeg: 0
                 };
                 var WHEEL_LERP_KEYS = [
-                    "condition", "tyreGrip", "pressure", "pressureRatio", "camber", "toe", "avgTemp",
+                    "condition", "tyreGrip", "wearPenalty", "pressure", "pressureRatio", "camber", "toe", "avgTemp",
                     "working_temp", "rimTemp", "airTemp", "aeroLoadN", "skinCarcassGap",
                     "brakeSurface", "brakeCore", "brakeThermalEfficiency", "brakeSoakRateCs",
                     "ductAirCoolFactor", "ductSoakCondFactor",
@@ -1417,7 +1420,7 @@ angular.module("beamng.apps")
                     lastRafTs = ts;
                     var alpha = Math.min(1, LERP_K * dt);
                     var moved = lerpDisplay(alpha);
-                    // Throttle digests: RAF keeps lerping the model; Angular rebinds at ~20 Hz.
+                    // Throttle digests: RAF keeps lerping the model; Angular rebinds at ~10 Hz.
                     if (!moved || !lastDigestTs || (ts - lastDigestTs) >= DIGEST_INTERVAL_MS) {
                         lastDigestTs = ts;
                         digestDisplay();
@@ -1440,11 +1443,11 @@ angular.module("beamng.apps")
 
                 var boundVehId = null;
                 var boundResetGen = null;
-                function resetRespinStreamBind() {
+                function resetNtfStreamBind() {
                     boundVehId = null;
                     boundResetGen = null;
                 }
-                function acceptRespinStream(dataStream) {
+                function acceptNtfStream(dataStream) {
                     if (!dataStream || !dataStream.data || dataStream.mpRemote) return false;
                     var id = dataStream.vehId;
                     if (id === undefined || id === null) return true;
@@ -1462,7 +1465,7 @@ angular.module("beamng.apps")
                     }
                     return true;
                 }
-                function isRespinLifeReset(dataStream) {
+                function isNtfLifeReset(dataStream) {
                     var gen = dataStream.resetGen;
                     if (gen === undefined || gen === null) return false;
                     if (boundResetGen === null) {
@@ -1477,11 +1480,11 @@ angular.module("beamng.apps")
                 }
 
                 function ingestStream(dataStream) {
-                    if (!acceptRespinStream(dataStream)) return;
+                    if (!acceptNtfStream(dataStream)) return;
 
                     var src = dataStream.data;
                     var count = src.length;
-                    var lifeReset = isRespinLifeReset(dataStream);
+                    var lifeReset = isNtfLifeReset(dataStream);
                     var structural = lifeReset || (scope.wheels.length !== count);
                     var i, w;
 
@@ -1580,8 +1583,8 @@ angular.module("beamng.apps")
                     }
                 });
 
-                scope.$on("VehicleChange", resetRespinStreamBind);
-                scope.$on("VehicleFocusChanged", resetRespinStreamBind);
+                scope.$on("VehicleChange", resetNtfStreamBind);
+                scope.$on("VehicleFocusChanged", resetNtfStreamBind);
                 scope.$on("TireWearThermals", function (event, dataStream) {
                     ingestStream(dataStream);
                 });

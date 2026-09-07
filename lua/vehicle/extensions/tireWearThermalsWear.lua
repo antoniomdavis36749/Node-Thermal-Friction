@@ -105,7 +105,7 @@ function M.install(F, deps)
         -- does NOT feed grip wearPenalty while node spike on. Leak/puncture may still use Cond.
         -- Base ×0.15 LOCKED (Sport Belasco clean ~22 km FR ~0.9%). Mild life curve around that
         -- center: slower when fresh, faster late — Cond/leak clocks only (no μ).
-        -- Optional mods.scalarTreadWearScale overrides mid (C5 supersoft open band = 1.0);
+        -- Optional mods.scalarTreadWearScale overrides mid (Sport ref 0.15 LOCKED; slick C5 4.7);
         -- early/late scale proportionally so the curve shape holds.
         local ENABLE_SCALAR_TREAD_WEAR = true
         local ENABLE_SCALAR_RATE_CURVE = true

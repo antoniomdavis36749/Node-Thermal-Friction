@@ -14,7 +14,7 @@ Clean-room layer. BeamNG APIs only. No ports from third-party node-wear mods.
 | `ENABLE_HUD_BRIDGE_A3` | same | **true** | Classic + Crew condition + O\|M\|I from node peak/ring |
 | `ENABLE_LOCK_ENERGY_COLE` | same | **true** (**LOCKED**) | Lock wear rate+cid from probe slipF (gates stay ω/slipE) |
 | `ENABLE_CAMBER_ENERGY_COLE` | same | **true** (**CLOSED / rates LOCKED**) | Camber scallop slip term from probe slipF (geometry unchanged) |
-| `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.05 / 0.14** (**LOCKED** Soft life A3b) | Slick/circuit `col×` lerps by `camberFrac`; Sport = 1.0 |
+| `CAMBER_COL_SLICK_SCALE_MIN/MAX` | same | **0.08 / 0.22** (**LOCKED** Soft life A3b) | ×1.5 from prior 0.05/0.14; C5 EOL peak ~15–22% @57 km |
 | `CAMBER_COL_TRACKDAY_SCALE_MIN/MAX` | same | **0.26 / 0.40** (**LOCKED**) | Track Day profile only; street arm 1.0° held |
 | `CAMBER_COL_SPORTPLUS_SCALE_MIN/MAX` | same | **0.30 / 0.45** (**LOCKED**) | Sport Plus profile only; est. from TD, Belasco 22 km confirm |
 | `CAMBER_COL_SPORT_SCALE_MIN/MAX` | same | **0.40 / 0.58** (**LOCKED**) | Plain Sport only (not Plus); Belasco 22 km confirm |
@@ -331,19 +331,18 @@ sum of tread nodes** (e.g. ~64–80 on a 4-wheel car with 16–20 rays), not 0.
   late 0.22 from dedicated `scalarTreadCondition` (never node-min'd). A3 `min(sc, nd)` held.
   Spot-check Sport ~22 km sc still ~0.7–1.0% band; endurance sc should age faster late.
 - **Friction coherence A1 LOCKED** — Cond = display hybrid; node μ owns contact scallop.
-- **A2 mild scalar grip fade ON** (2026-08-30) — `ENABLE_SCALAR_GRIP_FADE` default true;
-  fade from `scalarTreadCondition` only: start `lifeUsed ≥ 0.30` (**sc &lt; 70%**), floor **0.90**.
-  (Nudged from 0.40 / sc&lt;60% — earlier but still mid-life.)
-  Confirm: fresh Sport no felt fade; worn scalar mild loss; hard lock on fresh → node peak
-  hurts contact, scalar fade ≈ none.
+- **A2 mild scalar grip fade ON** (2026-08-30; **EOL floor LOCKED 2026-09-06**) —
+  `ENABLE_SCALAR_GRIP_FADE` default true; fade from `scalarTreadCondition` only: start
+  `lifeUsed ≥ 0.30` (**sc &lt; 70%**), floor **0.70**. Confirm: med+soft ~68 km fronts
+  sc~35% → A2×0.85. Pitwall **sc%/nd%** + **A2×**. Soft C4 life separate.
 - **Lock cole energy CLOSED / LOCKED** — gates ω/slipE; rate from slipF; quiet → slipE
   fallback intentional.
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + **GT3 Soft confirm**
   2026-08-26 — Soft louder than Sport; base `CAMBER_COL_*` held).
-- **Soft life A3b CLOSED / LOCKED** (GT3 Soft Belasco 22 km 2026-08-26) — slick curve
-  **0.05→0.14** by `camberFrac` + arm **2.0°**; fronts Cond ~**93–95%** (~5.5–7% drop).
-- **Med/Hard 22 km CLOSED** (2026-08-27) — Soft≈Med≈Hard on node Cond under shared slick
-  curve (Hard fronts ~4.9–5.9%); do not retune A3b. Belasco Soft→Med→Hard ladder done.
+- **Soft life A3b CLOSED / LOCKED** (2026-08-31) — slick `col×` **0.08→0.22** (was 0.05→0.14);
+  C5 EOL 57 km fronts peak ~15–22%, Cond sc-led. Street/TD/Sport camber untouched.
+- **Med/Hard 22 km CLOSED** (2026-08-27) — Soft≈Med≈Hard on node Cond under then-LOCKED slick
+  curve (Hard fronts ~4.9–5.9%); re-check only if this ×1.5 probe locks louder.
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row). Phase 3 friction exit checks complete.
 - **Private tester `0.2.0` (Beta)** — checklist + pack ready; public Repo still paused.
 - Lua locals: elevated but under warn (159/156/127); no peel until compile fails.
@@ -415,7 +414,7 @@ feel OK — **no further commercial band work**.
 **A2 feel (optional / user-owned):** extended Belasco supersoft to exercise `sc` &lt; 70% fade —
 not a release blocker; report only if fade feels wrong.
 
-### Supersoft C5 life — **OPEN** (nudged 2026-08-30)
+### Supersoft C5 life — **LOCKED** (2026-08-31)
 
 | Step | Action |
 | --- | --- |
@@ -424,23 +423,110 @@ not a release blocker; report only if fade feels wrong.
 | 2 | Capture: Cond/`sc\|nd`, blister, dyn grip; note A2 if `sc` &lt; 70% |
 | Watch | Do not retune locked Soft/Med/Hard `wearRate` / heat; node balance parked |
 
-**Capture call (26 km):** opt **80** C5 live; Cond **~93%** (`sc`-led, ~7% loss). Target mid-stint
-for 10–15 lap EOL was ~40% loss → shortfall **~×5.8**. **Nudge `scalarTreadWearScale` 1.0→6.0**;
-full slick ladder rescaled ×6. Re-confirm ~20–25 km (expect Cond ~60–70% band) then lock/nudge.
+**Lock capture (47 km @ 4.7):** opt **80**; fronts Cond **~18–20%** (`sc`-led), rears **~34–39%**.
+Path: 1.0→6.0 (hot @25 km)→**4.7 LOCKED**. Do not nudge C5 scalar without a new life brief.
 
-**Node note:** fronts node peak teens while Cond is sc-led — revisit slick node balance only after
-C5 scalar lands.
+**Node note:** Soft life A3b **LOCKED** 0.08→0.22 (57 km EOL peak ~15–22%, Cond sc-led).
 
-### Slick scalar life ladder — **rescaled from C5×6** (2026-08-30)
+### Soft life A3b (slick node camber) — **LOCKED** (2026-08-31)
 
-`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)` with **`s_C5 = 6.0`**, `L_C5 = 12`.
-Spectrum lerps between anchors. Street omit key → global ×0.15.
+| Step | Action |
+| --- | --- |
+| — | Done — no retune without a new camber brief |
+
+**Lock capture (C5 @4.7, 57 km to flat):** fronts peak **~15–22%** (FL flat Cond 0 / FR Cond ~2%
+sc-led); rears peak ~3%. Path: 0.05→0.14 → provisional ×1.5 **0.08→0.22 LOCKED**.
+
+### Soft C4 scalar life — **LOCKED** (2026-09-06)
+
+| Step | Result |
+| --- | --- |
+| Soft C4 @ **4.7** | Belasco ~**37 km** fronts **sc ~69–70%** sc-led (nd ~87–91%); mid-band hit |
+| Target | 35–45 km Cond/sc ~**60–70%** for 20–25 lap EOL |
+| Hold | Heat / `wearRate` / `rollingWearCoef` **70** / camber **0.08→0.22** — do not nudge |
+
+Same `scalarTreadWearScale` as C5; longer life from lower wearProd. **C3 / C2 predictive next.**
+
+### Soft C4 scalar life — **CLOSED**
+
+Confirm protocol complete — see lock above. Do not re-open from Soft mid-stints alone.
+
+### A2 scalar grip fade — **LOCKED** (2026-09-06)
+
+| Knob | Value | Status |
+| --- | --- | --- |
+| `SCALAR_GRIP_FADE_START` | 0.30 (sc &lt; 70%) | **LOCKED** |
+| `SCALAR_GRIP_FADE_FLOOR` | **0.70** | **LOCKED** |
+
+Confirm: Belasco med+soft slick ~68 km — fronts **sc ~35% → A2×0.85** (matches formula).
+Mild **0.90** left C5 near-new at cliff; **0.70** ≈ −30% at sc≈0 / ~×0.79 at sc 20%.
+Pitwall **A2×** held. Do not raise floor without a new Soft/C5 feel pass.
+### Slick scalar life ladder — **from locked C5=4.7** (2026-08-31)
+
+`s_X ≈ s_C5 × (wearProd_C5 / wearProd_X) × (L_C5 / L_X)` with **`s_C5 = 4.7` LOCKED**,
+`L_C5 = 12`, `wearProd = wearRate × rollingWearCoef`. Spectrum lerps between anchors.
+Street omit key → global ×0.15.
 
 | Softness | Profile | Target laps (EOL) | **`scalarTreadWearScale`** | Status |
 | --- | --- | --- | --- | --- |
-| 0.50 | hard C2 | 45–55 (50) | **8.1** | predictive (×6) |
-| 0.575 | hard mid | ~50 | **6.6** | predictive (×6) |
-| 0.65 | medium C3 | 30–40 (35) | **11.1** | predictive (×6) |
-| 0.725 | medium mid | ~35 | **9.0** | predictive (×6) |
-| 0.80 | soft C4 | 20–25 (22) | **5.7** | predictive (×6) |
-| 0.875 | supersoft C5 | 10–15 (12) | **6.0** | **OPEN — re-confirm** |
+| 0.50 | hard C2 | 45–55 (50) | **6.4** | predictive OPEN |
+| 0.575 | hard mid | ~50 | **5.2** | predictive OPEN |
+| 0.65 | medium C3 | 30–40 (35) | **9.3** | predictive OPEN |
+| 0.725 | medium mid | ~35 | **7.1** | predictive OPEN |
+| 0.80 | soft C4 | 20–25 (22) | **4.7** | **LOCKED** (~37 km sc~70% sc-led) |
+| 0.875 | supersoft C5 | 10–15 (12) | **4.7** | **LOCKED** |
+
+### Street scalar life ladder — **CLOSED / LOCKED** (2026-09-06)
+
+Soft-scalar `sc` clock only (leak / A2 / rate curve). **Feel / Cond pace = `nodeWearScale`**
+(performance band CLOSED separately). Heat / `wearRate` / camber **LOCKED** — scalar only.
+
+`s_X ≈ s_Sport × (wearProd_Sport / wearProd_X) × (L_Sport / L_X)` with **`s_Sport = 0.15` LOCKED**,
+`L_Sport = 120`, `wearProd = wearRate` (street `rollingWearCoef` = 1). Spectrum lerps on
+`PROFILE_POINTS`.
+
+| Tread | Profile | wearRate | Target EOL km (sc) | **`scalarTreadWearScale`** | Status |
+| --- | --- | --- | --- | --- | --- |
+| 0.30 | sport_plus | 0.0028 | ~90 | **0.19** | **LOCKED** |
+| 0.40 | track_day | 0.0033 | ~70 | **0.20** | **LOCKED** (108 km sc ~99% — secondary by design) |
+| 0.50 | sport | 0.0026 | ~120 | **0.15** | **LOCKED** ref |
+| 0.60 | standard | 0.000475 | ~220 | **0.45** | **LOCKED** |
+| 0.70 | standard | 0.0005 | ~280 | **0.33** | **LOCKED** |
+
+**Do not** bump street scalar to chase `nd` / feel cliff — that path is `nodeWearScale`.
+A2 still keys off `sc` only (fires late on street by design).
+
+**Off-band placeholders** (REVIEW later — not part of this lock):
+
+| Spectrum | tread anchors | scalar range (est.) |
+| --- | --- | --- |
+| `VINTAGE_SPECTRUM_POINTS` | 0.50 / 0.575 / 0.65 | **0.37 / 0.28 / 0.22** |
+| AT/MT (`PROFILE_POINTS`) | 0.80 / 0.85 / 0.90 | **0.54 / 0.55 / 0.56** |
+| `UTILITY_SPECTRUM_POINTS` | 0.50→0.95 | **0.33→0.61** |
+| `COMMERCIAL_SPECTRUM_POINTS` | 0.50→0.90 | **1.0 / 1.0 / 0.90 / 0.69 / 0.63** |
+| `ATV_UTV_SPECTRUM_POINTS` | 0.50→0.85 | **0.21→0.28** |
+| `truck` standalone | — | **0.98** |
+
+**Slick C4 scalar LOCKED**; C3 / C2 predictive remains OPEN on the slick ladder.
+
+### Track Day scalar life — **CLOSED**
+
+Confirmed secondary: 22 km + 108 km Belasco left `sc` ≈ 100% / 99% while `nd` drove Cond
+and feel. Scale **0.20 LOCKED**; no further street scalar confirms on Plus→Standard.
+### Node wear scale — **PROFILE_POINTS performance band** (2026-09-01)
+
+`mods.nodeWearScale` on **PROFILE_POINTS** anchors only (not utility/vintage/commercial/slick).
+Multiplies A3 **lock / drift / camber** accumulation in `tireWearThermalsNodeWear.lua`.
+Spectrum-lerped with tread; omit → **1.0** (Sport-locked baseline). Camber col× / heat /
+`wearRate` **LOCKED** — this is the feel-clock knob (μ scallop), not scalar `sc`.
+
+| Tread | Profile | **`nodeWearScale`** | Status |
+| --- | --- | --- | --- |
+| 0.30 | sport_plus | **1.10** | **LOCKED** (22 km FR Cond ~80% / peak ~20%) |
+| 0.40 | track_day | **1.0** | **LOCKED** (22 km FR ~82%; 108 km feel) |
+| 0.50 | sport | **1.0** | **LOCKED** ref |
+| 0.60 | standard | **0.82** | **LOCKED** (22 km FL Cond ~95%) |
+| 0.70 | standard | **0.75** | **LOCKED** (22 km FL Cond ~95%) |
+
+Curve: **Plus > Track Day ≥ Sport > Standard** — performance-band `nodeWearScale` **CLOSED /
+LOCKED** (2026-09-06). AT/MT omit key → inherit milder neighbor.

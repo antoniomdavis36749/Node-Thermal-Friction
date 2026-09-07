@@ -177,13 +177,13 @@ angular.module("beamng.apps")
                                 <span class="ttm-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(0) }}%
                                     <span style="font-size: 10px; opacity: 0.75; margin-left: 4px;">
-                                        sc{{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}
-                                        · nd{{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}
+                                        sc {{ (w.conditionScalar !== undefined ? w.conditionScalar : w.condition || 0).toFixed(0) }}%
+                                        · nd {{ (w.conditionNode !== undefined ? w.conditionNode : (100 - (w.nodeWearPeak||0)*100)).toFixed(0) }}%
                                     </span>
                                 </span>
                             </div>
                             <div class="ttm-cap-dim" style="margin: -2px 0 4px 0; font-size: 10px; opacity: 0.7;">
-                                A1: Cond = min(sc,nd) · grip = node μ
+                                A1: Cond = min(sc%,nd%) · A2 fade from sc · node μ
                             </div>
                             <div class="ttm-bar-container" style="margin-bottom: 5px;">
                                 <div class="ttm-bar-fill" ng-style="{'width': (w.condition || 0) + '%', 'background-color': getConditionColor(w.condition)}"></div>
@@ -562,11 +562,11 @@ angular.module("beamng.apps")
 
                 var boundVehId = null;
                 var boundResetGen = null;
-                function resetRespinStreamBind() {
+                function resetNtfStreamBind() {
                     boundVehId = null;
                     boundResetGen = null;
                 }
-                function acceptRespinStream(dataStream) {
+                function acceptNtfStream(dataStream) {
                     if (!dataStream || !dataStream.data || dataStream.mpRemote) return false;
                     var id = dataStream.vehId;
                     if (id === undefined || id === null) return true;
@@ -584,7 +584,7 @@ angular.module("beamng.apps")
                     }
                     return true;
                 }
-                function isRespinLifeReset(dataStream) {
+                function isNtfLifeReset(dataStream) {
                     var gen = dataStream.resetGen;
                     if (gen === undefined || gen === null) return false;
                     if (boundResetGen === null) {
@@ -599,11 +599,11 @@ angular.module("beamng.apps")
                 }
 
                 function ingestStream(dataStream) {
-                    if (!acceptRespinStream(dataStream)) return;
+                    if (!acceptNtfStream(dataStream)) return;
 
                     var src = dataStream.data;
                     var count = src.length;
-                    var lifeReset = isRespinLifeReset(dataStream);
+                    var lifeReset = isNtfLifeReset(dataStream);
                     var structural = lifeReset || (scope.wheels.length !== count);
                     var i, w;
 
@@ -642,8 +642,8 @@ angular.module("beamng.apps")
                     }
                 });
 
-                scope.$on("VehicleChange", resetRespinStreamBind);
-                scope.$on("VehicleFocusChanged", resetRespinStreamBind);
+                scope.$on("VehicleChange", resetNtfStreamBind);
+                scope.$on("VehicleFocusChanged", resetNtfStreamBind);
                 scope.$on("TireWearThermals", function (event, dataStream) {
                     ingestStream(dataStream);
                 });

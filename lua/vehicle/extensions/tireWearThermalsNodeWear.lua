@@ -1,5 +1,5 @@
 -- lua/vehicle/extensions/tireWearThermalsNodeWear.lua
--- Credits: ReSpin V2 experimental. Clean-room vs BeamNG APIs only (no third-party node-wear ports).
+-- Credits: Node-Thermal Friction V2 experimental. Clean-room vs BeamNG APIs only (no third-party node-wear ports).
 -- Policy A: thermal core owns wheel setFrictionThermalSensitivity; this layer only scales
 -- tread-node friction/mass via obj:setNodeFrictionSlidingCoefs / obj:setNodeMass.
 --
@@ -24,10 +24,11 @@ local ENABLE_CAMBER_ENERGY_COLE = true
 -- Soft life A/B (slick/circuit only): A2 arm 2.0° + A3 camF curve (quieter than flat ×0.30).
 -- Sport/street keep full base + 1.0° arm (Bolide scallop unchanged).
 local CAMBER_COL_BASE = 0.006
--- Soft life A3b LOCKED (GT3 Soft Belasco 22 km): fronts ~5.5–7% Cond drop.
--- Curve quiet at mild race camber; high camF scrub still costs more than lean.
-local CAMBER_COL_SLICK_SCALE_MIN = 0.05
-local CAMBER_COL_SLICK_SCALE_MAX = 0.14
+-- Soft life A3b LOCKED (2026-08-31): 0.08→0.22 after C5 EOL probe (57 km fronts peak
+-- ~15–22% vs baseline ~11–14% @47 km under 0.05→0.14; Cond stayed sc-led). Arm 2.0° held.
+-- Street/TD/Sport camber ladders untouched.
+local CAMBER_COL_SLICK_SCALE_MIN = 0.08
+local CAMBER_COL_SLICK_SCALE_MAX = 0.22
 -- Track Day LOCKED (Belasco 22 km ×2 + A/B): pre-mute peak ~25–29% / Cond ~71–75%;
 -- after 0.26→0.40 fronts Cond ~92% / peak ~8%, node-led. Soft life / Sport unchanged.
 local CAMBER_COL_TRACKDAY_SCALE_MIN = 0.26
@@ -154,6 +155,14 @@ end
 -- Drift slip arm + camber guard: true drift compound, or plain Sport (not Plus).
 local function driftSlipArmEligible(data)
     return isDriftPurpose(data) or isSportProfile(data)
+end
+
+-- PROFILE_POINTS performance-band knob; default 1.0 = Sport-locked node rate.
+local function nodeWearScaleForWheel(data)
+    local mods = data and data.interpolatedMods
+    local s = mods and mods.nodeWearScale
+    if type(s) == "number" and s > 0 then return s end
+    return 1.0
 end
 
 local function camberArmDegForWheel(data)
@@ -593,6 +602,8 @@ function M.install(F, deps)
                 local slip = w.dynamicSlipEnergy or w.slipEnergy or 0
                 local ang = abs(wd.angularVelocity or 0)
                 local loadN = w.loadRaw or wd.downForce or 0
+                local nwScale = nodeWearScaleForWheel(data)
+                data.nodeWearScale = nwScale
                 local lockArm = cid and slip > 0.18 and ang < 14.0
                 local driftEligible = driftSlipArmEligible(data)
                 local driftArm = ENABLE_DRIFT_SLIP_ARM and driftEligible and cid
@@ -648,7 +659,7 @@ function M.install(F, deps)
                         rate = 0.024 * min(1.45, slipCap / 0.45)
                         src = "slipE"
                     end
-                    rate = rate * min(1.30, max(200, loadN) / 4000)
+                    rate = rate * min(1.30, max(200, loadN) / 4000) * nwScale
                     for _, tgt in ipairs(collectRingTargets(wd, energyCid, LOCK_RING_HALF_WIDTH)) do
                         addWear(tgt.cid, i, rate * tgt.weight, dt)
                     end
@@ -677,7 +688,7 @@ function M.install(F, deps)
                         rate = DRIFT_SLIP_RATE * min(1.45, max(0.20, slipCap) / 0.45)
                         src = "slipE"
                     end
-                    rate = rate * min(1.30, max(200, loadN) / 4000)
+                    rate = rate * min(1.30, max(200, loadN) / 4000) * nwScale
                     for _, tgt in ipairs(collectRingTargets(wd, energyCid, LOCK_RING_HALF_WIDTH)) do
                         addWear(tgt.cid, i, rate * tgt.weight, dt)
                     end
@@ -702,7 +713,7 @@ function M.install(F, deps)
                         end
                     end
                     local slickScale = camberColScaleForWheel(data, camberFrac)
-                    local camBase = CAMBER_COL_BASE * slickScale * camberFrac * slipFrac
+                    local camBase = CAMBER_COL_BASE * slickScale * camberFrac * slipFrac * nwScale
                     data.nodeCamFrac = camberFrac
                     data.nodeCamColScale = slickScale
                     data.nodeCamArmDeg = armDeg

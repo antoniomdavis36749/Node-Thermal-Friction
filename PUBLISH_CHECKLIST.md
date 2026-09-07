@@ -5,7 +5,7 @@
 > checklist only if you deliberately resume a public zip upload.
 
 Branches: **`testing/main`** (active polish) → merge to **`main`** (GitHub default / Repo source link)  
-Working folder: `Tire-Wear-and-Thermals-ReSpin-dev` (local git sync under `mods/unpacked/`)  
+Working folder: `Node-Thermal-Friction-dev` (local git sync under `mods/unpacked/`)  
 Official packing docs: https://documentation.beamng.com/modding/mod-support/mod_packing/  
 Guidelines: https://www.beamng.com/game/support/policies/modding-guidelines/
 
@@ -41,7 +41,7 @@ Live Belasco / WCU Track ~15°C protocol (~4 laps / ~22 km). Soft compound knobs
 | FWD Soft front damp | `0.58/0.48` — fronts ~97 top of usable |
 | AWD Soft front damp | `0.45/0.38` — FR ~96; FL harsh/brake ceiling |
 
-- [x] Soft / Medium / Hard ReSpin slick band locked
+- [x] Soft / Medium / Hard NTF slick band locked
 - [x] FWD Soft-like topology locked
 - [x] AWD Soft-like front damp locked
 - [x] Pitwall Heavy kept in git for dev/testers (`-dev` unpack); **excluded from public zip** (see packer)
@@ -65,12 +65,12 @@ Player zip should contain only runtime content. Dev tooling must not ship.
 
 | Include in **core** zip | Include in **compat** zip (tires repo) | Exclude from both |
 | --- | --- | --- |
-| `lua/` (no lap harness) | `vehicles/` (`*_Respin` JBeams + public Scintilla `.pc`) | `tools/`, `.vscode/`, `.git/` |
+| `lua/` (no lap harness) | `vehicles/` (`*_NTF` JBeams + public Scintilla `.pc`) | `tools/`, `.vscode/`, `.git/` |
 | `ui/`, `scripts/` | `mod_info/TWTRS_COMPAT/` | Companion car meshes/textures |
-| `mod_info/TWTRS_RESPIN/` | tires-repo `COMPAT_TIRES.md`, `license`, `NOTICE`, `CREDITS.md` | `tools/output/`, soft-sim dumps |
+| `mod_info/TWTRS_NTF/` | tires-repo `COMPAT_TIRES.md`, `license`, `NOTICE`, `CREDITS.md` | `tools/output/`, soft-sim dumps |
 | docs + `COMPAT_TIRES.md` pointer | — | Old Redux `resource_id` leftovers; **`ui/modules/apps/tireWearThermalsHeavy/`** (dev Pitwall) |
 
-**Why two zips / two git repos:** a package that contains `vehicles/` is mounted as vehicle-only — core UI/Lua never load. Core testers clone this repo; vehicle parts come from **Tire-Wear-and-Thermals-ReSpin-Tires**.
+**Why two zips / two git repos:** a package that contains `vehicles/` is mounted as vehicle-only — core UI/Lua never load. Core testers clone this repo; vehicle parts come from **Node-Thermal-Friction-Tires**.
 
 - [x] Document exclude list (this file + packer)
 - [x] Stop loading `tireWestCoastLapTest` for players
@@ -79,19 +79,19 @@ Player zip should contain only runtime content. Dev tooling must not ship.
 - [x] Optional: omit `tireWestCoastLapTest.lua` from release zip (packer excludes it; file remains in git for tools)
 - [x] Document compatibility tires (`COMPAT_TIRES.md` pointer); companion lives in the tires repo
 - [x] Clean-zip smoke: core Apps visible when `vehicles/` is **not** in the core package
-- [x] Smoke-test Respin Soft/Med/Hard on Scintilla GT3 (WCU Track 15°C) — band locked
-- [ ] Smoke-test Pigniteon ETKC Respin parts before advertising that companion specifically (optional; Scintilla path confirmed)
+- [x] Smoke-test NTF Soft/Med/Hard on Scintilla GT3 (WCU Track 15°C) — band locked
+- [ ] Smoke-test Pigniteon ETKC NTF parts before advertising that companion specifically (optional; Scintilla path confirmed)
 
 ## C. Identity & metadata (new Repo resource)
 
 Do **not** reuse Redux’s resource identity. This is a new listing derived from open source.
 
 - [x] New title: `Node-Thermal Friction`
-- [x] Polished tagline + BBCode description (`LISTING.md`, `mod_info/TWTRS_RESPIN/info.json`)
+- [x] Polished tagline + BBCode description (`LISTING.md`, `mod_info/TWTRS_NTF/info.json`)
 - [x] Version string `0.1.2` (no version in zip filename; 0.1.1 was the first listed drop)
-- [x] Zip name draft: `TireWearThermalsReSpin.zip` (add `_YourBeamNGUser` before upload if needed)
+- [x] Zip name draft: `NodeThermalFriction.zip` (add `_YourBeamNGUser` before upload if needed)
 - [x] Removed Redux `resource_id` / `MXFQY32S5` / foreign owner fields / stale hashes
-- [x] Local placeholder tagid `TWTRS_RESPIN` (Repo will assign official tag on upload)
+- [x] Local placeholder tagid `TWTRS_NTF` (Repo will assign official tag on upload)
 - [x] BeamNG forum username confirmed on the Repo upload form (handle not stored in this tree)
 - [x] Icon / preview images — locked heroes + four-UI gallery + ducts
 - [ ] Category confirmed on upload form
@@ -111,20 +111,20 @@ Do **not** reuse Redux’s resource identity. This is a new listing derived from
 
 ## E. Packing (zips)
 
-Correct zip root = top-level game folders, **not** a parent `Tire-Wear-and-Thermals-ReSpin-main/` folder. Forward-slash zip paths required (packer uses Python zipfile).
+Correct zip root = top-level game folders, **not** a parent `Node-Thermal-Friction-main/` folder. Forward-slash zip paths required (packer uses Python zipfile).
 
 ```powershell
-.\tools\scripts\Pack-Release.ps1 -ZipName 'TireWearThermalsReSpin.zip'
+.\tools\scripts\Pack-Release.ps1 -ZipName 'NodeThermalFriction.zip'
 ```
 
 - [x] Use `tools/scripts/Pack-Release.ps1` (POSIX paths; core only — no `vehicles/`)
-- [x] Core zip roots: `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_RESPIN/` — **no** `vehicles/`
-- [x] Compat zip: pack from Tire-Wear-and-Thermals-ReSpin-Tires (`vehicles/`, `mod_info/TWTRS_COMPAT/`)
-- [x] Install **core + compat** → Apps still appear; Respin tires selectable (Scintilla confirmed 2026-08-14)
-- [x] No missing meshes on Respin tire swap; HUD classifies Soft/Med/Hard correctly
-- [x] Confirm compat zip has **no** third-party meshes — only `vehicles/common/*_Respin*.jbeam` plus `vehicles/scintilla/gt3_respin_*.pc`
+- [x] Core zip roots: `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_NTF/` — **no** `vehicles/`
+- [x] Compat zip: pack from Node-Thermal-Friction-Tires (`vehicles/`, `mod_info/TWTRS_COMPAT/`)
+- [x] Install **core + compat** → Apps still appear; NTF tires selectable (Scintilla confirmed 2026-08-14)
+- [x] No missing meshes on NTF tire swap; HUD classifies Soft/Med/Hard correctly
+- [x] Confirm compat zip has **no** third-party meshes — only `vehicles/common/*_NTF*.jbeam` plus `vehicles/scintilla/gt3_ntf_*.pc`
 - [x] Tag / commit both artifacts from the same git revision before Repo upload (packed from 7735a6e / main merge)
-- [ ] Optional: Pigniteon ETKC Respin parts smoke before advertising that companion specifically
+- [ ] Optional: Pigniteon ETKC NTF parts smoke before advertising that companion specifically
 
 ## F. Repo submission (two resources)
 
@@ -132,7 +132,7 @@ Upload **both** as **new** resources (not updates to Redux 29934). Core zip from
 
 ### F1. Core — Node-Thermal Friction
 
-- [x] Upload `TireWearThermalsReSpin.zip`
+- [x] Upload `NodeThermalFriction.zip`
 - [x] Paste core BBCode from `LISTING.md`; gallery: hero → `ui_four_apps` → `ducts`
 - [x] Category confirmed on form
 - [x] Approved / listed: https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/ (keep zip filename stable)
@@ -140,7 +140,7 @@ Upload **both** as **new** resources (not updates to Redux 29934). Core zip from
 ### F2. Compat Tires — second listing
 
 - [x] Decision: Compat is a **second Repo resource** (not bundled / not “later only”)
-- [x] Upload `TireWearThermalsReSpin_CompatTires.zip`
+- [x] Upload `NodeThermalFriction_CompatTires.zip`
 - [x] Paste Compat BBCode from the tires repo `LISTING.md`; gallery: Compat hero
 - [x] Category confirmed on form (Vehicles/Parts likely)
 - [x] Approved / listed: https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/

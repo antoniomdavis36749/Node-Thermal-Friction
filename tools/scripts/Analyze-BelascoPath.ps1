@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$vs = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\tools'
+$vs = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev\tools'
 
 $b = Get-Content (Join-Path (Join-Path $vs 'fixtures') 'belasco1-from-game.race.json') -Raw | ConvertFrom-Json
 Write-Host ("pathnodes=" + $b.pathnodes.Count)

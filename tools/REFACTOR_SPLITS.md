@@ -213,7 +213,7 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 4. **Run** `Count-LuaLocals.py` on main + new module.
 5. **Compile-check** if lupa available; otherwise in-game load.
 6. **Sync** to `-dev` unpack:
-   `...\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev\lua\vehicle\extensions\`
+   `...\mods\unpacked\Node-Thermal-Friction-dev\lua\vehicle\extensions\`
 7. **Respawn** vehicle (Lua changes don’t hot-reload reliably).
 8. **Smoke:** load car, drive 1 lap, check HUD temps/PSI/wear, no console errors.
 9. **No commit** unless Anton asks.
@@ -228,7 +228,7 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   Cond/zones display + leak/puncture thresholds; baseline grip ignores HUD Cond while spike on
   (`tools/V2_FRICTION_CONTRACT.md`)
 - **A2 mild scalar grip fade ON** — `ENABLE_SCALAR_GRIP_FADE` default true; `lifeUsed ≥ 0.30`
-  (**sc &lt; 70%**) → floor **0.90** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
+  (**sc &lt; 70%**) → floor **0.70 LOCKED** from `scalarTreadCondition` only (`tools/V2_NODE_WEAR_SPIKE.md`)
 - **Drag CLOSED / LOCKED** — `longGripMult` **1.18** (native PASS + ~1400 hp mod launch;
   rear long ~151%).
 - **Wet CLOSED / LOCKED** — ASPHALT_WET park/accel/brake/cruise **PASS / no nudge**.
@@ -238,8 +238,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
   Soft louder than Sport — base rates held)
-- **Soft life A3b CLOSED / LOCKED** — slick `col×` **0.05→0.14** + arm **2.0°**;
-  GT3 Soft/Med/Hard Belasco 22 km Soft≈Med≈Hard on node Cond — **ladder CLOSED**.
+- **Soft life A3b CLOSED / LOCKED** — slick `col×` **0.08→0.22** + arm **2.0°**
+- **A2 EOL fade LOCKED** — floor **0.70** (2026-09-06; med+soft ~68 km A2×0.85 @ sc~35%)
+- **Med/Hard 22 km CLOSED** — Soft≈Med≈Hard on node Cond under then-shared slick curve —
+  **ladder CLOSED** (do not retune A3b from Hard).
 - Second-car **cole smoke CLOSED** (Nightsnake 5-row) — Phase 3 friction exit checks done
 - **Private tester pack `0.2.0` (Beta)** — checklist + zip ready; public Repo still paused
 - **Track Day camber CLOSED / LOCKED** — col× **0.26→0.40**; 22 km fronts ~92% / peak ~8%
@@ -251,12 +253,17 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Commercial PSI hot tgt** — `seedHotTargetPSI` from native cold fill per pressure
   group (spectrum `optimalPressure` = design; drag rear ~82 no longer forced to 110)
 - **Commercial leftovers CLOSED** (2026-08-30) — feel OK; no further commercial band work
-- **Slick scalar life OPEN (nudged)** — C5 **6.0** after 26 km Cond~93% call (was 1.0);
-  ladder ×6 (C4 **5.7** / C3 **11.1** / C2 **8.1**). Node balance parked. Re-confirm C5.
+- **Slick scalar life** — C5 **4.7** / C4 **4.7 LOCKED** (~37 km fronts sc~70% sc-led).
+  C3 **9.3** / C2 **6.4** predictive OPEN. Mid anchors follow spectrum lerp.
+- **Street scalar life** — performance band **CLOSED / LOCKED**: Plus **0.19** / TD **0.20** /
+  Sport **0.15** / Standard **0.45/0.33**. Secondary `sc` clock (TD 108 km sc~99%); feel =
+  `nodeWearScale`. Off-band placeholders REVIEW later.
+- **Node wear scale** — `nodeWearScale` on **PROFILE_POINTS** performance band only;
+  Sport **1.0** / Plus **1.10** / Track Day **1.0** / Standard **0.82/0.75 LOCKED** (band CLOSED).
 - **Drift prototype** — gate `drift` on **drift compound OR plain Sport**; undriven camber
   mute; rate **0.017** provisional. **HELD / non-blocking** — feel revisit only if
   tester feedback lands (may not before next drop)
-- **A2 feel** — optional user Belasco supersoft to `sc` &lt; 70%; not a ship blocker
+- **A2 feel** — EOL floor **0.70 LOCKED**; Pitwall **sc%/nd%** + **A2×**
 - Grip refactor — **only** with regression scripts + tester sign-off
 - Further hot-path splits — **only** if LuaJIT 201-local compile forces it
 - **Lua locals audit 2026-08-25** — `ctwStepThermalNodes` 159 / `ctwPrepareThermals` 156 /
@@ -276,4 +283,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-08-30 (C5 scalar nudged 1.0→6.0; slick ladder ×6; node balance parked).*
+*Last updated: 2026-09-06 (Soft C4 scalar 4.7 LOCKED; A2 floor 0.70 LOCKED; street bands CLOSED).*

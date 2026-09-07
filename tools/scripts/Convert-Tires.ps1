@@ -2,7 +2,7 @@ param(
     # Leave empty to automatically convert all matching tires found in common.zip
     [string[]]$Entries = @(), 
     [string]$BeamNGRoot = 'C:\Program Files (x86)\Steam\steamapps\common\BeamNG.drive',
-    [string]$ModRoot = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Tire-Wear-and-Thermals-ReSpin-dev',
+    [string]$ModRoot = 'C:\Users\anton\AppData\Local\BeamNG\BeamNG.drive\current\mods\unpacked\Node-Thermal-Friction-dev',
     
     # Toggle to true to filter base files down to race, slick, and sport templates
     [bool]$OnlyHighPerformance = $true
@@ -60,7 +60,7 @@ function Convert-ToSpectrumJBeam {
             $l = $l -replace '"name"\s*:\s*"[^"]+? Tires"', ('"name":"' + $newDisplayName + ' ' + $nameSuffix + ' Tires"')
         }
 
-        $l = $l -replace '"authors"\s*:\s*"BeamNG"', '"authors":"BeamNG, ReSpin"'
+        $l = $l -replace '"authors"\s*:\s*"BeamNG"', '"authors":"BeamNG, Node-Thermal Friction"'
         
         if ($l -match '^(\s*"value"\s*:\s*)(\d+)(,?\s*(?://.*)?)$') {
             $l = $Matches[1] + ([int]$Matches[2] + $baseValueAdd) + $Matches[3]
