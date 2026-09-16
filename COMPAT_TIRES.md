@@ -13,3 +13,6 @@ Do **not** copy `vehicles/` into core Node-Thermal Friction. BeamNG treats a zip
 Career part shop also only sees `vehicles/` — tire prices and Scintilla config `Value` / `Population` live in the Compat pack, not here.
 
 Inventory, generators, listing copy, and `Pack-Release.ps1` for the companion zip live in the tires repo.
+
+**NTF clone standard:** pressure wheels use **`numRays`: 20** (~40 tread nodes/wheel) for denser node-wear
+scallop maps. `Convert-Tires.ps1` forces 20 on new clones.

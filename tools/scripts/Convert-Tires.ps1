@@ -86,10 +86,21 @@ function Convert-ToSpectrumJBeam {
             $l = $l -replace '"slidingFrictionCoef"\s*:\s*\d+(?:\.\d+)?', ('"slidingFrictionCoef":' + $formattedFriction)
         }
 
+        # NTF clones standardize on 20-ray pressure wheels (finer treadNodes for node wear).
+        if ($l -match '"numRays"\s*:\s*\d+') {
+            $l = $l -replace '"numRays"\s*:\s*\d+', '"numRays":20'
+        }
+
         $out.Add($l)
     }
 
-    return [string]::Join("`r`n", $out)
+    # If source had no numRays, inject after tireWidth in the joined output.
+    $joined = [string]::Join("`r`n", $out)
+    if ($joined -notmatch '"numRays"') {
+        $joined = [regex]::Replace($joined, '(\{"tireWidth"\s*:\s*[0-9.]+\}\s*,)', "`$1`r`n            {`"numRays`":20},")
+        return $joined
+    }
+    return $joined
 }
 
 $candidates = @()

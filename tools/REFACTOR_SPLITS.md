@@ -232,8 +232,12 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - **Drag CLOSED / LOCKED** — `longGripMult` **1.18** (native PASS + ~1400 hp mod launch;
   rear long ~151%).
 - **Wet CLOSED / LOCKED** — ASPHALT_WET park/accel/brake/cruise **PASS / no nudge**.
-- **Street heat CLOSED / LOCKED** — Sport park Cold → ~10 min ~44 mph cruise → Normal ~70°C
-  vs opt 66 (plateau OK); Cond ~100, blister 0.
+- **Street heat REOPENED (2026-09-10)** — tester: abuse overshoot too aggressive.
+  Cut **`workHeatRate` ~12%** on `PROFILE_POINTS` (cornering/load); **`slipHeatRate` /
+  `rollingRes` held** (straight rolling good). Wear locks held. Confirm: cruise settle
+  vs prior; loaded corners milder Hot ceiling.
+- **Slick heat REOPENED (2026-09-10)** — same dial-back on `SLICK_SPECTRUM_POINTS`
+  `workHeatRate` ~12%; slip/rolling held. Soft/Med/Hard wear+scalar locks held.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -283,4 +287,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-09-06 (Soft C4 scalar 4.7 LOCKED; A2 floor 0.70 LOCKED; street bands CLOSED).*
+*Last updated: 2026-09-10 (street+slick heat REOPENED — workHeatRate −12% cornering/load).*
