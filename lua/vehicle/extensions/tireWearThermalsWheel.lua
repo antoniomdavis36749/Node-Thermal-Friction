@@ -98,7 +98,7 @@ function M.install(F, deps)
         local hubRadius = tonumber(wd.hubRadius) or tonumber(jb.hubRadius) or (radius * 0.65)
 
         -- Mass: prefer explicit tire/hub totals, else node weights × ray count estimate
-        local rayCount = tonumber(wd.rayCount) or tonumber(jb.numRays) or 20
+        local rayCount = tonumber(wd.rayCount) or tonumber(jb.numRays) or 16
         local tireNodeW = tonumber(jb.nodeWeight) or tonumber(wd.nodeWeight)
         local hubNodeW = tonumber(jb.hubNodeWeight) or tonumber(wd.hubNodeWeight)
         local tireMass = tonumber(jb.tireWeight) or tonumber(wd.tireWeight)
