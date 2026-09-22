@@ -272,9 +272,10 @@ local THERMAL_TOPOLOGY = {
     patchLatLoadNudge = 0.05,        -- mild live lateral (gy) nudge on L/R ring weights
     -- Path A3: peakForce / downForceRaw util → patchHeatScale (smoothed load keeps Hertz stable;
     --   contactDepth + patchHeatScale EMA still kill kerb jitter). Prefer raw load as util denom.
-    patchUtilBlend = 0.20,           -- was 0.12; stronger useful coupling (not raw peak noise)
+    -- Round-3 heat dial-back (fleet lateral-G): util coupling eased again (R2 was 0.16 / 1.28).
+    patchUtilBlend = 0.12,           -- was 0.16; milder util→patch coupling
     patchUtilPeakLo = 0.82,          -- util clamp floor (was hardcoded 0.85)
-    patchUtilPeakHi = 1.40,          -- util clamp ceil (was 1.35)
+    patchUtilPeakHi = 1.20,          -- util clamp ceil (was 1.28; cap near-max load heat)
     -- Path A4: patch length prefers dynamicRadius vs static; clamp absurd deflation
     patchDynRadiusMinFrac = 0.55,    -- dynR floor as fraction of static radius
     patchDynRadiusMaxFrac = 1.06,    -- dynR ceil vs static (rare grow / squat)
@@ -1148,7 +1149,7 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     -- Path A3: peakForce / downForceRaw util nudge on patch heat (EMA still damps kerb noise)
     local peakWorkFactorEarly = 1.0
     if peakForce and peakForce > 100 and loadUtil > 100 then
-        peakWorkFactorEarly = max(topo.patchUtilPeakLo or 0.82, min(topo.patchUtilPeakHi or 1.40, peakForce / max(loadUtil, 1)))
+        peakWorkFactorEarly = max(topo.patchUtilPeakLo or 0.82, min(topo.patchUtilPeakHi or 1.20, peakForce / max(loadUtil, 1)))
     end
     local utilNudge = 1.0 + ((peakWorkFactorEarly - 1.0) * (topo.patchUtilBlend or 0))
     -- Pass 7j: floor 0.40→0.58 — hard_slick WCU fronts stuck at Patch/Heat 0.032×0.40
@@ -1184,7 +1185,8 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     -- Suspension damper / bump-stop heat into carcass (power ~ load·|v| + bump stress)
     local verticalCarcassHeat = 0
     if not isAirborne then
-        verticalCarcassHeat = abs(suspVel) * (loadRaw / 1200) * 0.55
+        -- Round-3: weight-shift scale 0.48→0.42 (fleet lateral-G dial-back).
+        verticalCarcassHeat = abs(suspVel) * (loadRaw / 1200) * 0.42
             + (w.suspBump or 0) * (loadRaw / 800) * 1.2
             + (w.suspStress or 0) * 1.8 * bottomOutSens
         if abs(suspVel) < 0.04 then
@@ -1461,8 +1463,9 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         local slipWorkScale = topo.skinSlipWorkScale or 1.10
         local slipEnergyHeatWork = slipEnergy / (1.0 + slipEnergy * 0.12)
         rawFrictionalGain = rawFrictionalGain * (max(surfaceMu - 0.5, 0.1) * 2)
+            -- Round-3: skin work coef 0.135→0.128 (modest cornering-work trim).
             + (((0.0078 * (slipEnergyHeat * slipEnergyHeat) * loadCoeff) * slipHeatRate * slideMuScale
-                + 0.145 * relative_work * workHeatRate * peakWorkFactor / (1 + (slipEnergyHeatWork * slipEnergyHeatWork))) * surfaceMu / tyreWidthCoeff) * slipWorkScale
+                + 0.128 * relative_work * workHeatRate * peakWorkFactor / (1 + (slipEnergyHeatWork * slipEnergyHeatWork))) * surfaceMu / tyreWidthCoeff) * slipWorkScale
                 
         rawFrictionalGain = rawFrictionalGain + ((verticalCarcassHeat * 0.005 * workHeatRate) / heatMassScale) * weight
 
@@ -1493,7 +1496,8 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         -- TURBULENT CONVECTION (v^0.8). 0.155 skin scale: cruise still mild; track retains more heat.
         -- Free-belt cool uses geometric patchFrac (not heat floor): larger patch → less freeFrac cool.
         -- Intentionally separate from patchHeatScale so we don't also amplify RR via hystSkinShare.
-        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale / (1.0 + min(0.18, max(0, g_mag - 0.20) * 0.22))
+        -- Round-3: corner velCool g-penalty min(0.18,(g-0.20)*0.22) → min(0.12,(g-0.20)*0.14).
+        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale / (1.0 + min(0.12, max(0, g_mag - 0.20) * 0.14))
         local totalConvection = tempDelta * (staticCoolingRate * 0.04 + velCool) * climateScale * (1.0 + (1.0 - patchFrac) * (topo.freeBeltCoolMult - 1.0)) * spawnConvScale
         
         if tempDelta > 0 then

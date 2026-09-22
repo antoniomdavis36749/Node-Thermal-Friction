@@ -1,15 +1,25 @@
 # Node-Thermal Friction
 
-> **Private tester `0.2.0` (Beta)** — V2 node wear + thermals locked for small-group /
+> **Private tester `0.2.1` (Beta)** — V2 node wear + thermals locked for small-group /
 > private MP. Public BeamNG Repo update still paused. See
 > `tools/V2_FRICTION_CONTRACT.md` and `tools/V2_NODE_WEAR_SPIKE.md`.
 > Friction **A1**: node μ owns contact feel; soft scalar ×0.15 ages Cond; flatspot
 > removed; lock is native. Soft life A3b + Soft→Med→Hard Belasco ladder locked.
-> **Pitwall Heavy** is **dev/testers-only** (git / `-dev`; not in release zip). Classic /
-> Crew are the player-facing HUDs.
+> Round-2 fleet heat dial-back is **tester-owned** (no further rate edits unless they
+> report a clear miss). **Pitwall Heavy** is **dev/testers-only** (git / `-dev`; not in
+> release zip). Classic / Crew are the player-facing HUDs.
 
 A variation / continuation of earlier open-source BeamNG.drive tire thermals/wear mods.
 Upstream authors are listed under **Credits** below.
+
+## Two mods (one sentence each)
+
+| Package | What it is |
+| --- | --- |
+| **Core** (this repo) | Thermals, wear, friction, ducts, Classic/Crew HUDs. No `vehicles/`. |
+| **Compat Tires** (`Node-Thermal-Friction-Tires`) | Optional `*_NTF` JBeam clones + Scintilla GT3 configs. Needs core. |
+
+Install core alone for any car’s stock tires. Add Compat only when you want NTF-named parts / Scintilla GT3 NTF configs. Never merge both into one zip — BeamNG hides UI/Lua if `vehicles/` is present.
 
 ## Credits
 

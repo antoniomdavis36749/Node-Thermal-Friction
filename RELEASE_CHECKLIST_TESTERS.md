@@ -3,7 +3,7 @@
 Use this **before every build** you hand to testers (Discord, forum, `-dev` sync, or zip).  
 Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does it work?”** list.
 
-**Current version (update when you ship):** `0.2.0` · **Build date:** 2026-08-30 · **Git branch:** `testing/main`
+**Current version (update when you ship):** `0.2.1` · **Build date:** 2026-09-19 · **Git branch:** `testing/main`
 
 **Status:** Private tester (Beta) — public Repo publish still paused (see README + `tools/V2_FRICTION_CONTRACT.md`).
 
@@ -11,13 +11,13 @@ Full Repo publish steps stay in `PUBLISH_CHECKLIST.md` — this is the **“does
 
 ## 1. What changed (5 bullets max — paste to testers)
 
-1. **A2** mild scalar Cond→grip fade (`sc` &lt; 70% → floor **0.70 LOCKED**); A1 node μ unchanged
-2. **Drag** `longGripMult` **1.18 LOCKED** (native + ~1400 hp)
-3. **Wet + street heat LOCKED** (ASPHALT_WET PASS; Sport cruise warm-up Normal ~70 vs opt 66)
-4. Commercial PSI hot-tgt seed + leftovers **CLOSED** (feel OK)
+1. **Round-2 fleet heat** dial-back (spread slip/work/util/weight-shift; rolling held) — **testers own validation**
+2. **numRays 16** baseline locked (18/20/24 broke modded cars; natives often OK)
+3. **A2** scalar Cond→grip fade floor **0.70 LOCKED**; A1 node μ unchanged
+4. Non-feel polish: Classic/Crew clarity, duct copy, Compat README/inventory, spectra status labels
 5. **Pitwall Heavy** = DEV only (`-dev` / git); zip = Classic + Crew only
 
-**Calibration touched?** ☐ No (default) · ☑ Yes — drag/wet/street heat/commercial closed; A2 ON; drift held
+**Calibration touched?** ☑ Yes — heat round-2 (tester-owned); feel wear locks held; polish campaign on product surfaces
 
 ---
 
@@ -83,19 +83,20 @@ Only run the rows that match **what you changed**. Skip the rest.
 
 | Scenario | Pass | Notes |
 |----------|:----:|-------|
-| Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | **Street heat LOCKED** 2026-08-30 — Sport ~10 min ~44 mph → Normal ~70 vs opt 66 |
-| Hard track lap — Soft/Med/Hard band still plausible | ☐ | |
+| Highway cruise 2 min — Sport/Sport Plus **not** overheating on straight | ☐ | Street heat + round-2 — cruise should stay flat |
+| Mid-speed turns — outside tire heat (low-camber native/mod) | ☐ | **Phase-2 heat — tester-owned**; compare vs pre-round-2 |
+| Hard track lap — Soft/Med/Hard band still plausible | ☐ | GT3 is ideal platform; also try a flatter setup car |
 | Spinout / lockup — **Leak** only (flatspot removed); node peak teens on hard lock | ☐ | |
 | Wet asphalt — grip drops, no ice-like behavior | ☐ | **LOCKED** 2026-08-30 — no nudge |
 | FWD/AWD Soft front — no runaway Cold PSI fill at highway speed | ☐ | |
-| Brake duct sliders save in `.pc` and affect Pitwall duct % | ☐ | |
+| Brake duct sliders save in `.pc` and affect Pitwall duct % | ☐ | Tire/rim cooling only — not rotor fade |
 
 ---
 
 ## 5. Packaging (only if sending a **zip**, not just `-dev` sync)
 
 ```powershell
-.\tools\scripts\Pack-Release.ps1 -ZipName 'NodeThermalFriction_0.2.0.zip'
+.\tools\scripts\Pack-Release.ps1 -ZipName 'NodeThermalFriction_0.2.1.zip'
 ```
 
 | Check | Done |
@@ -103,36 +104,37 @@ Only run the rows that match **what you changed**. Skip the rest.
 | Zip contains `lua/`, `ui/`, `scripts/`, `mod_info/TWTRS_NTF/` at **root** (no extra parent folder) | ☐ |
 | Zip does **not** contain `tools/`, `.git/`, `.vscode/` | ☐ |
 | Zip does **not** contain `ui/modules/apps/tireWearThermalsHeavy/` (dev Pitwall) | ☐ |
-| `mod_info/TWTRS_NTF/info.json` **version_string** matches section 1 (`0.2.0`) | ☐ |
+| `mod_info/TWTRS_NTF/info.json` **version_string** matches section 1 (`0.2.1`) | ☐ |
 | Clean install: enable zip only → apps appear in Apps menu | ☐ |
 
-Compat tires zip (if changed): pack from **Node-Thermal Friction Tires** repo separately.
+Compat tires zip (if changed): `.\tools\scripts\Pack-Compat-Release.ps1` (or pack from tires unpack).
 
 ---
 
 ## 6. Copy-paste for testers (Discord / forum)
 
 ```
-NTF private tester — v0.2.0 · 2026-08-30 (Beta)
+NTF private tester — v0.2.1 · 2026-09-19 (Beta)
 
 CHANGES:
-• A2 mild scalar grip fade (sc < 70% → floor **0.70 LOCKED**); A1 held
-• Drag longGripMult 1.18 LOCKED (native + ~1400 hp)
-• Wet + street heat LOCKED; commercial leftovers CLOSED
-• Drift rate 0.017 held / non-blocking; Classic+Crew in zip (Pitwall = -dev)
+• Round-2 fleet heat dial-back (testers own mid-corner / low-camber validation)
+• numRays 16 locked (higher rays OK on some natives, broke modded cars)
+• A2 floor 0.70 LOCKED; Classic/Crew + duct copy polish; Compat README/inventory
+• Spectra honesty: truck/utility/AT placeholders labeled provisional
 
 INSTALL:
 • Disable other tire-thermals mods and the public Node-Thermal Friction Repo copies (39082/39083) if you use -dev.
 • Minimal load: Node-Thermal Friction core + compat tires (if Scintilla Node-Thermal Friction) + test car only — disable unrelated mods.
-• Core: Node-Thermal-Friction-dev (or attached NodeThermalFriction_0.2.0.zip).
+• Core: Node-Thermal-Friction-dev (or attached NodeThermalFriction_0.2.1.zip).
 • Compat (Scintilla NTF tires only): Node-Thermal-Friction-Tires-dev.
 • After install: spawn car, add Node-Thermal Friction Classic or Crew.
 
 IMPORTANT: Respawn vehicle after every Lua update.
+PHASE-2 HEAT: prefer a low-camber native/mod street car for mid-speed turns, not only Scintilla GT3.
 
 REPORT BUGS WITH:
 Car + config | Map | Weather | What you did | What happened | Console error (screenshot)
-Build: v0.2.0 · testing/main · 2026-08-30
+Build: v0.2.1 · testing/main · 2026-09-19
 ```
 
 ---
@@ -142,13 +144,13 @@ Build: v0.2.0 · testing/main · 2026-08-30
 - **Respawn required** after Lua/UI updates (cached apps / old stream name).
 - **Only one** thermals mod at a time.
 - **Pitwall** is dense and **dev-only**; Classic or Crew is enough for casual driving.
-- **Beta:** drag long + wet + street heat + commercial leftovers locked/closed 2026-08-30.
-  Other locked bands in listing. Public Repo still paused.
+- **Beta:** feel stack is ahead of product polish; public Repo still paused.
 - **A2:** fade starts `sc` &lt; 70%; floor **0.70 LOCKED** (2026-09-06).
 - **AWD Soft:** one front can spike under heavy brake soak — harsh-drive ceiling, not always a bug.
 - Cond % can be **node-led** on race camber; soft scalar life is the slow stint clock (A1).
 - **Drift** (Sport + sustained spin): node arm + camber mute on; rate **0.017** provisional.
   Feel feedback welcome — **not a release blocker** if quiet before next drop.
+- Truck / utility / AT / vintage scalar life: **provisional fallback** (see `tools/SPECTRA_STATUS.md`).
 
 ---
 
@@ -156,7 +158,7 @@ Build: v0.2.0 · testing/main · 2026-08-30
 
 | Role | Name | Date |
 |------|------|------|
-| Built / synced by | Auto | 2026-08-30 |
+| Built / synced by | Auto | 2026-09-19 |
 | Smoke test by | | |
 | OK to send to testers | ☑ Yes · ☐ No — blocker: _________________ |
 

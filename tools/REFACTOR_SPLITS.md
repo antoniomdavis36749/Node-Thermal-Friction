@@ -238,6 +238,21 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
   vs prior; loaded corners milder Hot ceiling.
 - **Slick heat REOPENED (2026-09-10)** — same dial-back on `SLICK_SPECTRUM_POINTS`
   `workHeatRate` ~12%; slip/rolling held. Soft/Med/Hard wear+scalar locks held.
+- **ROUND-2 heat REOPEN (fleet mid-corner)** — spread cut, not a second work-only gut.
+  Topology: g→slip **0.15→0.11**, work coef **0.145→0.135**, `patchUtilPeakHi` **1.40→1.28**,
+  `patchUtilBlend` **0.20→0.16**, vertical carcass **0.55→0.48**. Profiles (same 2026-09-10
+  cohort: Plus / Track Day / Sport + slick C2–C5): **`workHeatRate` −5%** + **`slipHeatRate`
+  −5%** each; rolling/wear held. Rally/winter/drift/utility untouched. Soft-sim gate
+  `Test-CornerLoadHeat.ps1` PASS (cruise flat; low-camber/high-util −10…−15%). Camber-proxy
+  = slip+load (no dCamber/dt heat). GT3 is not the fleet heat reference car.
+- **ROUND-3 heat REOPEN (fleet lateral-G)** — additional slip-weighted cut on live Round-2.
+  Topology: g→slip **0.11→0.08**, work coef **0.135→0.128**, `patchUtilPeakHi` **1.28→1.20**,
+  `patchUtilBlend` **0.16→0.12**, vertical carcass **0.48→0.42**, velCool g-penalty
+  `min(0.18,(g-0.20)*0.22)` → `min(0.12,(g-0.20)*0.14)`. Same cohort: **`slipHeatRate` −6%**
+  + **`workHeatRate` −3%**; rolling/wear/A2/`nodeWearScale` held. Rally/winter/drift/utility
+  untouched. Soft-sim `Test-CornerLoadHeat.ps1` PASS vs R2 (cruise |d|≤2%; low-camber
+  −8…−12%; near-max util pass; GT3 INFO). Tester: ETK / low-camber street outside tire;
+  GT3 smoke only.
 - **Lock cole energy CLOSED / LOCKED** — gates stay ω/slipE; rate from probe slipF;
   quiet-probe slipE fallback intentional (`tools/V2_NODE_WEAR_SPIKE.md`).
 - **Camber accumulation CLOSED / rates LOCKED** (Bolide low-toe + GT3 Soft confirm;
@@ -283,8 +298,10 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 - `tools/V2_FRICTION_CONTRACT.md` — friction policy A + coherence A1 + A2 fade
 - `tools/V2_NODE_WEAR_SPIKE.md` — node spike + soft scalar flags + open-band protocols
 - `tools/scripts/Count-LuaLocals.py` — local scope audit
-- `tools/scripts/Pack-Release.ps1` — release zip
+- `tools/scripts/Pack-Release.ps1` — core release zip (no vehicles/, no Pitwall)
+- `tools/scripts/Pack-Compat-Release.ps1` — Compat Tires zip (vehicles/ only)
+- `tools/SPECTRA_STATUS.md` — locked vs provisional spectra
 
 ---
 
-*Last updated: 2026-09-10 (street+slick heat REOPENED — workHeatRate −12% cornering/load).*
+*Last updated: 2026-09-21 (round-3 fleet lateral-G REOPEN — topology + street/slick slip −6% / work −3%).*

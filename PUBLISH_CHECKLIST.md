@@ -1,6 +1,6 @@
 # BeamNG Repo publish checklist
 
-> **Deferred:** Public BeamNG Repo **update** is still paused. Private tester **`0.2.0`
+> **Deferred:** Public BeamNG Repo **update** is still paused. Private tester **`0.2.1`
 > (Beta)** is the current small-group drop (`RELEASE_CHECKLIST_TESTERS.md`). Use this
 > checklist only if you deliberately resume a public zip upload.
 

@@ -159,7 +159,7 @@ angular.module("beamng.apps")
                     ctx.fillStyle = "#ffffff";
                     var headerSize = Math.max(Math.min(colW / 12.0, 10.0), 7.0);
                     ctx.font = 'bold ' + headerSize + 'pt "Lucida Console", Monaco, monospace';
-                    var headerText = name.toUpperCase() + " | " + Math.ceil(condition) + "%";
+                    var headerText = name.toUpperCase() + " | Cond " + Math.ceil(condition) + "%";
                     ctx.fillText(headerText, cx, y + headerH * 0.72);
 
                     // 2. Draw Tire Tread Rings
@@ -292,7 +292,22 @@ angular.module("beamng.apps")
                     ctx.clearRect(0, 0, c.width, c.height);
                     ctx.textAlign = 'center';
 
-                    var wheelCount = dataStream.data.length;
+                    var wheelCount = dataStream.data ? dataStream.data.length : 0;
+                    if (!wheelCount) {
+                        ctx.fillStyle = "rgba(15, 23, 42, 0.92)";
+                        ctx.fillRect(0, 0, c.width, c.height);
+                        ctx.fillStyle = "#94a3b8";
+                        ctx.font = "11px sans-serif";
+                        ctx.fillText("NODE-THERMAL FRICTION", c.width * 0.5, c.height * 0.38);
+                        ctx.fillStyle = "#e2e8f0";
+                        ctx.font = "12px sans-serif";
+                        ctx.fillText("Waiting for tire stream…", c.width * 0.5, c.height * 0.52);
+                        ctx.fillStyle = "#64748b";
+                        ctx.font = "10px sans-serif";
+                        ctx.fillText("Spawn / respawn vehicle", c.width * 0.5, c.height * 0.64);
+                        ctx.fillText("Enable core NTF (not Compat alone)", c.width * 0.5, c.height * 0.74);
+                        return;
+                    }
                     for (var i = 0; i < wheelCount; i++) {
                         var d = dataStream.data[i];
                         if (d) {

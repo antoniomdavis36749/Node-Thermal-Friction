@@ -86,7 +86,8 @@ function Convert-ToSpectrumJBeam {
             $l = $l -replace '"slidingFrictionCoef"\s*:\s*\d+(?:\.\d+)?', ('"slidingFrictionCoef":' + $formattedFriction)
         }
 
-        # NTF clones standardize on 16-ray pressure wheels (20 caused unintentional wheel breakage).
+        # NTF clones standardize on 16-ray pressure wheels.
+        # Higher counts (18/20/24) were OK on some native cars but broke modded-vehicle wheels.
         if ($l -match '"numRays"\s*:\s*\d+') {
             $l = $l -replace '"numRays"\s*:\s*\d+', '"numRays":16'
         }

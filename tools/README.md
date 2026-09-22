@@ -9,6 +9,7 @@ Helpers for soft-sims, West Coast lap telemetry, and profile transforms.
 | `output/` | Generated CSV, status JSON, soft-sim dumps (gitignored) |
 | `V2_FRICTION_CONTRACT.md` | Experimental V2: thermal vs node-wear friction ownership |
 | `V2_NODE_WEAR_SPIKE.md` | Clean-room node wear spike flags + retest |
+| `SPECTRA_STATUS.md` | Locked vs provisional / fallback compound bands |
 | `REFACTOR_SPLITS.md` | Module split / Lua locals process |
 
 ## West Coast lap / telemetry
@@ -233,6 +234,21 @@ INVALID IF: no respawn | < ~20 km | grip-map only | mixed with HS slip sample
 
 - **Sport WEAR LOCKED / HEAT REOPENED (2026-09-10):** workHeatRate **5.61→4.94** (~−12%);
   slip **9.68** / rolling held. Cornering/load overshoot dial-back. Wear **0.0026** held.
+- **ROUND-2 HEAT REOPEN (fleet mid-corner):** Sport work **4.94→4.69** (−5%) + slip **9.68→9.20** (−5%);
+  Plus work **9.0→8.55** / slip **16.6→15.77**; Track Day work **5.45→5.18** / slip **10.9→10.355**.
+  Topology spread: g→slip boost **0.15→0.11**, work coef **0.145→0.135**, `patchUtilPeakHi` **1.40→1.28**,
+  `patchUtilBlend` **0.20→0.16**, vertical carcass scale **0.55→0.48**. Rolling / wear locks held.
+  Soft-sim gate: `tools/scripts/Test-CornerLoadHeat.ps1` (cruise flat; low-camber/high-util −10…−15%).
+  Note: tester “camber change in turns” maps to slip+load proxies — **no dCamber/dt heat term**.
+  GT3 is **not** the fleet heat reference (aero/camber keep mid-corner slip low).
+- **ROUND-3 HEAT REOPEN (fleet lateral-G):** Sport work **4.69→4.55** (−3%) + slip **9.20→8.65** (−6%);
+  Plus work **8.55→8.29** / slip **15.77→14.82**; Track Day work **5.18→5.02** / slip **10.355→9.734**.
+  Topology: g→slip **0.11→0.08**, work coef **0.135→0.128**, `patchUtilPeakHi` **1.28→1.20**,
+  `patchUtilBlend` **0.16→0.12**, vertical carcass **0.48→0.42**, corner velCool g-penalty
+  `min(0.18,(g-0.20)*0.22)` → `min(0.12,(g-0.20)*0.14)`. Rolling / cruise RR / aero / wear held.
+  Soft-sim gate: `Test-CornerLoadHeat.ps1` vs live R2 (cruise |d|≤2%; low-camber −8…−12%;
+  near-max util pass; GT3 informational). **Tester:** ETK / low-camber native or mod **street**
+  mid-speed turns, **outside tire**. Scintilla GT3 is **smoke only**, not the heat verdict car.
 - **Sport Plus WEAR LOCKED / HEAT REOPENED (2026-09-10):** workHeatRate **10.2→9.0**;
   slip **16.6** / velCool **0.50** held. Wear **0.0028** held.
 - **Aero heat = mechanical (realism):** native Pitwall/CSV stay. `aeroHeatScale` **1.0** — aero newtons in `downForce` heat like weight. The 0.55 mute and speed×48% fake are off. If a GT3 cooks on a straight, chase RR / high-V cool, not an aero fudge. Locked Sport/Plus/slick heat was already on 1.0.
@@ -248,6 +264,12 @@ INVALID IF: no respawn | < ~20 km | grip-map only | mixed with HS slip sample
 - **Soft C4 WEAR+scalar LOCKED / HEAT REOPENED (2026-09-10):** workHeatRate **9.8→8.62**;
   slip **17.5** / rolling / velCool **0.85** held. Prior settle ~**62 / 73 / 80 / 90** vs opt **82**
   was the aggressive-overshoot baseline — reconfirm loaded Turn 1 Hot ceiling milder.
+- **Slick ROUND-2 HEAT REOPEN:** C2–C5 work **−5%** + slip **−5%** each (Hard **6.86→6.52** /
+  **13.5→12.83**; Med **7.57→7.19** / **15.0→14.25**; Soft **8.62→8.19** / **17.5→16.63**;
+  C5 **9.42→8.95** / **19.5→18.53**). Mid anchors follow. Rolling / wear+scalar locks held.
+- **Slick ROUND-3 HEAT REOPEN:** C2–C5 work **−3%** + slip **−6%** each (Hard **6.52→6.32** /
+  **12.83→12.06**; Med **7.19→6.97** / **14.25→13.40**; Soft **8.19→7.94** / **16.63→15.63**;
+  C5 **8.95→8.68** / **18.53→17.42**). Mid anchors follow. Rolling / wear+scalar locks held.
 - **Medium C3 WEAR LOCKED / HEAT REOPENED:** work **8.6→7.57** (mid **8.9→7.83**); slip held.
 - **Hard C2 WEAR LOCKED / HEAT REOPENED:** work **7.8→6.86** (mid **8.1→7.13**); slip held.
 - **C5 HEAT REOPENED:** work **10.7→9.42**; slip **19.5** / scalar **4.7** held.

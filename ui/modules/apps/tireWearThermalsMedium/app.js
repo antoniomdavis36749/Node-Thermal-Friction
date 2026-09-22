@@ -165,7 +165,14 @@ angular.module("beamng.apps")
                         <span class="ttm-title">NODE-THERMAL FRICTION · CREW</span>
                     </div>
 
-                    <div class="ttm-grid">
+                    <div ng-if="!wheels.length" class="ttm-waiting"
+                         style="padding: 18px 12px; text-align: center; color: #94a3b8; font-size: 11px; line-height: 1.45;">
+                        <div style="color: #e2e8f0; margin-bottom: 6px;">Waiting for tire stream…</div>
+                        Spawn or <b>respawn</b> the vehicle.<br/>
+                        Enable <b>core</b> Node-Thermal Friction (Compat tires alone is not enough).
+                    </div>
+
+                    <div class="ttm-grid" ng-if="wheels.length">
                         <div class="ttm-card" ng-repeat="w in wheels">
                             <div class="ttm-card-header">
                                 <span class="ttm-wheel-name">{{ w.name }}</span>
@@ -173,7 +180,7 @@ angular.module("beamng.apps")
                             </div>
 
                             <div class="ttm-stat-row">
-                                <span class="ttm-label">Tread Condition:</span>
+                                <span class="ttm-label">Cond %:</span>
                                 <span class="ttm-value" ng-style="{'color': getConditionColor(w.condition)}">
                                     {{ (w.condition !== undefined ? w.condition : 0).toFixed(0) }}%
                                     <span style="font-size: 10px; opacity: 0.75; margin-left: 4px;">
@@ -183,7 +190,7 @@ angular.module("beamng.apps")
                                 </span>
                             </div>
                             <div class="ttm-cap-dim" style="margin: -2px 0 4px 0; font-size: 10px; opacity: 0.7;">
-                                A1: Cond = min(sc%,nd%) · A2 fade from sc · node μ
+                                Cond = min(sc,nd) · A2 fades from sc · node μ owns grip feel
                             </div>
                             <div class="ttm-bar-container" style="margin-bottom: 5px;">
                                 <div class="ttm-bar-fill" ng-style="{'width': (w.condition || 0) + '%', 'background-color': getConditionColor(w.condition)}"></div>
@@ -313,9 +320,22 @@ angular.module("beamng.apps")
 
                 scope.wheels = [];
 
+                // Profiles whose scalar life is provisional / fallback (see tools/SPECTRA_STATUS.md).
+                var PROVISIONAL_PROFILES = {
+                    truck: true, truck_offroad: true, light_truck_std: true, light_truck_hd: true,
+                    vintage: true, allterrain: true, mudterrain: true, crawler: true, paddle: true,
+                    highway_utility_utility: true
+                };
+
                 scope.formatProfile = function (profile) {
                     if (!profile) return "";
-                    return String(profile).replace(/_/g, " ");
+                    var raw = String(profile);
+                    var key = raw.toLowerCase().replace(/\s+/g, "_");
+                    var pretty = raw.replace(/_/g, " ");
+                    if (PROVISIONAL_PROFILES[key] || /utility|truck|vintage|allterrain|mudterrain|crawler|paddle/.test(key)) {
+                        return pretty + " · provisional";
+                    }
+                    return pretty;
                 };
 
                 scope.tempCategoryColor = function (cat) {

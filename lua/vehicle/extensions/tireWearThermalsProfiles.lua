@@ -429,7 +429,7 @@ local STANDALONE_MODIFIERS = {
         gripMultiplier = 0.9, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.014,
         optimalPressure = 100, optimalTemp = 65, pressureSensitivity = 0.15, rollingRes = 0.65,
         staticCoolingRate = 0.08, slipHeatRate = 7.875, workHeatRate = 2.7, wearRate = 0.00008,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.98,
         treadInertia = 1.89, carcassInertia = 3.06, thermalReactionRate = 1.2, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.71,
@@ -544,12 +544,15 @@ local PROFILE_POINTS = {
     { tread = 0.30, profile = "sport_plus", mods = {
         -- Scintilla sport plus WEAR LOCKED (#8). HEAT REOPENED 2026-09-10: cornering/load
         -- workHeatRate cut ~12% (10.2→9.0); slip/rolling held — straight rolling deemed good.
-        -- Tester: abuse overshoot from heatband A/B too aggressive. velCool 0.50 held.
+        -- ROUND-2 HEAT REOPEN (fleet mid-corner): work 9.0→8.55 (−5%) + slip 16.6→15.77 (−5%).
+        -- ROUND-3 HEAT REOPEN (fleet lateral-G): work 8.55→8.29 (−3%) + slip 15.77→14.82 (−6%);
+        -- rollingRes / wear locks held. Topology spread (g-boost/work coef/util/vert/velCool) shared.
+        -- Tester: ETK / low-camber street mid-speed turns, outside tire. velCool 0.50 held.
         adhesion = 0.52, airConductionRate = 0.015, airCoolingRate = 0.011, brakeGainRate = 1.35,
         casingCompliance = 0.45, coreCoolRate = 0.038, coreVelCoolRate = 0.0095, skinCoreConductance = 0.088,
         gripMultiplier = 1.04, longGripMult = 1.05, latGripMult = 1.02, loadSensitivity = 0.040,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.75, rollingRes = 0.70,
-        staticCoolingRate = 0.044, slipHeatRate = 16.6, workHeatRate = 9.0, wearRate = 0.0028,
+        staticCoolingRate = 0.044, slipHeatRate = 14.82, workHeatRate = 8.29, wearRate = 0.0028,
         -- Street scalar life LOCKED (Sport-ref ladder). Mild sc clock; feel = nodeWearScale 1.10.
         scalarTreadWearScale = 0.19,
         -- Node feel LOCKED (Belasco 22 km FR Cond ~80% / peak ~20%). Band peak above Track Day.
@@ -563,11 +566,13 @@ local PROFILE_POINTS = {
     { tread = 0.40, profile = "track_day", mods = {
         -- Track Day WEAR LOCKED. HEAT REOPENED 2026-09-10: workHeatRate 6.20→5.45 (~−12%);
         -- slip 10.9 / rolling held. Abuse overshoot dial-back (cornering/load only).
+        -- ROUND-2 HEAT REOPEN: work 5.45→5.18 (−5%) + slip 10.9→10.355 (−5%); rolling/wear held.
+        -- ROUND-3 HEAT REOPEN: work 5.18→5.02 (−3%) + slip 10.355→9.734 (−6%); rolling/wear held.
         adhesion = 0.444, airConductionRate = 0.015, airCoolingRate = 0.020, brakeGainRate = 1.32,
         casingCompliance = 0.42, coreCoolRate = 0.036, coreVelCoolRate = 0.0083, skinCoreConductance = 0.090,
         gripMultiplier = 1.04, longGripMult = 1.08, latGripMult = 1.0, loadSensitivity = 0.042,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.71, rollingRes = 0.88,
-        staticCoolingRate = 0.068, slipHeatRate = 10.9, workHeatRate = 5.45, wearRate = 0.0033,
+        staticCoolingRate = 0.068, slipHeatRate = 9.734, workHeatRate = 5.02, wearRate = 0.0033,
         -- Street scalar life LOCKED (Sport-ref ladder). 108 km Belasco: sc still ~99% (secondary).
         -- Feel cliff owned by nodeWearScale 1.0 — do not chase sc to match nd.
         scalarTreadWearScale = 0.20,
@@ -582,11 +587,14 @@ local PROFILE_POINTS = {
     { tread = 0.50, profile = "sport", mods = {
         -- Sport WEAR LOCKED. HEAT REOPENED 2026-09-10: workHeatRate 5.61→4.94 (~−12%);
         -- slip 9.68 / rolling held. Cornering/load overshoot dial-back.
+        -- ROUND-2 HEAT REOPEN: work 4.94→4.69 (−5%) + slip 9.68→9.20 (−5%); rolling/wear held.
+        -- ROUND-3 HEAT REOPEN: work 4.69→4.55 (−3%) + slip 9.20→8.65 (−6%); rolling/wear held.
+        -- Fleet mid-corner (not GT3): camber-proxy = slip+load, not dCamber/dt.
         adhesion = 0.42, airConductionRate = 0.015, airCoolingRate = 0.020, brakeGainRate = 1.2,
         casingCompliance = 0.5, coreCoolRate = 0.035, coreVelCoolRate = 0.008, skinCoreConductance = 0.076,
         gripMultiplier = 1.00, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.036,
         optimalPressure = 33, optimalTemp = 66, pressureSensitivity = 0.55, rollingRes = 0.82,
-        staticCoolingRate = 0.065, slipHeatRate = 9.68, workHeatRate = 4.94, wearRate = 0.0026,
+        staticCoolingRate = 0.065, slipHeatRate = 8.65, workHeatRate = 4.55, wearRate = 0.0026,
         -- Street scalar life LOCKED ref (global ×0.15 Sport Belasco ~22 km band). Do not nudge.
         scalarTreadWearScale = 0.15,
         -- Node feel LOCKED ref — today's Sport / PROFILE_POINTS baseline (1.0 = unchanged).
@@ -640,7 +648,7 @@ local PROFILE_POINTS = {
         gripMultiplier = 0.86, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.03,
         optimalPressure = 30, optimalTemp = 56, pressureSensitivity = 0.35, rollingRes = 1.18,
         staticCoolingRate = 0.08, slipHeatRate = 7.2, workHeatRate = 3.96, wearRate = 0.00025,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.54,
         treadInertia = 0.588, carcassInertia = 0.952, thermalReactionRate = 1.05, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.74,
@@ -655,7 +663,7 @@ local PROFILE_POINTS = {
         gripMultiplier = 0.84, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.028,
         optimalPressure = 28, optimalTemp = 54, pressureSensitivity = 0.315, rollingRes = 1.30,
         staticCoolingRate = 0.08, slipHeatRate = 6.75, workHeatRate = 3.70, wearRate = 0.000225,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.55,
         treadInertia = 0.630, carcassInertia = 1.020, thermalReactionRate = 1.0, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.725,
@@ -669,7 +677,7 @@ local PROFILE_POINTS = {
         gripMultiplier = 0.82, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.026,
         optimalPressure = 26, optimalTemp = 52, pressureSensitivity = 0.28, rollingRes = 1.42,
         staticCoolingRate = 0.08, slipHeatRate = 6.3, workHeatRate = 3.43, wearRate = 0.0002,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.56,
         treadInertia = 0.672, carcassInertia = 1.088, thermalReactionRate = 0.95, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.71,
@@ -693,15 +701,19 @@ local PROFILE_POINTS = {
 
 -- CONTINUOUS SLICK COMPOUND SPECTRUM: Chemically Decoupled Racing Compounds
 -- HEAT REOPENED 2026-09-10: workHeatRate −~12% (cornering/load); slip + rollingRes held.
--- Wear/scalar locks held. Tester: abuse overshoot from heatband A/B too aggressive.
+-- ROUND-2 HEAT REOPEN: work −5% + slip −5% each (fleet mid-corner spread); rolling/wear held.
+-- ROUND-3 HEAT REOPEN: work −3% + slip −6% each (fleet lateral-G; slip-led); rolling/wear held.
+-- Wear/scalar locks held. Tester: ETK / low-camber street — GT3 smoke only.
 local SLICK_SPECTRUM_POINTS = {
     { softness = 0.50, profile = "hard_slick", mods = {
         -- Hard C2 WEAR LOCKED. HEAT REOPENED: work 7.8→6.86; slip 13.5 / rolling held.
+        -- ROUND-2: work 6.86→6.52 (−5%) + slip 13.5→12.83 (−5%).
+        -- ROUND-3: work 6.52→6.32 (−3%) + slip 12.83→12.06 (−6%).
         adhesion = 0.48, airConductionRate = 0.015, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.3, coreCoolRate = 0.038, coreVelCoolRate = 0.0088, skinCoreConductance = 0.110,
         gripMultiplier = 0.96, longGripMult = 1, latGripMult = 0.74, loadSensitivity = 0.11,
         optimalPressure = 28, optimalTemp = 90, pressureSensitivity = 0.95, rollingRes = 0.98,
-        staticCoolingRate = 0.060, slipHeatRate = 13.5, workHeatRate = 6.86, wearRate = 0.00115,
+        staticCoolingRate = 0.060, slipHeatRate = 12.06, workHeatRate = 6.32, wearRate = 0.00115,
         -- Predictive scalar life OPEN from locked C5=4.7 (est. ~45–55 lap EOL).
         rollingWearCoef = 50, scalarTreadWearScale = 6.4,
         treadInertia = 0.4536, carcassInertia = 0.7344, thermalReactionRate = 1.25, tempPlateau = 14,
@@ -712,11 +724,13 @@ local SLICK_SPECTRUM_POINTS = {
     } },
     { softness = 0.575, profile = "hard_slick", mods = {
         -- Hard mid HEAT REOPENED: work 8.1→7.13; slip/rolling held.
+        -- ROUND-2: work 7.13→6.77 (−5%) + slip 14.0→13.3 (−5%).
+        -- ROUND-3: work 6.77→6.57 (−3%) + slip 13.3→12.50 (−6%).
         adhesion = 0.50, airConductionRate = 0.01575, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.275, coreCoolRate = 0.0345, coreVelCoolRate = 0.008, skinCoreConductance = 0.115,
         gripMultiplier = 0.99, longGripMult = 1, latGripMult = 0.73, loadSensitivity = 0.115,
         optimalPressure = 27.5, optimalTemp = 87, pressureSensitivity = 1.0, rollingRes = 1.00,
-        staticCoolingRate = 0.060, slipHeatRate = 14.0, workHeatRate = 7.13, wearRate = 0.00130,
+        staticCoolingRate = 0.060, slipHeatRate = 12.50, workHeatRate = 6.57, wearRate = 0.00130,
         -- Mid Hard↔Med predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 55, scalarTreadWearScale = 5.2,
         treadInertia = 0.4263, carcassInertia = 0.6902, thermalReactionRate = 1.335, tempPlateau = 14,
@@ -727,11 +741,13 @@ local SLICK_SPECTRUM_POINTS = {
     } },
     { softness = 0.65, profile = "medium_slick", mods = {
         -- Medium C3 WEAR LOCKED. HEAT REOPENED: work 8.6→7.57; slip 15 / rolling held.
+        -- ROUND-2: work 7.57→7.19 (−5%) + slip 15.0→14.25 (−5%).
+        -- ROUND-3: work 7.19→6.97 (−3%) + slip 14.25→13.40 (−6%).
         adhesion = 0.52, airConductionRate = 0.0165, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.25, coreCoolRate = 0.031, coreVelCoolRate = 0.0072, skinCoreConductance = 0.120,
         gripMultiplier = 1.02, longGripMult = 1, latGripMult = 0.72, loadSensitivity = 0.12,
         optimalPressure = 27, optimalTemp = 84, pressureSensitivity = 1.05, rollingRes = 1.02,
-        staticCoolingRate = 0.060, slipHeatRate = 15.0, workHeatRate = 7.57, wearRate = 0.00135,
+        staticCoolingRate = 0.060, slipHeatRate = 13.40, workHeatRate = 6.97, wearRate = 0.00135,
         -- Predictive scalar life OPEN from locked C5=4.7 (est. ~30–40 lap EOL).
         rollingWearCoef = 42, scalarTreadWearScale = 9.3,
         treadInertia = 0.399, carcassInertia = 0.646, thermalReactionRate = 1.42, tempPlateau = 14,
@@ -742,11 +758,13 @@ local SLICK_SPECTRUM_POINTS = {
     } },
     { softness = 0.725, profile = "medium_slick", mods = {
         -- Medium mid HEAT REOPENED: work 8.9→7.83; slip/rolling held.
+        -- ROUND-2: work 7.83→7.44 (−5%) + slip 15.5→14.73 (−5%).
+        -- ROUND-3: work 7.44→7.22 (−3%) + slip 14.73→13.85 (−6%).
         adhesion = 0.535, airConductionRate = 0.016875, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.235, coreCoolRate = 0.031, coreVelCoolRate = 0.0074, skinCoreConductance = 0.122,
         gripMultiplier = 1.05, longGripMult = 1, latGripMult = 0.71, loadSensitivity = 0.125,
         optimalPressure = 26.5, optimalTemp = 83, pressureSensitivity = 1.125, rollingRes = 1.05,
-        staticCoolingRate = 0.060, slipHeatRate = 15.5, workHeatRate = 7.83, wearRate = 0.00155,
+        staticCoolingRate = 0.060, slipHeatRate = 13.85, workHeatRate = 7.22, wearRate = 0.00155,
         -- Mid Med↔Soft predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 48, scalarTreadWearScale = 7.1,
         treadInertia = 0.3717, carcassInertia = 0.6018, thermalReactionRate = 1.485, tempPlateau = 14,
@@ -757,11 +775,13 @@ local SLICK_SPECTRUM_POINTS = {
     } },
     { softness = 0.80, profile = "soft_slick", mods = {
         -- Soft C4 WEAR + scalar LOCKED. HEAT REOPENED: work 9.8→8.62; slip 17.5 / rolling held.
+        -- ROUND-2: work 8.62→8.19 (−5%) + slip 17.5→16.63 (−5%).
+        -- ROUND-3: work 8.19→7.94 (−3%) + slip 16.63→15.63 (−6%).
         adhesion = 0.55, airConductionRate = 0.01725, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.22, coreCoolRate = 0.031, coreVelCoolRate = 0.0076, skinCoreConductance = 0.130,
         gripMultiplier = 1.08, longGripMult = 1, latGripMult = 0.70, loadSensitivity = 0.13,
         optimalPressure = 26, optimalTemp = 82, pressureSensitivity = 1.2, rollingRes = 1.22,
-        staticCoolingRate = 0.060, slipHeatRate = 17.5, workHeatRate = 8.62, wearRate = 0.00255,
+        staticCoolingRate = 0.060, slipHeatRate = 15.63, workHeatRate = 7.94, wearRate = 0.00255,
         -- Soft C4 scalar life LOCKED 2026-09-06: 4.7 (Belasco ~37 km fronts sc~69–70% sc-led;
         -- mid-band 60–70% @ 35–45 km). Same scale as C5; longer life via lower wearProd. Heat held.
         rollingWearCoef = 70, scalarTreadWearScale = 4.7,
@@ -773,11 +793,13 @@ local SLICK_SPECTRUM_POINTS = {
     } },
     { softness = 0.875, profile = "supersoft_slick", mods = {
         -- C5 scalar LOCKED 4.7. HEAT REOPENED 2026-09-10: work 10.7→9.42; slip 19.5 / rolling held.
+        -- ROUND-2: work 9.42→8.95 (−5%) + slip 19.5→18.53 (−5%).
+        -- ROUND-3: work 8.95→8.68 (−3%) + slip 18.53→17.42 (−6%).
         adhesion = 0.565, airConductionRate = 0.017625, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.205, coreCoolRate = 0.031, coreVelCoolRate = 0.0078, skinCoreConductance = 0.138,
         gripMultiplier = 1.11, longGripMult = 1, latGripMult = 0.69, loadSensitivity = 0.135,
         optimalPressure = 25.5, optimalTemp = 80, pressureSensitivity = 1.275, rollingRes = 1.39,
-        staticCoolingRate = 0.060, slipHeatRate = 19.5, workHeatRate = 9.42, wearRate = 0.00355,
+        staticCoolingRate = 0.060, slipHeatRate = 17.42, workHeatRate = 8.68, wearRate = 0.00355,
         rollingWearCoef = 92, scalarTreadWearScale = 4.7,
         treadInertia = 0.3171, carcassInertia = 0.5134, thermalReactionRate = 1.615, tempPlateau = 14,
         coldWidth = 43, hotWidth = 43, gripFloor = 0.17, coldWearMult = 2.73,
@@ -795,7 +817,7 @@ local UTILITY_SPECTRUM_POINTS = {
         gripMultiplier = 0.9, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.022,
         optimalPressure = 44, optimalTemp = 60, pressureSensitivity = 0.32, rollingRes = 0.84,
         staticCoolingRate = 0.08, slipHeatRate = 7.875, workHeatRate = 4.2, wearRate = 0.00032,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.33,
         treadInertia = 0.588, carcassInertia = 0.952, thermalReactionRate = 1.2, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.77,
@@ -809,7 +831,7 @@ local UTILITY_SPECTRUM_POINTS = {
         gripMultiplier = 0.87, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.024,
         optimalPressure = 40, optimalTemp = 58, pressureSensitivity = 0.30, rollingRes = 0.96,
         staticCoolingRate = 0.08, slipHeatRate = 7.612, workHeatRate = 4.05, wearRate = 0.00027,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.36,
         treadInertia = 0.609, carcassInertia = 0.986, thermalReactionRate = 1.225, tempPlateau = 17,
         coldWidth = 58, hotWidth = 52.5, gripFloor = 0.26, coldWearMult = 1.755,
@@ -823,7 +845,7 @@ local UTILITY_SPECTRUM_POINTS = {
         gripMultiplier = 0.84, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.026,
         optimalPressure = 36, optimalTemp = 56, pressureSensitivity = 0.28, rollingRes = 1.08,
         staticCoolingRate = 0.08, slipHeatRate = 7.35, workHeatRate = 3.9, wearRate = 0.00022,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.43,
         treadInertia = 0.63, carcassInertia = 1.02, thermalReactionRate = 1.25, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.74,
@@ -837,7 +859,7 @@ local UTILITY_SPECTRUM_POINTS = {
         gripMultiplier = 0.8, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.026,
         optimalPressure = 28, optimalTemp = 52, pressureSensitivity = 0.22, rollingRes = 1.35,
         staticCoolingRate = 0.08, slipHeatRate = 6.51, workHeatRate = 3.6, wearRate = 0.00018,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.50,
         treadInertia = 0.714, carcassInertia = 1.156, thermalReactionRate = 1.2, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.71,
@@ -851,7 +873,7 @@ local UTILITY_SPECTRUM_POINTS = {
         gripMultiplier = 0.76, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.03,
         optimalPressure = 24, optimalTemp = 50, pressureSensitivity = 0.18, rollingRes = 1.55,
         staticCoolingRate = 0.08, slipHeatRate = 6.09, workHeatRate = 3.3, wearRate = 0.00014,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.61,
         treadInertia = 0.798, carcassInertia = 1.292, thermalReactionRate = 1.15, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.68,
@@ -869,7 +891,7 @@ local COMMERCIAL_SPECTRUM_POINTS = {
         gripMultiplier = 0.84, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.011,
         optimalPressure = 105, optimalTemp = 62, pressureSensitivity = 0.1, rollingRes = 0.62,
         staticCoolingRate = 0.08, slipHeatRate = 7.35, workHeatRate = 2.4, wearRate = 0.00006,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 1.0,
         treadInertia = 1.764, carcassInertia = 2.856, thermalReactionRate = 1.15, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.71,
@@ -883,7 +905,7 @@ local COMMERCIAL_SPECTRUM_POINTS = {
         gripMultiplier = 0.78, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.01,
         optimalPressure = 110, optimalTemp = 62, pressureSensitivity = 0.09, rollingRes = 0.58,
         staticCoolingRate = 0.08, slipHeatRate = 6.825, workHeatRate = 2.16, wearRate = 0.00005,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 1.0,
         treadInertia = 2.184, carcassInertia = 3.536, thermalReactionRate = 1.1, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.68,
@@ -897,7 +919,7 @@ local COMMERCIAL_SPECTRUM_POINTS = {
         gripMultiplier = 0.82, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.014,
         optimalPressure = 95, optimalTemp = 62, pressureSensitivity = 0.13, rollingRes = 0.75,
         staticCoolingRate = 0.08, slipHeatRate = 7.875, workHeatRate = 2.7, wearRate = 0.00008,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.90,
         treadInertia = 1.89, carcassInertia = 3.06, thermalReactionRate = 1.2, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.71,
@@ -911,7 +933,7 @@ local COMMERCIAL_SPECTRUM_POINTS = {
         gripMultiplier = 0.77, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.016,
         optimalPressure = 87.5, optimalTemp = 59, pressureSensitivity = 0.11, rollingRes = 0.90,
         staticCoolingRate = 0.08, slipHeatRate = 7.087, workHeatRate = 3.0, wearRate = 0.00010,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.69,
         treadInertia = 1.953, carcassInertia = 3.162, thermalReactionRate = 1.225, tempPlateau = 17,
         coldWidth = 58, hotWidth = 52.5, gripFloor = 0.26, coldWearMult = 1.695,
@@ -925,7 +947,7 @@ local COMMERCIAL_SPECTRUM_POINTS = {
         gripMultiplier = 0.72, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.018,
         optimalPressure = 80, optimalTemp = 56, pressureSensitivity = 0.09, rollingRes = 1.05,
         staticCoolingRate = 0.08, slipHeatRate = 6.3, workHeatRate = 3.3, wearRate = 0.00012,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.63,
         treadInertia = 2.016, carcassInertia = 3.264, thermalReactionRate = 1.25, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.68,
@@ -943,7 +965,7 @@ local ATV_UTV_SPECTRUM_POINTS = {
         gripMultiplier = 0.84, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.055,
         optimalPressure = 14, optimalTemp = 55, pressureSensitivity = 0.25, rollingRes = 1.1,
         staticCoolingRate = 0.08, slipHeatRate = 6.825, workHeatRate = 3.6, wearRate = 0.0025,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.21,
         treadInertia = 0.336, carcassInertia = 0.544, thermalReactionRate = 1.65, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.71,
@@ -957,7 +979,7 @@ local ATV_UTV_SPECTRUM_POINTS = {
         gripMultiplier = 0.82, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.0575,
         optimalPressure = 12, optimalTemp = 52.5, pressureSensitivity = 0.225, rollingRes = 1.175,
         staticCoolingRate = 0.08, slipHeatRate = 6.562, workHeatRate = 3.45, wearRate = 0.00215,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.21,
         treadInertia = 0.357, carcassInertia = 0.578, thermalReactionRate = 1.575, tempPlateau = 17,
         coldWidth = 58, hotWidth = 52.5, gripFloor = 0.26, coldWearMult = 1.695,
@@ -971,7 +993,7 @@ local ATV_UTV_SPECTRUM_POINTS = {
         gripMultiplier = 0.8, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.06,
         optimalPressure = 10, optimalTemp = 50, pressureSensitivity = 0.2, rollingRes = 1.25,
         staticCoolingRate = 0.08, slipHeatRate = 6.3, workHeatRate = 3.3, wearRate = 0.0018,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.23,
         treadInertia = 0.378, carcassInertia = 0.612, thermalReactionRate = 1.5, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.68,
@@ -985,7 +1007,7 @@ local ATV_UTV_SPECTRUM_POINTS = {
         gripMultiplier = 0.76, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.065,
         optimalPressure = 7, optimalTemp = 48, pressureSensitivity = 0.15, rollingRes = 1.4,
         staticCoolingRate = 0.08, slipHeatRate = 5.775, workHeatRate = 3, wearRate = 0.0014,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.28,
         treadInertia = 0.42, carcassInertia = 0.68, thermalReactionRate = 1.35, tempPlateau = 18,
         coldWidth = 58, hotWidth = 50, gripFloor = 0.26, coldWearMult = 1.65,
@@ -1004,7 +1026,7 @@ local VINTAGE_SPECTRUM_POINTS = {
         gripMultiplier = 0.92, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.042,
         optimalPressure = 24, optimalTemp = 56, pressureSensitivity = 0.45, rollingRes = 0.94,
         staticCoolingRate = 0.08, slipHeatRate = 6.5, workHeatRate = 5.7, wearRate = 0.0004,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.37,
         treadInertia = 0.50, carcassInertia = 0.82, thermalReactionRate = 1.15, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.65,
@@ -1018,7 +1040,7 @@ local VINTAGE_SPECTRUM_POINTS = {
         gripMultiplier = 0.945, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.04,
         optimalPressure = 27, optimalTemp = 58, pressureSensitivity = 0.435, rollingRes = 0.91,
         staticCoolingRate = 0.08, slipHeatRate = 6.9, workHeatRate = 5.45, wearRate = 0.000475,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.28,
         treadInertia = 0.49, carcassInertia = 0.80, thermalReactionRate = 1.22, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.68,
@@ -1032,7 +1054,7 @@ local VINTAGE_SPECTRUM_POINTS = {
         gripMultiplier = 0.97, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.038,
         optimalPressure = 30, optimalTemp = 60, pressureSensitivity = 0.42, rollingRes = 0.88,
         staticCoolingRate = 0.08, slipHeatRate = 7.4, workHeatRate = 5.05, wearRate = 0.00055,
-        -- PLACEHOLDER scalar life — REVIEW after performance street band locks.
+        -- PROVISIONAL FALLBACK scalar life — not Belasco-locked; see tools/SPECTRA_STATUS.md.
         scalarTreadWearScale = 0.22,
         treadInertia = 0.48, carcassInertia = 0.78, thermalReactionRate = 1.28, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.71,

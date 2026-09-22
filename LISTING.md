@@ -17,7 +17,7 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 | --- | --- |
 | **Title** | Node-Thermal Friction |
 | **Tagline** | Private tester — V2 node wear + thermals (friction A1). Public Repo paused. |
-| **Version** | 0.2.0 |
+| **Version** | 0.2.1 |
 | **Zip filename** | `NodeThermalFriction.zip` (stable Repo id; display title is Node-Thermal Friction) |
 | **Prefix** | Beta |
 
@@ -112,19 +112,34 @@ GNU Affero General Public License v3 — see the [I]license[/I] file in the pack
 
 ## Compat Tires resource (second listing)
 
-Pack, inventory, and listing BBCode live in **Node-Thermal-Friction-Tires** (`LISTING.md` there). Do not put `vehicles/` in this core tree.
+Pack, inventory, and listing BBCode live in the Compat unpack / tires repo (`README.md`,
+`INVENTORY.md`, `LISTING.md` under `Node-Thermal-Friction-Tires-dev`). Do not put
+`vehicles/` in this core tree.
 
 **Live listing:** https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/
 
-Paste this into the Compat resource **Links** (or Requirements) so it points back at core:
+**Core ↔ Compat cross-links (paste on both Repo pages):**
 
 ```bbcode
 [B]Requires[/B] the core heat/wear/apps mod: [URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin.39082/[/URL]
 ```
 
-Gallery for that listing: tires repo `mod_info/TWTRS_COMPAT/images/listing_hero.jpg` (icon: `icon.jpg`). Core still keeps the compat hero master under `tools/listing/locked/ntf-compat-hero.jpg`.
+```bbcode
+Optional parts: [B]Compat Tires[/B] [URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]
+```
+
+Pack Compat zip from core tools: `.\tools\scripts\Pack-Compat-Release.ps1`
+
+Gallery for that listing: tires unpack `mod_info/TWTRS_COMPAT/images/listing_hero.jpg` (icon: `icon.jpg`). Core still keeps the compat hero master under `tools/listing/locked/ntf-compat-hero.jpg`.
 
 ---
+
+## Changelog (0.2.1)
+
+- Private-beta polish: Classic/Crew blank-stream + Cond labeling; duct Tuning copy; Compat README/inventory/pack script
+- Spectra honesty: truck/utility/AT/vintage labeled provisional (`tools/SPECTRA_STATUS.md`)
+- Round-2 fleet heat dial-back (tester-owned); numRays 16 baseline locked
+- Public Repo update still paused
 
 ## Changelog (0.1.2)
 

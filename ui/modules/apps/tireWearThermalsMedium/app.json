@@ -1,7 +1,7 @@
 {
   "name": "Node-Thermal Friction Crew",
   "author": "Node-Thermal Friction",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "directive": "tireWearThermalsMedium",
   "domElement": "<tire-wear-thermals-medium></tire-wear-thermals-medium>",
   "types": [
@@ -10,7 +10,7 @@
     "ui.apps.categories.info",
     "ui.apps.categories.racing"
   ],
-  "description": "Crew view: driver telemetry plus carcass, rim soak, and stint fade.",
+  "description": "Node-Thermal Friction Crew: Cond% with sc/nd split, O|M|I zones, grip, PSI, carcass/rim, profile. Respawn if no signal.",
   "category": "Telemetry",
   "isAuxiliary": false,
   "interactive": "yes",

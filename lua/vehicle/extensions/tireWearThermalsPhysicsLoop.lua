@@ -154,7 +154,8 @@ function M.install(F, deps)
                 w.longSlipEnergy = longComp
                 w.sideSlipEnergy = sideComp
                 w.slipEnergy = max(nativeWork, longComp * 0.55 + sideComp * 0.45)
-                local dynamicSlipEnergy = (w.slipEnergy + toeScrubEnergy) * (1.0 + abs(g_mag) * 0.15)
+                -- Round-3: g→slip boost 0.11→0.08 (fleet lateral-G; roll/camber-change proxy into slip heat).
+                local dynamicSlipEnergy = (w.slipEnergy + toeScrubEnergy) * (1.0 + abs(g_mag) * 0.08)
                 -- Soft ground depth amplifies scrub/work slightly (paddling / ploughing)
                 if (wd.contactDepth or 0) > 0.05 then
                     dynamicSlipEnergy = dynamicSlipEnergy * (1.0 + min(0.6, wd.contactDepth))
