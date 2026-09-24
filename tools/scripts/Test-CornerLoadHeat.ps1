@@ -1,7 +1,7 @@
-# Corner / load-util heat soft-sim gate (round-3 lateral-G dial-back).
+# Corner / load-util heat soft-sim gate (round-4: peak under ~100C from ~116C).
 # Mirrors live slip^2 + g-boost, work coef, peakWF/util nudge, verticalCarcassHeat,
 # and corner velCool g-penalty (net = patched * (1+pen); cruise pen=0).
-# Before = live Round-2 knobs + post-R2 Sport rates; After = R3 table + slip −6% / work −3%.
+# Before = live Round-3 knobs + post-R3 Sport rates; After = R4 (slip −8% / work −4%).
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
 $outDir = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
@@ -89,25 +89,12 @@ function Clone-Knobs([hashtable]$src) {
     return $h
 }
 
-# Sport rates (live Round-2 reopen: 9.68/4.94 * 0.95 → 9.20/4.69)
-$sportSlip = 9.20
-$sportWork = 4.69
+# Sport rates live after Round-3 (9.20*0.94 / 4.69*0.97).
+$sportSlip = 8.65
+$sportWork = 4.55
 $sportG0 = 0.16
 
 $before = @{
-    gBoost       = 0.11
-    workCoef     = 0.135
-    utilLo       = 0.82
-    utilHi       = 1.28
-    utilBlend    = 0.16
-    vertScale    = 0.48
-    coolCap      = 0.18
-    coolSlope    = 0.22
-    slipHeatRate = $sportSlip
-    workHeatRate = $sportWork
-    workG0       = $sportG0
-}
-$after = @{
     gBoost       = 0.08
     workCoef     = 0.128
     utilLo       = 0.82
@@ -116,8 +103,21 @@ $after = @{
     vertScale    = 0.42
     coolCap      = 0.12
     coolSlope    = 0.14
-    slipHeatRate = $sportSlip * 0.94
-    workHeatRate = $sportWork * 0.97
+    slipHeatRate = $sportSlip
+    workHeatRate = $sportWork
+    workG0       = $sportG0
+}
+$after = @{
+    gBoost       = 0.06
+    workCoef     = 0.118
+    utilLo       = 0.82
+    utilHi       = 1.12
+    utilBlend    = 0.09
+    vertScale    = 0.36
+    coolCap      = 0.05
+    coolSlope    = 0.07
+    slipHeatRate = [math]::Round($sportSlip * 0.92, 2)
+    workHeatRate = [math]::Round($sportWork * 0.96, 2)
     workG0       = $sportG0
 }
 
@@ -141,26 +141,26 @@ $cases = @(
         id = 3; name = 'Low-camber outside mid'
         gMag = 1.18; slip = 0.195; loadRaw = 6800; weight = 0.50
         peakForce = 7500; loadUtil = 6800; suspVel = 0.14; heldRolling = 0.35
-        metric = 'patched'; minDelta = -12.0; maxDelta = -8.0; gate = $true
+        # ~116C peak → under 100C is ~15–18% less corner rise. Gate that band.
+        metric = 'patched'; minDelta = -20.0; maxDelta = -12.0; gate = $true
     }
     @{
         id = 4; name = 'Near-max util weight-shift'
         gMag = 1.10; slip = 0.255; loadRaw = 7400; weight = 0.52
         peakForce = 9800; loadUtil = 7400; suspVel = 0.55; heldRolling = 0.30
-        # UtilHi now binds (peakWF 1.32→1.20); allow a slightly wider cut than case 3.
-        metric = 'patched'; minDelta = -16.0; maxDelta = -8.0; gate = $true
+        metric = 'patched'; minDelta = -22.0; maxDelta = -12.0; gate = $true
     }
 )
 
 $isoKeys = @(
-    @{ name = 'gBoost';    set = @{ gBoost = 0.08 } }
-    @{ name = 'workCoef';  set = @{ workCoef = 0.128 } }
-    @{ name = 'utilHi';    set = @{ utilHi = 1.20 } }
-    @{ name = 'utilBlend'; set = @{ utilBlend = 0.12 } }
-    @{ name = 'vertScale'; set = @{ vertScale = 0.42 } }
-    @{ name = 'velCool';   set = @{ coolCap = 0.12; coolSlope = 0.14 } }
-    @{ name = 'slipRate';  set = @{ slipHeatRate = $sportSlip * 0.94 } }
-    @{ name = 'workRate';  set = @{ workHeatRate = $sportWork * 0.97 } }
+    @{ name = 'gBoost';    set = @{ gBoost = 0.06 } }
+    @{ name = 'workCoef';  set = @{ workCoef = 0.118 } }
+    @{ name = 'utilHi';    set = @{ utilHi = 1.12 } }
+    @{ name = 'utilBlend'; set = @{ utilBlend = 0.09 } }
+    @{ name = 'vertScale'; set = @{ vertScale = 0.36 } }
+    @{ name = 'velCool';   set = @{ coolCap = 0.05; coolSlope = 0.07 } }
+    @{ name = 'slipRate';  set = @{ slipHeatRate = [math]::Round($sportSlip * 0.92, 2) } }
+    @{ name = 'workRate';  set = @{ workHeatRate = [math]::Round($sportWork * 0.96, 2) } }
 )
 
 $sb = New-Object System.Text.StringBuilder
@@ -169,16 +169,17 @@ function Out([string]$s) {
     Write-Host $s
 }
 
-Out '=== Corner / load-util heat soft-sim gate (round-3) ==='
+Out '=== Corner / load-util heat soft-sim gate (round-4) ==='
 Out 'Live mirrors: slip^2 * g-boost, work coef, peakWF/util nudge, verticalCarcassHeat, velCool g-penalty'
-Out ('Before (R2): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7}/{8}' -f `
+Out ('Before (R3): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7}/{8}' -f `
     $before.gBoost, $before.workCoef, $before.utilHi, $before.utilBlend, $before.vertScale, $before.coolCap, $before.coolSlope, $before.slipHeatRate, $before.workHeatRate)
-Out ('After  (R3): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7:N3}/{8:N3} (-6%/-3%)' -f `
+Out ('After  (R4): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7}/{8} (-8%/-4%)' -f `
     $after.gBoost, $after.workCoef, $after.utilHi, $after.utilBlend, $after.vertScale, $after.coolCap, $after.coolSlope, $after.slipHeatRate, $after.workHeatRate)
 Out 'Hold: rollingRes / cruise RR / aeroHeatScale / wear locks / A2 floor / nodeWearScale'
+Out "Aim: rear peak ~116C to under 100C (about 15-18 percent less corner rise above ambient)"
 Out ''
-Out 'Pass: case1 total |d|<=2%; case3 patched d in [-12,-8]%; case4 patched d in [-16,-8]% (util stacking);'
-Out '      no single knob >~7% of that case budget (iso uses net so velCool counts); case2 INFO only'
+Out "Pass: case1 total abs d <= 2 percent; case3 patched d in [-20,-12]; case4 patched d in [-22,-12]"
+Out "      no single knob above ~8 percent of that case budget; case2 INFO only"
 Out ''
 
 $fail = 0
@@ -205,7 +206,7 @@ foreach ($c in $cases) {
     }
 
     $passDelta = ($delta -ge [double]$c.minDelta) -and ($delta -le [double]$c.maxDelta)
-    $passIso = $maxIso -le 7.0
+    $passIso = $maxIso -le 8.0
     $gated = [bool]$c.gate
     if ($gated) {
         $pass = $passDelta -and $passIso
@@ -246,7 +247,7 @@ foreach ($r in $results) {
 }
 Out ''
 if ($fail -eq 0) {
-    Out 'OVERALL: PASS - soft-sim gate green (round-3 lateral-G dial-back sized).'
+    Out "OVERALL: PASS - soft-sim gate green (round-4 under-100C corner cut)."
 } else {
     Out ("OVERALL: FAIL - {0} gated case(s) outside pass criteria." -f $fail)
 }

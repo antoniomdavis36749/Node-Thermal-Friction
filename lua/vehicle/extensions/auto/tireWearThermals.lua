@@ -272,10 +272,10 @@ local THERMAL_TOPOLOGY = {
     patchLatLoadNudge = 0.05,        -- mild live lateral (gy) nudge on L/R ring weights
     -- Path A3: peakForce / downForceRaw util → patchHeatScale (smoothed load keeps Hertz stable;
     --   contactDepth + patchHeatScale EMA still kill kerb jitter). Prefer raw load as util denom.
-    -- Round-3 heat dial-back (fleet lateral-G): util coupling eased again (R2 was 0.16 / 1.28).
-    patchUtilBlend = 0.12,           -- was 0.16; milder util→patch coupling
+    -- Round-4: util coupling 0.12/1.20 → 0.09/1.12 (rear peak ~116C toward under 100C).
+    patchUtilBlend = 0.09,           -- Round-4: was 0.12; milder util→patch coupling
     patchUtilPeakLo = 0.82,          -- util clamp floor (was hardcoded 0.85)
-    patchUtilPeakHi = 1.20,          -- util clamp ceil (was 1.28; cap near-max load heat)
+    patchUtilPeakHi = 1.12,          -- Round-4: was 1.20; cap near-max load heat
     -- Path A4: patch length prefers dynamicRadius vs static; clamp absurd deflation
     patchDynRadiusMinFrac = 0.55,    -- dynR floor as fraction of static radius
     patchDynRadiusMaxFrac = 1.06,    -- dynR ceil vs static (rare grow / squat)
@@ -1185,8 +1185,8 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     -- Suspension damper / bump-stop heat into carcass (power ~ load·|v| + bump stress)
     local verticalCarcassHeat = 0
     if not isAirborne then
-        -- Round-3: weight-shift scale 0.48→0.42 (fleet lateral-G dial-back).
-        verticalCarcassHeat = abs(suspVel) * (loadRaw / 1200) * 0.42
+        -- Round-4: weight-shift scale 0.42→0.36.
+        verticalCarcassHeat = abs(suspVel) * (loadRaw / 1200) * 0.36
             + (w.suspBump or 0) * (loadRaw / 800) * 1.2
             + (w.suspStress or 0) * 1.8 * bottomOutSens
         if abs(suspVel) < 0.04 then
@@ -1463,9 +1463,9 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         local slipWorkScale = topo.skinSlipWorkScale or 1.10
         local slipEnergyHeatWork = slipEnergy / (1.0 + slipEnergy * 0.12)
         rawFrictionalGain = rawFrictionalGain * (max(surfaceMu - 0.5, 0.1) * 2)
-            -- Round-3: skin work coef 0.135→0.128 (modest cornering-work trim).
+            -- Round-4: skin work coef 0.128→0.118.
             + (((0.0078 * (slipEnergyHeat * slipEnergyHeat) * loadCoeff) * slipHeatRate * slideMuScale
-                + 0.128 * relative_work * workHeatRate * peakWorkFactor / (1 + (slipEnergyHeatWork * slipEnergyHeatWork))) * surfaceMu / tyreWidthCoeff) * slipWorkScale
+                + 0.118 * relative_work * workHeatRate * peakWorkFactor / (1 + (slipEnergyHeatWork * slipEnergyHeatWork))) * surfaceMu / tyreWidthCoeff) * slipWorkScale
                 
         rawFrictionalGain = rawFrictionalGain + ((verticalCarcassHeat * 0.005 * workHeatRate) / heatMassScale) * weight
 
@@ -1496,8 +1496,8 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         -- TURBULENT CONVECTION (v^0.8). 0.155 skin scale: cruise still mild; track retains more heat.
         -- Free-belt cool uses geometric patchFrac (not heat floor): larger patch → less freeFrac cool.
         -- Intentionally separate from patchHeatScale so we don't also amplify RR via hystSkinShare.
-        -- Round-3: corner velCool g-penalty min(0.18,(g-0.20)*0.22) → min(0.12,(g-0.20)*0.14).
-        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale / (1.0 + min(0.12, max(0, g_mag - 0.20) * 0.14))
+        -- Round-4: corner velCool g-penalty min(0.12,(g-0.20)*0.14) → min(0.05,(g-0.20)*0.07).
+        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale / (1.0 + min(0.05, max(0, g_mag - 0.20) * 0.07))
         local totalConvection = tempDelta * (staticCoolingRate * 0.04 + velCool) * climateScale * (1.0 + (1.0 - patchFrac) * (topo.freeBeltCoolMult - 1.0)) * spawnConvScale
         
         if tempDelta > 0 then

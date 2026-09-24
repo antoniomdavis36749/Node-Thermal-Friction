@@ -5,8 +5,8 @@ performance + race slicks; other bands remain usable fallbacks, not Belasco-lock
 
 | Band | Maturity | Notes |
 | --- | --- | --- |
-| Street Soft → Standard, Sport, Sport Plus, Track Day | **LOCKED** (wear + life); heat round-3 **tester-owned** | ETK / low-camber street mid-turns (outside); GT3 smoke only |
-| Slick Hard C2 / Med C3 / Soft C4 / C5 | **LOCKED** (wear + Soft C4 scalar 4.7) | Heat round-3 tester-owned; same non-GT3 protocol |
+| Street Soft → Standard, Sport, Sport Plus, Track Day | **LOCKED** (wear + life); heat round-4 **tester-owned** (aim rear peak under 100C) | ETK / low-camber street mid-turns (outside); GT3 smoke only |
+| Slick Hard C2 / Med C3 / Soft C4 / C5 | **LOCKED** (wear + Soft C4 scalar 4.7) | Heat round-4 tester-owned (aim rear peak under 100C); same non-GT3 protocol |
 | Wet / winter (street soft-cap ON) | **Provisional** | Wet asphalt grip path locked 2026-08-30; broader A/B open |
 | Rally asphalt / gravel | **Provisional** | Lat/long bumps landed; not Belasco-locked life |
 | Drift | **Provisional** | Node rate 0.017 — non-blocking |

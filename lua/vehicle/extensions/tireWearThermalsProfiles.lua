@@ -552,7 +552,8 @@ local PROFILE_POINTS = {
         casingCompliance = 0.45, coreCoolRate = 0.038, coreVelCoolRate = 0.0095, skinCoreConductance = 0.088,
         gripMultiplier = 1.04, longGripMult = 1.05, latGripMult = 1.02, loadSensitivity = 0.040,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.75, rollingRes = 0.70,
-        staticCoolingRate = 0.044, slipHeatRate = 14.82, workHeatRate = 8.29, wearRate = 0.0028,
+        -- ROUND-4: rear peak ~116C → under 100C. slip −8% / work −4%; rolling held.
+        staticCoolingRate = 0.044, slipHeatRate = 13.63, workHeatRate = 7.96, wearRate = 0.0028,
         -- Street scalar life LOCKED (Sport-ref ladder). Mild sc clock; feel = nodeWearScale 1.10.
         scalarTreadWearScale = 0.19,
         -- Node feel LOCKED (Belasco 22 km FR Cond ~80% / peak ~20%). Band peak above Track Day.
@@ -572,7 +573,8 @@ local PROFILE_POINTS = {
         casingCompliance = 0.42, coreCoolRate = 0.036, coreVelCoolRate = 0.0083, skinCoreConductance = 0.090,
         gripMultiplier = 1.04, longGripMult = 1.08, latGripMult = 1.0, loadSensitivity = 0.042,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.71, rollingRes = 0.88,
-        staticCoolingRate = 0.068, slipHeatRate = 9.734, workHeatRate = 5.02, wearRate = 0.0033,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.068, slipHeatRate = 8.96, workHeatRate = 4.82, wearRate = 0.0033,
         -- Street scalar life LOCKED (Sport-ref ladder). 108 km Belasco: sc still ~99% (secondary).
         -- Feel cliff owned by nodeWearScale 1.0 — do not chase sc to match nd.
         scalarTreadWearScale = 0.20,
@@ -594,7 +596,8 @@ local PROFILE_POINTS = {
         casingCompliance = 0.5, coreCoolRate = 0.035, coreVelCoolRate = 0.008, skinCoreConductance = 0.076,
         gripMultiplier = 1.00, longGripMult = 1, latGripMult = 1, loadSensitivity = 0.036,
         optimalPressure = 33, optimalTemp = 66, pressureSensitivity = 0.55, rollingRes = 0.82,
-        staticCoolingRate = 0.065, slipHeatRate = 8.65, workHeatRate = 4.55, wearRate = 0.0026,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.065, slipHeatRate = 7.96, workHeatRate = 4.37, wearRate = 0.0026,
         -- Street scalar life LOCKED ref (global ×0.15 Sport Belasco ~22 km band). Do not nudge.
         scalarTreadWearScale = 0.15,
         -- Node feel LOCKED ref — today's Sport / PROFILE_POINTS baseline (1.0 = unchanged).
@@ -713,7 +716,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.3, coreCoolRate = 0.038, coreVelCoolRate = 0.0088, skinCoreConductance = 0.110,
         gripMultiplier = 0.96, longGripMult = 1, latGripMult = 0.74, loadSensitivity = 0.11,
         optimalPressure = 28, optimalTemp = 90, pressureSensitivity = 0.95, rollingRes = 0.98,
-        staticCoolingRate = 0.060, slipHeatRate = 12.06, workHeatRate = 6.32, wearRate = 0.00115,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 11.10, workHeatRate = 6.07, wearRate = 0.00115,
         -- Predictive scalar life OPEN from locked C5=4.7 (est. ~45–55 lap EOL).
         rollingWearCoef = 50, scalarTreadWearScale = 6.4,
         treadInertia = 0.4536, carcassInertia = 0.7344, thermalReactionRate = 1.25, tempPlateau = 14,
@@ -730,7 +734,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.275, coreCoolRate = 0.0345, coreVelCoolRate = 0.008, skinCoreConductance = 0.115,
         gripMultiplier = 0.99, longGripMult = 1, latGripMult = 0.73, loadSensitivity = 0.115,
         optimalPressure = 27.5, optimalTemp = 87, pressureSensitivity = 1.0, rollingRes = 1.00,
-        staticCoolingRate = 0.060, slipHeatRate = 12.50, workHeatRate = 6.57, wearRate = 0.00130,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 11.50, workHeatRate = 6.31, wearRate = 0.00130,
         -- Mid Hard↔Med predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 55, scalarTreadWearScale = 5.2,
         treadInertia = 0.4263, carcassInertia = 0.6902, thermalReactionRate = 1.335, tempPlateau = 14,
@@ -747,7 +752,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.25, coreCoolRate = 0.031, coreVelCoolRate = 0.0072, skinCoreConductance = 0.120,
         gripMultiplier = 1.02, longGripMult = 1, latGripMult = 0.72, loadSensitivity = 0.12,
         optimalPressure = 27, optimalTemp = 84, pressureSensitivity = 1.05, rollingRes = 1.02,
-        staticCoolingRate = 0.060, slipHeatRate = 13.40, workHeatRate = 6.97, wearRate = 0.00135,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 12.33, workHeatRate = 6.69, wearRate = 0.00135,
         -- Predictive scalar life OPEN from locked C5=4.7 (est. ~30–40 lap EOL).
         rollingWearCoef = 42, scalarTreadWearScale = 9.3,
         treadInertia = 0.399, carcassInertia = 0.646, thermalReactionRate = 1.42, tempPlateau = 14,
@@ -764,7 +770,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.235, coreCoolRate = 0.031, coreVelCoolRate = 0.0074, skinCoreConductance = 0.122,
         gripMultiplier = 1.05, longGripMult = 1, latGripMult = 0.71, loadSensitivity = 0.125,
         optimalPressure = 26.5, optimalTemp = 83, pressureSensitivity = 1.125, rollingRes = 1.05,
-        staticCoolingRate = 0.060, slipHeatRate = 13.85, workHeatRate = 7.22, wearRate = 0.00155,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 12.74, workHeatRate = 6.93, wearRate = 0.00155,
         -- Mid Med↔Soft predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 48, scalarTreadWearScale = 7.1,
         treadInertia = 0.3717, carcassInertia = 0.6018, thermalReactionRate = 1.485, tempPlateau = 14,
@@ -781,7 +788,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.22, coreCoolRate = 0.031, coreVelCoolRate = 0.0076, skinCoreConductance = 0.130,
         gripMultiplier = 1.08, longGripMult = 1, latGripMult = 0.70, loadSensitivity = 0.13,
         optimalPressure = 26, optimalTemp = 82, pressureSensitivity = 1.2, rollingRes = 1.22,
-        staticCoolingRate = 0.060, slipHeatRate = 15.63, workHeatRate = 7.94, wearRate = 0.00255,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 14.38, workHeatRate = 7.62, wearRate = 0.00255,
         -- Soft C4 scalar life LOCKED 2026-09-06: 4.7 (Belasco ~37 km fronts sc~69–70% sc-led;
         -- mid-band 60–70% @ 35–45 km). Same scale as C5; longer life via lower wearProd. Heat held.
         rollingWearCoef = 70, scalarTreadWearScale = 4.7,
@@ -799,7 +807,8 @@ local SLICK_SPECTRUM_POINTS = {
         casingCompliance = 0.205, coreCoolRate = 0.031, coreVelCoolRate = 0.0078, skinCoreConductance = 0.138,
         gripMultiplier = 1.11, longGripMult = 1, latGripMult = 0.69, loadSensitivity = 0.135,
         optimalPressure = 25.5, optimalTemp = 80, pressureSensitivity = 1.275, rollingRes = 1.39,
-        staticCoolingRate = 0.060, slipHeatRate = 17.42, workHeatRate = 8.68, wearRate = 0.00355,
+        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
+        staticCoolingRate = 0.060, slipHeatRate = 16.03, workHeatRate = 8.33, wearRate = 0.00355,
         rollingWearCoef = 92, scalarTreadWearScale = 4.7,
         treadInertia = 0.3171, carcassInertia = 0.5134, thermalReactionRate = 1.615, tempPlateau = 14,
         coldWidth = 43, hotWidth = 43, gripFloor = 0.17, coldWearMult = 2.73,

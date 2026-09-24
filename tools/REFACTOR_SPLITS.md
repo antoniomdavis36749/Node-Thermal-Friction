@@ -304,4 +304,4 @@ Wear pitfall: subfunctions need a **compact `ctw` reload** at the top (or direct
 
 ---
 
-*Last updated: 2026-09-21 (round-3 fleet lateral-G REOPEN — topology + street/slick slip −6% / work −3%).*
+*Last updated: 2026-09-22 (round-4 corner cut — rear peak ~116C toward under 100C; slip −8% / work −4%; rolling held).*
