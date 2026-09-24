@@ -121,7 +121,7 @@ local THERMAL_TOPOLOGY = {
     flexWarmLoad1 = 400,       -- load_kg gate full
     flexWarmSpeed0 = 2.0,      -- m/s freestream gate start
     flexWarmSpeed1 = 20.0,     -- m/s gate full
-    flexWarmG0 = 0.24,         -- mild corner work opens earlier (straights still choked)
+    flexWarmG0 = 0.24,         -- retired for heat: chassis g must not open carcass flex
     -- Skin slip/work scale (compound slipHeatRate/workHeatRate own stint warm-up; no WC fudge)
     -- Pass 7f: WCU Scintilla GT3 — scale 1.60 ≈ no lift (slip/work add-on minority of
     --   skin heat); cut free-belt cool bias; revert skinSlipWorkScale to 1.0.
@@ -181,14 +181,14 @@ local THERMAL_TOPOLOGY = {
     drivePropStreetSpeed1 = 112.0,        -- m/s (~250 mph): full street carcass damp
     -- Street driven-wheel residual slip soft-cap ENABLE (FWD hard-accel cook):
     -- Soft-cap slip→skin (+ mild prop skin) only when: non-slick, driven (|prop|), rolling
-    -- (not stationary burnout), and low lateral g (not drift/corner). Profile floors own strength;
-    -- sport_plus milder floors live on sport_plus PROFILE_POINTS (not separate topo keys).
+    -- (not stationary burnout). Wheel slip and speed only — chassis g does not fade the cap.
+    -- Profile floors own strength; sport_plus milder floors live on sport_plus PROFILE_POINTS.
     driveStreetSlipSpeed0 = 3.5,          -- m/s freestream: below → full heat (burnout/launch)
     driveStreetSlipSpeed1 = 14.0,         -- m/s: full soft-cap eligibility (~30 mph)
     driveStreetSlipCapStart = 0.16,       -- slipEnergy where soft-cap begins
     driveStreetSlipCapFull = 0.52,        -- slipEnergy at full soft-cap
-    driveStreetSlipG0 = 0.32,             -- g_mag: soft-cap starts fading (corner/drift)
-    driveStreetSlipG1 = 0.58,             -- g_mag: soft-cap fully off
+    driveStreetSlipG0 = 0.32,             -- retired: chassis g must not fade the slip cap
+    driveStreetSlipG1 = 0.58,             -- retired: chassis g must not fade the slip cap
     -- P1 spectrum: mass-scale absolute Nm gates (Civic ≠ hypercar); AWD per-wheel excess damp.
     drivePropMassRefKg = 1500,            -- massScale = sqrt(mass/ref); Belasco GT≈1.0
     drivePropMassScaleMin = 0.78,         -- light hatch: gates open earlier
@@ -267,6 +267,11 @@ local THERMAL_TOPOLOGY = {
     --   * Do not own torque fade / pad μ / ABS; η is display + soft soak scale only.
     --   * No arcade brake-bite long-grip hack on this track.
     contactDepthEmaTau = 0.08,       -- s; short EMA so gravel/kerb depth doesn't jitter patchFrac
+    -- Sliding heat reads BeamNG slipEnergy (W × NATIVE_SLIP_ENERGY_SCALE), EMA'd with contactDepthEmaTau.
+    slipPowerCap = 8.0,              -- working units; ~1.6 MW raw. Above lock/burnout, cuts impact spikes.
+    -- Sticking-patch flex: this wheel's load × slip only. Zero at no slip and once slip exceeds the ref.
+    stickFlexGain = 0.00035,
+    stickFlexSlipRef = 0.45,
     patchHertzDeflBlend = 0.35,      -- max weight of deflection proxy vs Hertz F/P area
     patchDeflWidthFrac = 0.55,       -- effective width fraction of chord×width deflection area
     patchLatLoadNudge = 0.05,        -- mild live lateral (gy) nudge on L/R ring weights
@@ -732,9 +737,9 @@ local function assertCtwWearContractOnce()
     end
 end
 
-F.ctwPrepareDriveGates = function(data, mods, slipEnergy, g_mag, brakeTorque, propulsionTorque, safeAirspeed, rollingResistance, flexModifier, vehNotParked)
+F.ctwPrepareDriveGates = function(data, mods, slipEnergy, brakeTorque, propulsionTorque, safeAirspeed, rollingResistance, flexModifier, vehNotParked)
     -- Propulsion torque at steady cruise is mostly aero/RR balance — do not treat as slip work.
-    -- Gate drive-torque heating by slip + lateral load so highway throttle does not cook the tread.
+    -- Gate drive-torque heating by this wheel's slip and brake, never chassis g_mag.
     local propAbs = abs(propulsionTorque)
     -- P1: mass-scale absolute Nm gates (light hatch opens earlier; heavy raises cruise floor).
     local massRef = topo.drivePropMassRefKg or 1500
@@ -742,10 +747,11 @@ F.ctwPrepareDriveGates = function(data, mods, slipEnergy, g_mag, brakeTorque, pr
         min(topo.drivePropMassScaleMax or 1.35, sqrt(max(400, vehicleMass) / max(400, massRef))))
     local cruiseNm = topo.drivePropCruiseNm * massScale
     local excessFullNm = topo.drivePropExcessFullNm * massScale
-    local driveHeatGate = min(1.0, (slipEnergy * 2.5) + (g_mag * 0.45) + (abs(brakeTorque) > 40 and 1.0 or 0))
+    local driveHeatGate = min(1.0, (slipEnergy * 2.5) + (abs(brakeTorque) > 40 and 1.0 or 0))
     -- Straight-line cruise choke (Phase 2: cruiseDriveChokeMin=1.0 → off for Soft C4 A/B).
     -- When min<1: idle/coast stay cold; softens once |prop| > half cruiseNm.
-    if slipEnergy < 0.06 and g_mag < 0.28 and abs(brakeTorque) < 40 then
+    -- Slip and brake only — chassis g must not lift the choke.
+    if slipEnergy < 0.06 and abs(brakeTorque) < 40 then
         local chokeMin = topo.cruiseDriveChokeMin or 1.0
         if chokeMin < 0.999 then
             local halfCruise = cruiseNm * 0.5
@@ -840,14 +846,12 @@ F.ctwPrepareDriveGates = function(data, mods, slipEnergy, g_mag, brakeTorque, pr
         local v1 = topo.driveStreetSlipSpeed1 or 14.0
         local speedRamp = max(0, min(1.0, (safeAirspeed - v0) / max(1.0, v1 - v0)))
         speedRamp = speedRamp * speedRamp * (3.0 - 2.0 * speedRamp)
-        local g0 = topo.driveStreetSlipG0 or 0.32
-        local g1 = topo.driveStreetSlipG1 or 0.58
-        local gGate = 1.0 - max(0, min(1.0, (g_mag - g0) / max(1e-3, g1 - g0)))
         local s0 = topo.driveStreetSlipCapStart or 0.16
         local s1 = topo.driveStreetSlipCapFull or 0.52
         local slipRamp = max(0, min(1.0, (slipEnergy - s0) / max(1e-3, s1 - s0)))
         slipRamp = slipRamp * slipRamp * (3.0 - 2.0 * slipRamp)
-        local blend = speedRamp * gGate * slipRamp
+        -- Wheel slip and speed only. Chassis g must not fade this cap off.
+        local blend = speedRamp * slipRamp
         if blend > 1e-4 then
             streetSlipHeatScale = 1.0 + (heatMin - 1.0) * blend
             streetSlipPropScale = 1.0 + (propMin - 1.0) * blend
@@ -960,6 +964,14 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local slipEnergy = isAirborne and 0 or (w.dynamicSlipEnergy or 0)
     local longSlipEnergy = isAirborne and 0 or (w.longSlipEnergy or 0)
     local sideSlipEnergy = isAirborne and 0 or (w.sideSlipEnergy or 0)
+    -- Direction of this wheel's slip (speed squares). Undirected power stays on the center tread.
+    local shareDen = longSlipEnergy * longSlipEnergy + sideSlipEnergy * sideSlipEnergy
+    local longShare = 1.0
+    local latShare = 0.0
+    if shareDen > 1e-8 then
+        longShare = (longSlipEnergy * longSlipEnergy) / shareDen
+        latShare = (sideSlipEnergy * sideSlipEnergy) / shareDen
+    end
     local peakForce = isAirborne and 0 or (w.peakForce or 0)
     -- Short EMA on contactDepth so gravel/kerbs don't jitter patchFrac / heat
     local rawContactDepth = isAirborne and 0 or (w.contactDepth or 0)
@@ -968,6 +980,23 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local contactDepth = (data.contactDepthSmooth or rawContactDepth)
         + (rawContactDepth - (data.contactDepthSmooth or rawContactDepth)) * depthAlpha
     data.contactDepthSmooth = contactDepth
+    -- Sliding power: this wheel's BeamNG slipEnergy (watts → working units). Same EMA as contact depth.
+    -- Missing / NaN falls back to the existing per-wheel slip speeds, never chassis G.
+    local slipPowerRaw = 0
+    if not isAirborne then
+        local nativeSlipW = wd.slipEnergy
+        if type(nativeSlipW) ~= "number" or nativeSlipW ~= nativeSlipW then
+            slipPowerRaw = longSlipEnergy * 0.55 + sideSlipEnergy * 0.45
+        else
+            slipPowerRaw = nativeSlipW * NATIVE_SLIP_ENERGY_SCALE
+            if slipPowerRaw < 0 then slipPowerRaw = 0 end
+        end
+        local slipPowerCap = topo.slipPowerCap or 8.0
+        if slipPowerRaw > slipPowerCap then slipPowerRaw = slipPowerCap end
+    end
+    local slipPowerSmooth = (data.slipPowerSmooth or slipPowerRaw)
+        + (slipPowerRaw - (data.slipPowerSmooth or slipPowerRaw)) * depthAlpha
+    data.slipPowerSmooth = slipPowerSmooth
     local propulsionTorque = isAirborne and 0 or (wd.propulsionTorque or 0) * (wd.wheelDir or 1)
     local brakeTorque = isAirborne and 0 or (wd.brakeTorque or 0) * (wd.wheelDir or 1)
     -- A3: smoothed downForce for Hertz/thermal mass; downForceRaw for util spikes
@@ -1030,6 +1059,13 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
 
     -- Thermal load: aero mute is off (scale 1.0). Helper stays for an explicit A/B later.
     local load_kg_thermal = load_kg * F.aeroHeatThermalFrac(data, wd.name, loadRaw, safeAirspeed)
+    -- Sticking patch: small flex from this wheel's load and slip. Hard slides are slip-power only.
+    local stickFlexHeat = 0
+    local slipMag = longSlipEnergy + sideSlipEnergy
+    local stickRef = topo.stickFlexSlipRef or 0.45
+    if stickRef > 1e-6 and slipMag > 0 and slipMag < stickRef then
+        stickFlexHeat = (topo.stickFlexGain or 0.00035) * load_kg_thermal * slipMag * (1.0 - slipMag / stickRef)
+    end
 
     data.working_temp = current_optimal_temp
 
@@ -1089,7 +1125,7 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     
     local rollingResistance = (mods.rollingRes or 0.8) * (bf.rrFromSidewall or 1.0) * max(0.7, min(1.4, (bf.dragCoef or 5) / 5.0))
     -- topo = THERMAL_TOPOLOGY (module-level alias)
-    F.ctwPrepareDriveGates(data, mods, slipEnergy, g_mag, brakeTorque, propulsionTorque, safeAirspeed, rollingResistance, flexModifier, vehNotParked)
+    F.ctwPrepareDriveGates(data, mods, slipEnergy, brakeTorque, propulsionTorque, safeAirspeed, rollingResistance, flexModifier, vehNotParked)
     local propAbs = ctw.propAbs
     local cruiseNm = ctw.cruiseNm
     local excessPropGate = ctw.excessPropGate
@@ -1279,6 +1315,10 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         ctw.sideSlipEnergy = sideSlipEnergy
         ctw.skinCoreConductance = skinCoreConductance
         ctw.slipEnergy = slipEnergy
+        ctw.slipPowerSmooth = slipPowerSmooth
+        ctw.longShare = longShare
+        ctw.latShare = latShare
+        ctw.stickFlexHeat = stickFlexHeat
         ctw.slipHeatRate = slipHeatRate
         ctw.staticCoolingRate = staticCoolingRate
         ctw.streetCarcassScale = streetCarcassScale
@@ -1355,7 +1395,6 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local excessPropGateCarcass = ctw.excessPropGateCarcass
     local excessPropGateEff = ctw.excessPropGateEff
     local flexModifier = ctw.flexModifier
-    local g_mag = ctw.g_mag
     local groundModel = ctw.groundModel
     local heatMassScale = ctw.heatMassScale
     local isAirborne = ctw.isAirborne
@@ -1375,7 +1414,6 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local netTorque = ctw.netTorque
     local patchFrac = ctw.patchFrac
     local patchHeatScale = ctw.patchHeatScale
-    local peakWorkFactor = ctw.peakWorkFactor
     local pressureRatio = ctw.pressureRatio
     local propAbs = ctw.propAbs
     local rimRate = ctw.rimRate
@@ -1384,6 +1422,10 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local sideSlipEnergy = ctw.sideSlipEnergy
     local skinCoreConductance = ctw.skinCoreConductance
     local slipEnergy = ctw.slipEnergy
+    local slipPowerSmooth = ctw.slipPowerSmooth or 0
+    local longShare = ctw.longShare or 1
+    local latShare = ctw.latShare or 0
+    local stickFlexHeat = ctw.stickFlexHeat or 0
     local slipHeatRate = ctw.slipHeatRate
     local staticCoolingRate = ctw.staticCoolingRate
     local streetCarcassScale = ctw.streetCarcassScale
@@ -1442,32 +1484,37 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local carcassWeights = scratchCarcassWeights
     carcassWeights[1], carcassWeights[2], carcassWeights[3] = wLeftB / (wLeftB + wCenterB + wRightB), wCenterB / (wLeftB + wCenterB + wRightB), wRightB / (wLeftB + wCenterB + wRightB)
 
+    -- Sliding watts: smoothed per-wheel slipEnergy, not chassis G. Soft-sat shape unchanged.
+    local slipEnergyHeat = (slipPowerSmooth / (1.0 + slipPowerSmooth * 0.12)) * streetSlipHeatScale
+
     for i = 1, 3 do
         local weight = carcassWeights[i]
-        local loadCoeff = weight * load_kg_thermal
-        -- Cornering work only — straight-line bump noise must not inflate skin heat.
-        -- Soft C4 workHeatG0 0.04: light/medium turn-in can warm; other compounds stay 0.22.
-        local relative_work = max(0, g_mag - (ctw.workHeatG0 or 0.22)) * loadCoeff / 1000
-        
-        -- High-speed soft-saturation slide heat (street driven residual slip soft-cap applied here)
-        local slipEnergyHeat = (slipEnergy / (1.0 + slipEnergy * 0.12)) * streetSlipHeatScale
-
-        -- Rebalanced skin ring heating rates to prevent rapid thermal saturation
-        local rawFrictionalGain = (slipEnergyHeat * 0.05 + netTorque * 0.002) * 3 * weight
-        
         local surfaceMu = ((ctw.gmStatic or groundModel.staticFrictionCoefficient or 1) * 0.55
             + (ctw.gmSliding or groundModel.slidingFrictionCoefficient or groundModel.staticFrictionCoefficient or 1) * 0.45) * jbeamMu
         local slideMuScale = max(0.5, min(1.6, jbeamSlideMu / max(0.2, jbeamMu)))
+        local surfaceFactor = (max(surfaceMu - 0.5, 0.1) * 2)
+        -- Torque and bump heat stay on the load-biased ring. Sliding heat is split below.
+        local rawFrictionalGain = (netTorque * 0.002) * 3 * weight * surfaceFactor
+            + ((verticalCarcassHeat * 0.005 * workHeatRate) / heatMassScale) * weight
 
-        -- Skin slip/work: compound rates + optional skinSlipWorkScale (default 1; no track fudge)
-        local slipWorkScale = topo.skinSlipWorkScale or 1.10
-        local slipEnergyHeatWork = slipEnergy / (1.0 + slipEnergy * 0.12)
-        rawFrictionalGain = rawFrictionalGain * (max(surfaceMu - 0.5, 0.1) * 2)
-            -- Round-4: skin work coef 0.128→0.118.
-            + (((0.0078 * (slipEnergyHeat * slipEnergyHeat) * loadCoeff) * slipHeatRate * slideMuScale
-                + 0.118 * relative_work * workHeatRate * peakWorkFactor / (1 + (slipEnergyHeatWork * slipEnergyHeatWork))) * surfaceMu / tyreWidthCoeff) * slipWorkScale
-                
-        rawFrictionalGain = rawFrictionalGain + ((verticalCarcassHeat * 0.005 * workHeatRate) / heatMassScale) * weight
+        -- Longitudinal share → center skin. Lateral share → loaded shoulder (existing L/R bias).
+        local slipShare = longShare
+        if i ~= 2 then
+            local latDen = wLeft + wRight
+            if latDen > 1e-6 then
+                slipShare = latShare * ((i == 1) and (wLeft / latDen) or (wRight / latDen))
+            else
+                slipShare = latShare * 0.5
+            end
+        end
+        if slipShare > 0 then
+            local slipWorkScale = topo.skinSlipWorkScale or 1.10
+            local slipBase = (slipEnergyHeat * 0.05) * 3 * surfaceFactor
+            local slipQuad = ((0.0078 * (slipEnergyHeat * slipEnergyHeat) * load_kg_thermal) * slipHeatRate * slideMuScale
+                * surfaceMu / tyreWidthCoeff) * slipWorkScale
+            -- Stick flex uses the same share, then the same skin↔carcass conductance as slip heat.
+            rawFrictionalGain = rawFrictionalGain + (slipBase + slipQuad + stickFlexHeat) * slipShare
+        end
 
         -- Surface sliding heat dampening (inline select)
         local frictionalGain = (rawFrictionalGain / heatMassScale) * ((tempDistWeighted > 1.1) and max(0.30, 1.0 - (tempDistWeighted - 1.1) * 0.6) or 1.0)
@@ -1496,8 +1543,8 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         -- TURBULENT CONVECTION (v^0.8). 0.155 skin scale: cruise still mild; track retains more heat.
         -- Free-belt cool uses geometric patchFrac (not heat floor): larger patch → less freeFrac cool.
         -- Intentionally separate from patchHeatScale so we don't also amplify RR via hystSkinShare.
-        -- Round-4: corner velCool g-penalty min(0.12,(g-0.20)*0.14) → min(0.05,(g-0.20)*0.07).
-        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale / (1.0 + min(0.05, max(0, g_mag - 0.20) * 0.07))
+        -- Chassis g does not cut convection. Corner heat is per-wheel slip power, not a cooling penalty.
+        local velCool = (effectiveAirspeed ^ 0.8) * airCoolingRate * 0.155 * (ctw.skinVelCoolScale or 1.0) * airCoolingFactor * surfaceAreaScale
         local totalConvection = tempDelta * (staticCoolingRate * 0.04 + velCool) * climateScale * (1.0 + (1.0 - patchFrac) * (topo.freeBeltCoolMult - 1.0)) * spawnConvScale
         
         if tempDelta > 0 then
@@ -1560,9 +1607,11 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local cruiseRRScale = 1.0
     local rrFull = topo.cruiseRrScaleFull or 1.0
     local rrPart = topo.cruiseRrScalePartial or 1.0
-    if slipEnergy < 0.08 and g_mag < 0.35 and abs(brakeTorque) < 50 then
+    -- Scales are 1.0 on the live topology, so this cap does not change rolling heat.
+    -- Slip and brake only: chassis g must not lift the cap in a corner.
+    if slipEnergy < 0.08 and abs(brakeTorque) < 50 then
         cruiseRRScale = rrFull
-    elseif slipEnergy < 0.15 and g_mag < 0.55 then
+    elseif slipEnergy < 0.15 then
         cruiseRRScale = rrPart
     end
     -- Prop-linked RR damp: base load·ω RR opens under drive and was feeding carcass runaway
@@ -1580,13 +1629,13 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         + (propAbs * driveHeatGateCarcass * angularVelHeat * (topo.drivePropHystBase + (topo.drivePropHystExcess - topo.drivePropHystBase) * excessPropGateCarcass) * rollingResistance)
     ) / heatMassScale
 
-    -- P0-2: gated flex warm-up into carcass (load × speed × g/slip). Does NOT bypass cruiseRRScale —
-    -- straights keep workGate≈0 so Belasco GT-IV highway soak stays soft-capped.
+    -- P0-2: gated flex warm-up into carcass (load × speed × this wheel's slip). Does NOT bypass cruiseRRScale —
+    -- straights keep workGate≈0 so Belasco GT-IV highway soak stays soft-capped. Chassis g does not open it.
     local flexWarmHeat = 0
     if not isAirborne and vehNotParked > 0 then
         local flexGate = max(0, min(1, (load_kg - topo.flexWarmLoad0) / max(1, topo.flexWarmLoad1 - topo.flexWarmLoad0)))
             * max(0, min(1, (safeAirspeed - topo.flexWarmSpeed0) / max(1, topo.flexWarmSpeed1 - topo.flexWarmSpeed0)))
-            * max(0, min(1, max(0, g_mag - topo.flexWarmG0) / 0.70 + slipEnergy * 1.8))
+            * max(0, min(1, slipEnergy * 1.8))
         if flexGate > 1e-4 then
             local coldCoreBoost = (avgCarcassTemp < current_working_temp)
                 and (1.0 + 0.35 * max(0, min(1, (current_working_temp - avgCarcassTemp) / max(20.0, mods.coldWidth or DEFAULT_MODS.coldWidth))))
@@ -2247,11 +2296,9 @@ F.updateGFX = function(dt)
         stintDistanceM = stintDistanceM + airspeed * dt
     end
 
-    local gx_gfx = (sensors and (sensors.gx2 or sensors.gx) or 0) / 9.80665
     local gy_gfx = (sensors and (sensors.gy2 or sensors.gy) or 0) / 9.80665
-    local g_mag = sqrt(gx_gfx * gx_gfx + gy_gfx * gy_gfx)
 
-    F.prepareWheelFrame(dt, localizedEnvTemp, invQuat, upVector, airspeed, g_mag, gy_gfx)
+    F.prepareWheelFrame(dt, localizedEnvTemp, invQuat, upVector, airspeed, gy_gfx)
 
     F.sampleNativeAero()
     F.runFixedPhysicsSteps(dt, localizedEnvTemp)

@@ -25,7 +25,7 @@ function M.install(F, deps)
     local setDriveLayoutMode = deps.setDriveLayoutMode
     local TempCarcassToAvgTemp = deps.TempCarcassToAvgTemp
 
-    F.prepareWheelFrame = function(dt, localizedEnvTemp, invQuat, upVector, airspeed, g_mag, g_lat)
+    F.prepareWheelFrame = function(dt, localizedEnvTemp, invQuat, upVector, airspeed, g_lat)
         local wheels = getWheels()
         if not wheels or not wheels.wheelRotators then return end
         -- P1: count driven wheels + F/R layout for AWD / FWD Soft-like damp
@@ -75,11 +75,10 @@ function M.install(F, deps)
                 w.toeRad = toeRad
                 w.airspeed = airspeed
 
-                -- Signed lateral G: g_lat (vehicle-right positive) * wheelDir maps lateral load
-                -- onto each wheel's own outer shoulder ring. Under left corner (g_lat < 0), the
-                -- right/outer wheel (wheelDir = -1) gets bias > 0 → rightRing ↑; left/inner wheel
-                -- (wheelDir = 1) gets bias < 0 → leftRing ↑. Magnitude path (heat scale) still
-                -- uses |g_mag| unchanged so total heat budget is not affected.
+                -- Signed lateral G picks the loaded shoulder ring only. Under a left corner
+                -- (g_lat < 0), the right/outer wheel (wheelDir = -1) gets bias > 0 → rightRing ↑;
+                -- the left/inner wheel (wheelDir = 1) gets bias < 0 → leftRing ↑.
+                -- Heat magnitude does not use chassis g_mag. Sliding watts are per-wheel slipEnergy.
                 local gLatBias = (g_lat or 0) * (wd.wheelDir or 1) * 0.28
                 local combinedBias = (-w.camber * 0.12 * (wd.wheelDir or 1)) + gLatBias
                 w.combinedBias = combinedBias
@@ -154,8 +153,9 @@ function M.install(F, deps)
                 w.longSlipEnergy = longComp
                 w.sideSlipEnergy = sideComp
                 w.slipEnergy = max(nativeWork, longComp * 0.55 + sideComp * 0.45)
-                -- Round-4: g→slip boost 0.08→0.06 (keep corner peaks under ~100C).
-                local dynamicSlipEnergy = (w.slipEnergy + toeScrubEnergy) * (1.0 + abs(g_mag) * 0.06)
+                -- Wear/lock still see toe scrub + soft-ground depth. Chassis g_mag does not scale this.
+                -- Sliding heat uses smoothed wd.slipEnergy in the thermal step, not this signal.
+                local dynamicSlipEnergy = w.slipEnergy + toeScrubEnergy
                 -- Soft ground depth amplifies scrub/work slightly (paddling / ploughing)
                 if (wd.contactDepth or 0) > 0.05 then
                     dynamicSlipEnergy = dynamicSlipEnergy * (1.0 + min(0.6, wd.contactDepth))
