@@ -3,7 +3,8 @@
 -- prepareWheelFrame + runFixedPhysicsSteps (100 Hz). Hud is stream-only.
 local M = {}
 
-local min, max, abs, sin = math.min, math.max, math.abs, math.sin
+local min, max, abs, sin, sqrt = math.min, math.max, math.abs, math.sin, math.sqrt
+local atan2 = math.atan2
 
 function M.install(F, deps)
     local getWheels = deps.getWheels or function() return deps.wheels end
@@ -25,7 +26,7 @@ function M.install(F, deps)
     local setDriveLayoutMode = deps.setDriveLayoutMode
     local TempCarcassToAvgTemp = deps.TempCarcassToAvgTemp
 
-    F.prepareWheelFrame = function(dt, localizedEnvTemp, invQuat, upVector, airspeed, g_lat)
+    F.prepareWheelFrame = function(dt, localizedEnvTemp, invQuat, upVector, airspeed)
         local wheels = getWheels()
         if not wheels or not wheels.wheelRotators then return end
         -- P1: count driven wheels + F/R layout for AWD / FWD Soft-like damp
@@ -68,20 +69,16 @@ function M.install(F, deps)
             if data then
                 F.updateWheelSuspension(w, data, wd, dt, invQuat, upVector)
 
-                local camberDeg, toeDeg, camberRad, toeRad = F.calculateWheelAlignment(i, wd, invQuat, upVector)
+                local camberDeg, toeDeg, camberRad, toeRad, axX, axY, axZ, outSign = F.calculateWheelAlignment(i, wd, invQuat, upVector)
+                if outSign then w.outSign = outSign end
+                local outDir = w.outSign or 1
                 w.camber = camberDeg
+                -- Standard camber on both sides of the car: negative = top leaning in.
+                w.camberStd = camberDeg * outDir
                 w.toe = toeDeg
                 w.camberRad = camberRad
                 w.toeRad = toeRad
                 w.airspeed = airspeed
-
-                -- Signed lateral G picks the loaded shoulder ring only. Under a left corner
-                -- (g_lat < 0), the right/outer wheel (wheelDir = -1) gets bias > 0 → rightRing ↑;
-                -- the left/inner wheel (wheelDir = 1) gets bias < 0 → leftRing ↑.
-                -- Heat magnitude does not use chassis g_mag. Sliding watts are per-wheel slipEnergy.
-                local gLatBias = (g_lat or 0) * (wd.wheelDir or 1) * 0.28
-                local combinedBias = (-w.camber * 0.12 * (wd.wheelDir or 1)) + gLatBias
-                w.combinedBias = combinedBias
 
                 local groundModelName, gm = F.GetGroundModelData(wd.contactMaterialID1)
                 w.groundModel = gm
@@ -89,6 +86,25 @@ function M.install(F, deps)
                 local loadRaw = wd.downForce or 0
                 local airborneState = (not wd.contactMaterialID1 or wd.contactMaterialID1 == -1) or (loadRaw <= 0)
                 w.loadRaw, w.isAirborne = loadRaw, airborneState
+
+                -- This wheel's slip angle toward its own outer (+) or inner (-) shoulder, from hub velocity.
+                local latTarget = 0
+                if axX and not airborneState and wd.node1 and wd.node2 then
+                    local v1 = objCall("getNodeVelocityVector", wd.node1)
+                    local v2 = objCall("getNodeVelocityVector", wd.node2)
+                    if v1 and v2 then
+                        local vx, vy, vz = (v1.x + v2.x) * 0.5, (v1.y + v2.y) * 0.5, (v1.z + v2.z) * 0.5
+                        local vAxis = (vx * axX + vy * axY + vz * axZ) * outDir
+                        local vPlane = sqrt(max(0, vx * vx + vy * vy + vz * vz - vAxis * vAxis))
+                        latTarget = max(-1, min(1, atan2(vAxis, max(3.0, vPlane)) / (topo.latSlipAngleRef or 0.10)))
+                    end
+                end
+                local latPrev = w.latSlipDir or 0
+                w.latSlipDir = latPrev + (latTarget - latPrev) * min(1.0, dt / max(0.02, topo.latSlipEmaTau or 0.10))
+
+                -- Ring 1 = outer shoulder, ring 3 = inner. Top-in camber loads the inner shoulder;
+                -- sliding outward loads the outer one.
+                w.combinedBias = (-w.camberStd * 0.12) - (topo.latSlipShoulderBias or 0.28) * w.latSlipDir
                 w.contactMatId = wd.contactMaterialID1 or -1
                 w.isBroken = wd.isBroken or false
                 w.isTireDeflated = wd.isTireDeflated or false
@@ -215,7 +231,7 @@ function M.install(F, deps)
 
                     if wheel then
                         if w.isTireDeflated or w.isBroken then
-                            F.applyWheelFriction(wheel, 1.0, 1.0)
+                            F.applyWheelFriction(wheel, 1.0)
                         else
                         -- Raw thermal grip → native lock (brake lock fade disabled; see ENABLE_BRAKE_LOCK_FADE)
                             local longGrip = data.lastLongGripRaw or data.lastLongGrip or 1.0
@@ -224,7 +240,8 @@ function M.install(F, deps)
                             longGrip, latGrip, fade = F.applyBrakeLockFade(longGrip, latGrip, wd, w)
                             data.lastLongGrip, data.lastLatGrip = longGrip, latGrip
                             data.lockFade = fade or 0
-                            F.applyWheelFriction(wheel, longGrip, latGrip)
+                            -- BeamNG has one friction multiplier per wheel; long and lat each weight half.
+                            F.applyWheelFriction(wheel, (longGrip + latGrip) * 0.5)
                         end
                     end
                 end

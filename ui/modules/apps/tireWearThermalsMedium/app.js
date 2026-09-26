@@ -240,7 +240,7 @@ angular.module("beamng.apps")
                             <div class="ttm-thermal-strip">
                                 <div class="ttm-thermal-segment"
                                      ng-repeat="tempVal in w.surfaceTemps track by $index"
-                                     ng-style="{'background-color': getTempColor(tempVal, w.working_temp), 'color': '#ffffff'}">
+                                     ng-style="{'background-color': getTempColor(tempVal, w), 'color': '#ffffff'}">
                                     {{ (tempVal !== undefined ? tempVal : 0).toFixed(0) }}°
                                 </div>
                             </div>
@@ -249,14 +249,14 @@ angular.module("beamng.apps")
                             <div class="ttm-thermal-strip">
                                 <div class="ttm-thermal-segment"
                                      ng-repeat="tempVal in w.carcassTemps track by $index"
-                                     ng-style="{'background-color': getTempColor(tempVal, w.working_temp), 'color': '#ffffff'}">
+                                     ng-style="{'background-color': getTempColor(tempVal, w), 'color': '#ffffff'}">
                                     {{ (tempVal !== undefined ? tempVal : 0).toFixed(0) }}°
                                 </div>
                             </div>
 
                             <div class="ttm-stat-row">
                                 <span class="ttm-label">Rim:</span>
-                                <span class="ttm-value" ng-style="{'color': getTempColor(w.rimTemp, w.working_temp)}">
+                                <span class="ttm-value" ng-style="{'color': getTempColor(w.rimTemp, w)}">
                                     {{ (w.rimTemp !== undefined ? w.rimTemp : 0).toFixed(0) }}°
                                 </span>
                             </div>
@@ -387,22 +387,42 @@ angular.module("beamng.apps")
                     return "#ef4444";
                 };
 
-                scope.getTempColor = function (tempVal, working_temp) {
-                    if (tempVal === undefined) return "hsla(240, 80%, 45%, 1)";
-                    var r = tempVal / (working_temp || 85);
-                    var hue;
-                    if (r < 0.75) {
-                        var t = Math.min(Math.max((r - 0.4) / 0.35, 0), 1);
-                        t = t * t * (3 - 2 * t);
-                        hue = 240 - t * 120;
-                    } else if (r <= 1.10) {
-                        hue = 120;
-                    } else {
-                        var t = Math.min(Math.max((r - 1.10) / 0.30, 0), 1);
-                        t = t * t * (3 - 2 * t);
-                        hue = 120 - t * 120;
+                function smoothstep01(t) {
+                    t = Math.min(Math.max(t, 0), 1);
+                    return t * t * (3 - 2 * t);
+                }
+
+                // Color from this wheel's streamed grip window (thermalGripWindow edges).
+                scope.getTempColor = function (tempVal, wheel) {
+                    var sat = 80;
+                    var lit = 45;
+                    if (tempVal === undefined || tempVal === null) {
+                        return "hsla(240, " + sat + "%, " + lit + "%, 1)";
                     }
-                    return "hsla(" + Math.round(hue) + ", 80%, 45%, 1)";
+                    var opt = wheel && wheel.optimalTemp;
+                    var plateau = wheel && wheel.tempPlateau;
+                    var coldW = wheel && wheel.coldWidth;
+                    var hotW = wheel && wheel.hotWidth;
+                    if (!(opt > 0) || plateau === undefined || plateau === null
+                        || coldW === undefined || coldW === null
+                        || hotW === undefined || hotW === null) {
+                        return "hsla(240, " + sat + "%, " + lit + "%, 1)";
+                    }
+                    var coldEdge = opt - plateau;
+                    var hotEdge = opt + plateau;
+                    if (tempVal >= coldEdge && tempVal <= hotEdge) {
+                        return "hsla(120, " + sat + "%, " + lit + "%, 1)";
+                    }
+                    if (tempVal < coldEdge) {
+                        var tC = smoothstep01(coldW > 0 ? (coldEdge - tempVal) / coldW : 1);
+                        var hueC = 200 + tC * 40;
+                        var litC = Math.max(22, lit - tC * 8);
+                        return "hsla(" + Math.round(hueC) + ", " + sat + "%, " + Math.round(litC) + "%, 1)";
+                    }
+                    var tH = smoothstep01(hotW > 0 ? (tempVal - hotEdge) / hotW : 1);
+                    var hueH = 28 * (1 - tH);
+                    var litH = Math.max(22, lit - tH * 22);
+                    return "hsla(" + Math.round(hueH) + ", " + sat + "%, " + Math.round(litH) + "%, 1)";
                 };
 
                 scope.hasDamage = function (w) {
@@ -453,6 +473,12 @@ angular.module("beamng.apps")
                     dst.tempCategory = src.tempCategory;
                     dst.targetHotPressure = src.targetHotPressure;
                     dst.optimalPressure = src.optimalPressure;
+                    dst.optimalTemp = src.optimalTemp;
+                    dst.tempPlateau = src.tempPlateau;
+                    dst.coldWidth = src.coldWidth;
+                    dst.hotWidth = src.hotWidth;
+                    dst.gripMultiplier = src.gripMultiplier;
+                    dst.thermalGrip = src.thermalGrip;
                 }
 
                 function snapLerpArrays(dst, src) {

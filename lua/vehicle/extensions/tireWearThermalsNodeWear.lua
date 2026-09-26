@@ -717,8 +717,7 @@ function M.install(F, deps)
                     data.nodeCamFrac = camberFrac
                     data.nodeCamColScale = slickScale
                     data.nodeCamArmDeg = armDeg
-                    local wheelDir = wd.wheelDir or 1
-                    local camberDeg = (w.camber or 0) * wheelDir
+                    local camberDeg = w.camberStd or w.camber or 0
                     local nRing = treadNodeCount(treadNodes)
                     if ENABLE_RING_WEAR and nRing > 0 then
                         for ringIdx, nid in ipairs(treadNodes) do

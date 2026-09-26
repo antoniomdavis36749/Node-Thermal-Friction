@@ -285,13 +285,12 @@ function M.install(F, deps)
         return nil
     end
 
-    -- Safe 8-arg friction API (BeamNG stage2 signature; ignore legacy 9th arg)
-    F.applyWheelFriction = function(wheel, longGrip, latGrip)
+    -- One multiplier per wheel. The last three arguments are BeamNG's low / middle / high
+    -- temperature bands (not axes); the -300..1e7 band keeps every tire on the middle one.
+    F.applyWheelFriction = function(wheel, grip)
         if isRemoteMpVehicle() then return end
         if not wheel or type(wheel.setFrictionThermalSensitivity) ~= "function" then return end
-        local mid = (longGrip + latGrip) * 0.5
-        -- Disable native thermal curve; grip comes from this mod
-        wheel:setFrictionThermalSensitivity(-300, 1e7, 1e-10, 1e-10, 10, longGrip, mid, latGrip)
+        wheel:setFrictionThermalSensitivity(-300, 1e7, 1e-10, 1e-10, 10, grip, grip, grip)
     end
     F.initTyreData = function()
         local wheels = getWheels()
@@ -503,8 +502,14 @@ function M.install(F, deps)
         end
         local toeRad = atan2(lay * sideSign, abs(lax))
         local toeDeg = deg(toeRad)
-    
-        return camberDeg, toeDeg, camberRad, toeRad
+
+        -- outSign: +1 when node1 is the outer axle node (BeamNG default), -1 when it is inner.
+        local outSign = nil
+        if invQuat and vec3 then
+            outSign = (lax * sideSign >= 0) and 1 or -1
+        end
+
+        return camberDeg, toeDeg, camberRad, toeRad, wax, way, waz, outSign
     end
 end
 

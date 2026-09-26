@@ -107,17 +107,27 @@ function M.install(F, deps)
         return mods
     end
 
+    -- Same edges getProfileThermalGrip uses. Full grip is opt ± plateau.
+    -- Softness scale (0.8 + 0.4 * softness) and the cold compliance term stay here
+    -- so the HUD stream cannot grow a second window.
+    F.thermalGripWindow = function(mods, compliance, softness)
+        mods = mods or DEFAULT_MODS
+        compliance = compliance or 0.5
+        softness = softness or 0.5
+        local tOpt = mods.optimalTemp or DEFAULT_MODS.optimalTemp
+        local scale = 0.8 + 0.4 * softness
+        local plateau = (mods.tempPlateau or DEFAULT_MODS.tempPlateau) * scale
+        local wCold = (mods.coldWidth or DEFAULT_MODS.coldWidth) * scale * (1.0 + (compliance - 0.5) * 0.15)
+        local wHot = (mods.hotWidth or DEFAULT_MODS.hotWidth) * scale
+        return tOpt, plateau, wCold, wHot
+    end
+
     -- Plateau-Gaussian thermal grip from profile knobs (single source of truth with optimalTemp)
     -- Cold side uses a softer exponent so street/sport compounds are not cliffed below ~40C.
     F.getProfileThermalGrip = function(mods, temp, compliance, softness)
         mods = mods or DEFAULT_MODS
         temp = temp or 21
-        compliance = compliance or 0.5
-        softness = softness or 0.5
-        local tOpt = mods.optimalTemp or DEFAULT_MODS.optimalTemp
-        local plateau = (mods.tempPlateau or DEFAULT_MODS.tempPlateau) * (0.8 + 0.4 * softness)
-        local wCold = (mods.coldWidth or DEFAULT_MODS.coldWidth) * (0.8 + 0.4 * softness) * (1.0 + (compliance - 0.5) * 0.15)
-        local wHot = (mods.hotWidth or DEFAULT_MODS.hotWidth) * (0.8 + 0.4 * softness)
+        local tOpt, plateau, wCold, wHot = F.thermalGripWindow(mods, compliance, softness)
         local floor = mods.gripFloor or DEFAULT_MODS.gripFloor
         local diff = abs(temp - tOpt)
         local excess = max(0.0, diff - plateau)

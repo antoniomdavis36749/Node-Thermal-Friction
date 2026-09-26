@@ -56,33 +56,48 @@ angular.module("beamng.apps")
                     }
                 }
 
-                // Resolves HSL thermal gradient with smoothstep transitions
-                function getTempColor(tempVal, working_temp) {
-                    var r = tempVal / (working_temp || 85);
-                    var hue;
-                    
-                    if (r < 0.75) {
-                        // Cold to Optimal transition: Blue (240) to Green (120)
-                        var t = Math.min(Math.max((r - 0.4) / 0.35, 0), 1);
-                        t = t * t * (3 - 2 * t);
-                        hue = 240 + t * (120 - 240);
-                    } else if (r <= 1.15) {
-                        // Optimal zone (Green)
-                        hue = 120;
-                    } else {
-                        // Overheated transition: Green to Red (120 to 0)
-                        var t = Math.min(1.0, (r - 1.15) / 0.35);
-                        t = t * t * (3 - 2 * t);
-                        hue = 120 - t * 120;
+                function smoothstep01(t) {
+                    t = Math.min(Math.max(t, 0), 1);
+                    return t * t * (3 - 2 * t);
+                }
+
+                // Color from this wheel's streamed grip window (thermalGripWindow edges).
+                // In band: green. Below opt − plateau: cold. Above opt + plateau: hot, darker through hotWidth.
+                function getTempColor(tempVal, wheel) {
+                    var sat = 85;
+                    var lit = 52;
+                    if (tempVal === undefined || tempVal === null) {
+                        return "hsla(240," + sat + "%," + lit + "%,1)";
                     }
-                    
-                    return "hsla(" + Math.round(hue) + ",85%,52%,1)";
+                    var opt = wheel && wheel.optimalTemp;
+                    var plateau = wheel && wheel.tempPlateau;
+                    var coldW = wheel && wheel.coldWidth;
+                    var hotW = wheel && wheel.hotWidth;
+                    if (!(opt > 0) || plateau === undefined || plateau === null
+                        || coldW === undefined || coldW === null
+                        || hotW === undefined || hotW === null) {
+                        return "hsla(240," + sat + "%," + lit + "%,1)";
+                    }
+                    var coldEdge = opt - plateau;
+                    var hotEdge = opt + plateau;
+                    if (tempVal >= coldEdge && tempVal <= hotEdge) {
+                        return "hsla(120," + sat + "%," + lit + "%,1)";
+                    }
+                    if (tempVal < coldEdge) {
+                        var tC = smoothstep01(coldW > 0 ? (coldEdge - tempVal) / coldW : 1);
+                        var hueC = 200 + tC * 40;
+                        var litC = Math.max(22, lit - tC * 8);
+                        return "hsla(" + Math.round(hueC) + "," + sat + "%," + Math.round(litC) + "%,1)";
+                    }
+                    var tH = smoothstep01(hotW > 0 ? (tempVal - hotEdge) / hotW : 1);
+                    var hueH = 28 * (1 - tH);
+                    var litH = Math.max(22, lit - tH * 22);
+                    return "hsla(" + Math.round(hueH) + "," + sat + "%," + Math.round(litH) + "%,1)";
                 }
 
                 function drawWheelData(d, tyreNumber, wheelCount) {
                     var name = d.name || "unknown";
                     var temps = d.temp;
-                    var working_temp = d.working_temp;
                     var condition = d.condition;
                     var camber = d.camber;
                     var pressure = d.pressure;
@@ -167,7 +182,7 @@ angular.module("beamng.apps")
                     var sectionWidth = (treadW - segGap * 2) / 3.0;
                     for (var i = 0; i < 3; i++) {
                         var tempVal = temps[i] || 0;
-                        var sectionColor = getTempColor(tempVal, working_temp);
+                        var sectionColor = getTempColor(tempVal, d);
 
                         var crad = Math.min(5.0, sectionWidth * 0.25);
                         var radius = { tl: 0, tr: 0, br: 0, bl: 0 };

@@ -419,7 +419,7 @@ angular.module("beamng.apps")
                             <div class="tth-stat-row">
                                 <span class="tth-label">Camber / Toe:</span>
                                 <span class="tth-value" ng-style="{'color': isExcessiveCamber(w.camber) ? '#ffaa44' : '#f1f5f9'}">
-                                    {{ fmtSigned(w.camber, 2) }}° /
+                                    {{ fmtSigned(w.camberStd !== undefined ? w.camberStd : w.camber, 2) }}° /
                                     {{ fmtSigned(w.toe, 2) }}°
                                 </span>
                             </div>
@@ -433,9 +433,9 @@ angular.module("beamng.apps")
                             </div>
                             <div class="tth-stat-row">
                                 <span class="tth-label">Stint max:</span>
-                                <span class="tth-value" ng-style="{'color': getTempColor(w.stintMaxAvgTemp, w.working_temp)}">
+                                <span class="tth-value" ng-style="{'color': getTempColor(w.stintMaxAvgTemp, w)}">
                                     {{ (w.stintMaxAvgTemp||0).toFixed(1) }}°
-                                    <span style="color:#cbd5e1; font-size: 13px;" ng-if="(w.stintMaxAvgTemp||0) > (w.working_temp||0) * 1.20"> · Hot flash</span>
+                                    <span style="color:#cbd5e1; font-size: 13px;" ng-if="pastHotEdge(w.stintMaxAvgTemp, w)"> · Hot flash</span>
                                 </span>
                             </div>
 
@@ -486,7 +486,7 @@ angular.module("beamng.apps")
                             <div class="tth-thermal-strip">
                                 <div class="tth-thermal-segment" 
                                      ng-repeat="tempVal in w.surfaceTemps track by $index"
-                                     ng-style="{'background-color': getTempColor(tempVal, w.working_temp), 'color': '#ffffff'}">
+                                     ng-style="{'background-color': getTempColor(tempVal, w), 'color': '#ffffff'}">
                                     {{ (tempVal !== undefined ? tempVal : 0).toFixed(2) }}°
                                 </div>
                             </div>
@@ -494,21 +494,21 @@ angular.module("beamng.apps")
                             <div class="tth-thermal-strip">
                                 <div class="tth-thermal-segment" 
                                      ng-repeat="tempVal in w.carcassTemps track by $index"
-                                     ng-style="{'background-color': getTempColor(tempVal, w.working_temp), 'color': '#ffffff'}">
+                                     ng-style="{'background-color': getTempColor(tempVal, w), 'color': '#ffffff'}">
                                     {{ (tempVal !== undefined ? tempVal : 0).toFixed(2) }}°
                                 </div>
                             </div>
 
                             <div class="tth-stat-row">
                                 <span class="tth-label">Rim / Brake Soak:</span>
-                                <span class="tth-value" ng-style="{'color': getTempColor(w.rimTemp, w.working_temp)}">
+                                <span class="tth-value" ng-style="{'color': getTempColor(w.rimTemp, w)}">
                                     {{ (w.rimTemp !== undefined ? w.rimTemp : 0).toFixed(2) }} °C
                                 </span>
                             </div>
 
                             <div class="tth-stat-row">
                                 <span class="tth-label">Stock Brake (Surf / Core):</span>
-                                <span class="tth-value" ng-style="{'color': getTempColor(w.brakeSurface, 400)}">
+                                <span class="tth-value" ng-style="{'color': getBrakeTempColor(w.brakeSurface)}">
                                     {{ (w.brakeSurface !== undefined ? w.brakeSurface : 0).toFixed(2) }} /
                                     {{ (w.brakeCore !== undefined ? w.brakeCore : 0).toFixed(2) }} °C
                                     <span style="font-size: 14px; color: #e2e8f0;">
@@ -528,7 +528,7 @@ angular.module("beamng.apps")
 
                             <div class="tth-stat-row">
                                 <span class="tth-label">Internal Air Cavity:</span>
-                                <span class="tth-value" ng-style="{'color': getTempColor(w.airTemp, w.working_temp)}">
+                                <span class="tth-value" ng-style="{'color': getTempColor(w.airTemp, w)}">
                                     {{ (w.airTemp !== undefined ? w.airTemp : 0).toFixed(2) }} °C
                                 </span>
                             </div>
@@ -1135,9 +1135,15 @@ angular.module("beamng.apps")
                     };
                 };
 
-                scope.getTempColor = function (tempVal, working_temp) {
+                function smoothstep01(t) {
+                    t = Math.min(Math.max(t, 0), 1);
+                    return t * t * (3 - 2 * t);
+                }
+
+                // Rotor paint stays on a 400°C reference. Tire nodes use the grip window.
+                scope.getBrakeTempColor = function (tempVal) {
                     if (tempVal === undefined) return "hsla(240, 80%, 45%, 1)";
-                    var r = tempVal / (working_temp || 85);
+                    var r = tempVal / 400;
                     var hue;
                     if (r < 0.75) {
                         var tCold = Math.min(Math.max((r - 0.4) / 0.35, 0), 1);
@@ -1151,6 +1157,46 @@ angular.module("beamng.apps")
                         hue = 120 - tHot * 120;
                     }
                     return "hsla(" + Math.round(hue) + ", 80%, 45%, 1)";
+                };
+
+                scope.pastHotEdge = function (tempVal, wheel) {
+                    var opt = wheel && wheel.optimalTemp;
+                    var plateau = wheel && wheel.tempPlateau;
+                    if (!(opt > 0) || plateau === undefined || plateau === null) return false;
+                    return (tempVal || 0) > (opt + plateau);
+                };
+
+                // Color from this wheel's streamed grip window (thermalGripWindow edges).
+                scope.getTempColor = function (tempVal, wheel) {
+                    var sat = 80;
+                    var lit = 45;
+                    if (tempVal === undefined || tempVal === null) {
+                        return "hsla(240, " + sat + "%, " + lit + "%, 1)";
+                    }
+                    var opt = wheel && wheel.optimalTemp;
+                    var plateau = wheel && wheel.tempPlateau;
+                    var coldW = wheel && wheel.coldWidth;
+                    var hotW = wheel && wheel.hotWidth;
+                    if (!(opt > 0) || plateau === undefined || plateau === null
+                        || coldW === undefined || coldW === null
+                        || hotW === undefined || hotW === null) {
+                        return "hsla(240, " + sat + "%, " + lit + "%, 1)";
+                    }
+                    var coldEdge = opt - plateau;
+                    var hotEdge = opt + plateau;
+                    if (tempVal >= coldEdge && tempVal <= hotEdge) {
+                        return "hsla(120, " + sat + "%, " + lit + "%, 1)";
+                    }
+                    if (tempVal < coldEdge) {
+                        var tC = smoothstep01(coldW > 0 ? (coldEdge - tempVal) / coldW : 1);
+                        var hueC = 200 + tC * 40;
+                        var litC = Math.max(22, lit - tC * 8);
+                        return "hsla(" + Math.round(hueC) + ", " + sat + "%, " + Math.round(litC) + "%, 1)";
+                    }
+                    var tH = smoothstep01(hotW > 0 ? (tempVal - hotEdge) / hotW : 1);
+                    var hueH = 28 * (1 - tH);
+                    var litH = Math.max(22, lit - tH * 22);
+                    return "hsla(" + Math.round(hueH) + ", " + sat + "%, " + Math.round(litH) + "%, 1)";
                 };
 
                 function lerpNum(cur, tgt, alpha) {

@@ -185,6 +185,7 @@ local THERMAL_TOPOLOGY = {
     -- Profile floors own strength; sport_plus milder floors live on sport_plus PROFILE_POINTS.
     driveStreetSlipSpeed0 = 3.5,          -- m/s freestream: below → full heat (burnout/launch)
     driveStreetSlipSpeed1 = 14.0,         -- m/s: full soft-cap eligibility (~30 mph)
+    driveStreetSlipCapEnable = false,     -- off until A/B: enabling it cools driven street tires vs every calibrated band
     driveStreetSlipCapStart = 0.16,       -- slipEnergy where soft-cap begins
     driveStreetSlipCapFull = 0.52,        -- slipEnergy at full soft-cap
     driveStreetSlipG0 = 0.32,             -- retired: chassis g must not fade the slip cap
@@ -250,6 +251,13 @@ local THERMAL_TOPOLOGY = {
     -- Pass 7g: after 7f free-belt cut (skin flat, carcass +5°C), route more RR/flex heat
     --   to skin for WCU Scintilla GT3 under-opt test (0.21→0.28).
     hystSkinShare = 0.28,            -- RR/flex→skin (front warm without carcass cook)
+    -- PHASE 1 LOCKED 2026-09-26 (GT3 + normal-car smoke). Native already applies
+    -- frictionCoef and load sensitivity per tread node, so neither is re-applied here.
+    gripLevelScale = 0.80,
+    -- 2026-09-24: straight rolling bump only. Was 2.8e-6 (cruise tread sat on track temp).
+    -- Load·ω hysteresis for every rolling tire, including light load. Not a corner term.
+    -- About 6°C tread on a 130 mph straight; a warm loaded shoulder stays under +10°C.
+    rollingHystCoef = 2.0e-4,
     -- Pressure→grip bands (ratio error = currentPSI/hotTgt - 1). Hot tgt is seeded from
     -- native cold fill per pressure group (seedHotTargetPSI); spectrum optimalPressure is design.
     -- stock BeamNG cold fills often sit at/above opt, then Gay-Lussac warm pushes further over —
@@ -269,12 +277,18 @@ local THERMAL_TOPOLOGY = {
     contactDepthEmaTau = 0.08,       -- s; short EMA so gravel/kerb depth doesn't jitter patchFrac
     -- Sliding heat reads BeamNG slipEnergy (W × NATIVE_SLIP_ENERGY_SCALE), EMA'd with contactDepthEmaTau.
     slipPowerCap = 8.0,              -- working units; ~1.6 MW raw. Above lock/burnout, cuts impact spikes.
-    -- Sticking-patch flex: this wheel's load × slip only. Zero at no slip and once slip exceeds the ref.
-    stickFlexGain = 0.00035,
+    -- Sticking-patch flex: this wheel's load × its own slip, only while slipMag < stickFlexSlipRef.
+    -- 2026-09-23: 0.00035 → 0.12. Gripping slip (~0.05 at 0.67G) made the old gain a fraction of a degree.
+    -- 2026-09-24: 0.12 → 0.22. 0.12 added ~10°C on a loaded tire; 0.22 is the linear step for
+    -- about another 8–12°C of tread in a 0.99 G corner. Near-zero slip adds only a couple of degrees.
+    stickFlexGain = 0.22,
     stickFlexSlipRef = 0.45,
+    -- Shoulder weighting from this wheel's own slip angle (outer + / inner -), not chassis G.
+    latSlipAngleRef = 0.10,          -- rad; slip angle that reaches full shoulder bias
+    latSlipShoulderBias = 0.28,      -- combinedBias at latSlipAngleRef (camber term is separate)
+    latSlipEmaTau = 0.10,            -- s; smooths hub-velocity noise
     patchHertzDeflBlend = 0.35,      -- max weight of deflection proxy vs Hertz F/P area
     patchDeflWidthFrac = 0.55,       -- effective width fraction of chord×width deflection area
-    patchLatLoadNudge = 0.05,        -- mild live lateral (gy) nudge on L/R ring weights
     -- Path A3: peakForce / downForceRaw util → patchHeatScale (smoothed load keeps Hertz stable;
     --   contactDepth + patchHeatScale EMA still kill kerb jitter). Prefer raw load as util denom.
     -- Round-4: util coupling 0.12/1.20 → 0.09/1.12 (rear peak ~116C toward under 100C).
@@ -649,7 +663,7 @@ F.getFreestreamAirspeed = function()
 end
 
 -- Chassis G + yaw for Pitwall (same sensors path as thermals g_mag).
--- Convention in this mod: gx ≈ long, gy ≈ lat (see patchLatLoadNudge / GFX sample).
+-- Convention in this mod: gx ≈ long, gy ≈ lat.
 F.getChassisDynamicsSnapshot = function()
     local gx = (sensors and (sensors.gx2 or sensors.gx) or 0) / 9.80665
     local gy = (sensors and (sensors.gy2 or sensors.gy) or 0) / 9.80665
@@ -839,7 +853,7 @@ F.ctwPrepareDriveGates = function(data, mods, slipEnergy, brakeTorque, propulsio
     local streetSlipPropScale = 1.0
     local heatMin = mods.driveSlipHeatMin or 1.0
     local propMin = mods.driveSlipPropMin or 1.0
-    if softcapPurposeOk and slickDriveScale >= 0.999 and abs(brakeTorque) < 40
+    if topo.driveStreetSlipCapEnable and softcapPurposeOk and slickDriveScale >= 0.999 and abs(brakeTorque) < 40
         and propAbs > (cruiseNm * 0.5)
         and (heatMin < 0.999 or propMin < 0.999) then
         local v0 = topo.driveStreetSlipSpeed0 or 3.5
@@ -998,7 +1012,8 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         + (slipPowerRaw - (data.slipPowerSmooth or slipPowerRaw)) * depthAlpha
     data.slipPowerSmooth = slipPowerSmooth
     local propulsionTorque = isAirborne and 0 or (wd.propulsionTorque or 0) * (wd.wheelDir or 1)
-    local brakeTorque = isAirborne and 0 or (wd.brakeTorque or 0) * (wd.wheelDir or 1)
+    -- wd.brakeTorque is the brake's capacity; wd.brakingTorque is the torque applied this step.
+    local brakeTorque = isAirborne and 0 or (wd.brakingTorque or 0) * (wd.wheelDir or 1)
     -- A3: smoothed downForce for Hertz/thermal mass; downForceRaw for util spikes
     local loadRaw = isAirborne and 0 or (wd.downForce or wd.downForceRaw or w.downForceRaw or 0)
     local loadUtil = loadRaw
@@ -1064,7 +1079,7 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local slipMag = longSlipEnergy + sideSlipEnergy
     local stickRef = topo.stickFlexSlipRef or 0.45
     if stickRef > 1e-6 and slipMag > 0 and slipMag < stickRef then
-        stickFlexHeat = (topo.stickFlexGain or 0.00035) * load_kg_thermal * slipMag * (1.0 - slipMag / stickRef)
+        stickFlexHeat = (topo.stickFlexGain or 0.22) * load_kg_thermal * slipMag * (1.0 - slipMag / stickRef)
     end
 
     data.working_temp = current_optimal_temp
@@ -1093,18 +1108,6 @@ F.ctwPrepareThermals = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
 
     -- Pass pressure ratio to warp edge load calculations dynamically based on inflation states
     local wLeft, wCenter, wRight = F.CalcBiasWeights(w.combinedBias, pressureRatio)
-    -- Mild live lateral load nudge (gy) toward loaded shoulder — not a soft-body node map
-    do
-        local nudge = max(-1.0, min(1.0, gy)) * (topo.patchLatLoadNudge or 0.05)
-        if abs(nudge) > 1e-5 then
-            wLeft = max(0.05, wLeft * (1.0 - nudge))
-            wRight = max(0.05, wRight * (1.0 + nudge))
-            local wSum = wLeft + wCenter + wRight
-            if wSum > 1e-6 then
-                wLeft, wCenter, wRight = wLeft / wSum, wCenter / wSum, wRight / wSum
-            end
-        end
-    end
 
     -- Detect surfaces via shared classifier cache (must match CalculateTyreGrip)
     local isRaining = electrics and electrics.values and type(electrics.values.rainState) == "number" and electrics.values.rainState > 0
@@ -1473,10 +1476,10 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     local filmEvap = max(waterFilmDepth, (rainAmt > 0.05) and max(0.25, rainAmt) or 0)
     local wetEvapExtra = (topo.wetEvapSkinCoef or 0.014) * filmEvap
 
-    -- Lateral carcass bias from side-slip (outer shoulder works harder in a slide)
+    -- Carcass bias toward the shoulder this patch is sliding toward (latSlipDir > 0 = outer).
     local sideBias = 0
     if (longSlipEnergy + sideSlipEnergy) > 1e-4 then
-        sideBias = max(-0.35, min(0.35, (sideSlipEnergy - longSlipEnergy * 0.35) * 0.15 * (wd.wheelDir or 1)))
+        sideBias = max(-0.35, min(0.35, -(w.latSlipDir or 0) * max(0, sideSlipEnergy - longSlipEnergy * 0.35) * 0.15))
     end
     local wLeftB = max(0.08, wLeft * (1.0 - sideBias))
     local wRightB = max(0.08, wRight * (1.0 + sideBias))
@@ -1624,7 +1627,7 @@ F.ctwStepThermalNodes = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
     -- Skin uses excessPropGateEff; carcass hyst/flex use excessPropGateCarcass (slick / street high-V cut).
     -- Base load·ω RR (cruise soft-cap + prop damp). Coast-axle warm-up is flexWarmGain, not a separate RR mult.
     local totalHysteresisHeat = (
-        (load_kg_thermal * angularVelHeat * 0.0000028 * (0.45 * exp(-0.5 * (avgWeightedTemp / current_working_temp - 1)^2) + 0.15) * rollingResistance * cruiseRRScale * propRrDamp)
+        (load_kg_thermal * angularVelHeat * (topo.rollingHystCoef or 2.8e-6) * (0.45 * exp(-0.5 * (avgWeightedTemp / current_working_temp - 1)^2) + 0.15) * rollingResistance * cruiseRRScale * propRrDamp)
         + (verticalCarcassHeat * 0.01 * workHeatRate)
         + (propAbs * driveHeatGateCarcass * angularVelHeat * (topo.drivePropHystBase + (topo.drivePropHystExcess - topo.drivePropHystBase) * excessPropGateCarcass) * rollingResistance)
     ) / heatMassScale
@@ -1952,20 +1955,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
     tyreGrip = F.applyProfileSurfaceBias(tyreGrip, surfaceType, profile1Lower, profile2Lower)
     local longPressureScale, latPressureScale = F.CalcPressureGripScales(pOffset, sensitivity, isLooseSurface)
 
-    -- Dynamically scales vertical tire load sensitivity by active wheelCount to handle trucks/duallys
-    local staticLoad = (vehicleMass * 9.81) / wheelCount
-    local loadSensitivityModifier = 1.0 / (1.0 + (mods.loadSensitivity or DEFAULT_MODS.loadSensitivity) * max(0, ((w.loadRaw or 0) / max(1, staticLoad)) - 1.0))
-    -- Blend with stock JBeam noLoadCoef / fullLoadCoef curve
-    local bf = data.baseFactors
-    if bf and bf.noLoadCoef and bf.fullLoadCoef then
-        local loadN = max(0, w.loadRaw or 0)
-        local tLoad = min(1.0, loadN * (bf.loadSensitivitySlope or 0.00015) * 8.0)
-        local jbeamLoadCoef = lerp(bf.noLoadCoef, bf.fullLoadCoef, tLoad)
-        loadSensitivityModifier = loadSensitivityModifier * max(0.80, min(1.25, jbeamLoadCoef))
-        -- Soft coupling to stock frictionCoef (do not double-count vs setFrictionThermalSensitivity)
-        tyreGrip = tyreGrip * max(0.88, min(1.12, 0.55 + 0.45 * (bf.frictionCoef or 1.0)))
-    end
-    tyreGrip = tyreGrip * max(0.70, loadSensitivityModifier)
+    tyreGrip = tyreGrip * (topo.gripLevelScale or 0.80)
 
     -- Dynamic Wet & Hydroplaning Model (film depth from rain accumulation)
     if isWetSurface or waterFilmDepth > 0.05 then
@@ -2102,6 +2092,7 @@ F.CalculateTyreGrip = function(wheelID, localEnvTemp)
 
     -- Tip-over protection: only after real load transfer (preserve turn-in bite)
     do
+        local staticLoad = (vehicleMass * 9.81) / wheelCount
         local loadRatio = (w.loadRaw or 0) / max(1.0, staticLoad)
         if loadRatio > 1.32 then
             local overload = min(1.6, loadRatio - 1.32)
@@ -2296,9 +2287,7 @@ F.updateGFX = function(dt)
         stintDistanceM = stintDistanceM + airspeed * dt
     end
 
-    local gy_gfx = (sensors and (sensors.gy2 or sensors.gy) or 0) / 9.80665
-
-    F.prepareWheelFrame(dt, localizedEnvTemp, invQuat, upVector, airspeed, gy_gfx)
+    F.prepareWheelFrame(dt, localizedEnvTemp, invQuat, upVector, airspeed)
 
     F.sampleNativeAero()
     F.runFixedPhysicsSteps(dt, localizedEnvTemp)
@@ -2439,7 +2428,7 @@ F.onInit = function()
             for i, wd in pairs(wheels.wheelRotators) do
                 local wheel = F.resolveWheelFrictionTarget(i, wd)
                 if wheel then
-                    F.applyWheelFriction(wheel, 1.0, 1.0)
+                    F.applyWheelFriction(wheel, 1.0)
                 end
             end
         end

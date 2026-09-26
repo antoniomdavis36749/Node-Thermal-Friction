@@ -19,13 +19,25 @@ future node wear (local contact damage). Never two absolute friction writers.
 
 **Preferred for V2 merge:** Policy A
 
-- **A — Thermal baseline, node relative:** Thermal core writes wheel long/lat/mid.
+- **A — Thermal baseline, node relative:** Thermal core writes one wheel multiplier,
+  `(longGrip + latGrip) / 2`, to all three `setFrictionThermalSensitivity` slots. Those
+  slots are BeamNG temperature bands, not axes, so there is no per-axis grip.
   Node wear multiplies **contact-node** friction/mass by wear scales (0–1).
   Nodes never call `setFrictionThermalSensitivity`.
 - **B — Nodes own contact:** Thermal core publishes modifiers only (temps → factors).
   Node layer applies absolute contact friction. Thermal must stop writing wheel μ.
 
 Do not run A and B mixed. Do not run Node-Thermal Friction wheel μ + any third-party node-wear mod.
+
+## Phase 1 native correctness — LOCKED 2026-09-26
+
+Smoked on Scintilla GT3 and a normal car. Do not reopen without a new Belasco miss.
+
+- Brake heat, wear, and gates read `wd.brakingTorque` (applied), not `wd.brakeTorque` (capacity).
+- One wheel friction coefficient, `(longGrip + latGrip) / 2`. BeamNG's three slots are temperature bands.
+- `frictionCoef` and JBeam load sensitivity stay with BeamNG. NTF level is `gripLevelScale` **0.80**. Drag `gripMultiplier` **1.32**.
+- Shoulder heat follows each wheel's slip angle and standard camber (`camberStd`). Chassis G does not pick a shoulder.
+- Street residual-slip soft-cap stays **off** until a dedicated A/B.
 
 ## Clean-room
 

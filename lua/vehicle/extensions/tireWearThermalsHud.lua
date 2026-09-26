@@ -77,7 +77,7 @@ function M.install(F, deps)
                 tempCategory = "Normal",
                 working_temp = WORKING_TEMP, condition = 100, conditionScalar = 100, conditionNode = 100, conditionNodeLead = 0,
                 zoneCondition = { 100, 100, 100 },
-                tyreGrip = 1, longGrip = 1, latGrip = 1, wearPenalty = 1, camber = 0, toe = 0, pressure = 25,
+                tyreGrip = 1, longGrip = 1, latGrip = 1, wearPenalty = 1, camber = 0, camberStd = 0, toe = 0, pressure = 25,
                 initialPressure = 25, optimalPressure = 25, coldPressure = 25, targetHotPressure = 25,
                 luaPressure = 25, nativePressure = 25, pressureDelta = 0,
                 pressureRatio = 1, skinCarcassGap = 0, driveHeatGate = 0, driveHeatGateCarcass = 0,
@@ -226,6 +226,7 @@ function M.install(F, deps)
                     entry.nodeColWheelCid = data.nodeColWheelCid or 0
                     entry.nodeColMatch = (data.nodeColMatch and data.nodeColMatch ~= 0) and 1 or 0
                     entry.camber = (w.isBroken) and 0 or ((w.camber or 0) * (wd.wheelDir or 1))
+                    entry.camberStd = (w.isBroken) and 0 or (math.floor((w.camberStd or w.camber or 0) * 100) / 100)
                     entry.toe = (w.isBroken) and 0 or math.floor((w.toe or 0) * 100) / 100
                     entry.pressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.currentPressurePSI or initialPressurePSI) * 10) / 10)
                     entry.luaPressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.luaPressurePSI or data.currentPressurePSI or initialPressurePSI) * 10) / 10)
@@ -351,13 +352,23 @@ function M.install(F, deps)
                         entry.working_temp = WORKING_TEMP
                     end
 
-                    local optTemp = data.working_temp or WORKING_TEMP
                     local hotTgt = math.max(1.0, entry.targetHotPressure or entry.optimalPressure or 25)
                     local avgT = EffectiveTyreTemp(data.temp, w.combinedBias or 0, (entry.pressure or 0) / hotTgt, localizedEnvTemp, interpolatedMods)
-                    local tempRatio = avgT / (optTemp > 0 and optTemp or 1)
-                    if tempRatio < 0.80 then
+                    -- Effective window: same softness/compliance scale as getProfileThermalGrip.
+                    -- interpolatedMods is already the blended compound (not a street default).
+                    local softness = wd.softnessCoef or 0.5
+                    local compliance = (interpolatedMods and interpolatedMods.casingCompliance) or 0.5
+                    local opt, plateau, coldW, hotW = F.thermalGripWindow(interpolatedMods, compliance, softness)
+                    entry.optimalTemp = math.floor(opt * 10 + 0.5) / 10
+                    entry.tempPlateau = math.floor(plateau * 10 + 0.5) / 10
+                    entry.coldWidth = math.floor(coldW * 10 + 0.5) / 10
+                    entry.hotWidth = math.floor(hotW * 10 + 0.5) / 10
+                    entry.gripMultiplier = math.floor(((interpolatedMods and interpolatedMods.gripMultiplier) or 1) * 1000 + 0.5) / 1000
+                    local therm = F.getProfileThermalGrip(interpolatedMods, avgT, compliance, softness)
+                    entry.thermalGrip = math.floor((therm or 0) * 1000 + 0.5) / 1000
+                    if avgT < (entry.optimalTemp - entry.tempPlateau) then
                         entry.tempCategory = "Cold"
-                    elseif tempRatio > 1.20 then
+                    elseif avgT > (entry.optimalTemp + entry.tempPlateau) then
                         entry.tempCategory = "Hot"
                     else
                         entry.tempCategory = "Normal"
