@@ -345,8 +345,8 @@ function Simulate-BrakeStop {
     $effAir = $combinedAir / (1.0 + $combinedAir / 220.0)
 
     # Drive gates — live: brakeTorque > 40 opens gate fully
-    $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($gMag * 0.45) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
-    if (($slip -lt 0.06) -and ($gMag -lt 0.28) -and ($brakeNm -lt 40)) {
+    $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
+    if (($slip -lt 0.06) -and ($brakeNm -lt 40)) {
       $halfCruise = [double]$topo.drivePropCruiseNm * 0.5
       if ($propAbs -gt $halfCruise) {
         $driveHeatGate = $driveHeatGate * (0.15 + 0.85 * (Clamp (($propAbs - $halfCruise) / [math]::Max(1.0, $halfCruise)) 0 1))
@@ -377,8 +377,8 @@ function Simulate-BrakeStop {
 
     # cruise RR soft-cap OFF when |brake| >= 50 (live)
     $cruiseRR = 1.0
-    if (($slip -lt 0.08) -and ($gMag -lt 0.35) -and ($brakeNm -lt 50)) { $cruiseRR = 0.48 }
-    elseif (($slip -lt 0.15) -and ($gMag -lt 0.55)) { $cruiseRR = 0.72 }
+    if (($slip -lt 0.08) -and ($brakeNm -lt 50)) { $cruiseRR = 1.0 }
+    elseif (($slip -lt 0.15)) { $cruiseRR = 1.0 }
 
     $propRrDamp = 1.0
     if (($carcassPropScale -lt 0.999) -and ($excessPropGate -gt 1e-4)) {
@@ -396,7 +396,7 @@ function Simulate-BrakeStop {
 
     $seh = $slip / (1.0 + $slip * 0.12)
     $loadCoeff = $wt * $loadKgTh
-    $gWork = [math]::Max(0.0, $gMag - 0.22)
+    $gWork = 0.0
     $rel = $gWork * $loadCoeff / 1000.0
 
     $raw = ($seh * 0.05 + $netTorque * 0.002) * 3.0 * $wt
@@ -423,7 +423,7 @@ function Simulate-BrakeStop {
       $gain = $gain * (Lerp $LOCKUP_HEAT_FLOOR 1.0 $lockBlend)
     }
 
-    $cornerRetain = 1.0 / (1.0 + [math]::Min(0.18, [math]::Max(0.0, $gMag - 0.20) * 0.22))
+    $cornerRetain = 1.0
     $velCool = [math]::Pow([math]::Max(0.01, $effAir), 0.8) * $airCool * 0.155 * $cornerRetain
     $tempDelta = $skin - $env
     $conv = $tempDelta * ($staticCool * 0.04 + $velCool) * $climateScale * $freeBeltBias * $convScale
@@ -454,7 +454,7 @@ function Simulate-BrakeStop {
         [math]::Max(1.0, [double]$topo.flexWarmLoad1 - [double]$topo.flexWarmLoad0)) 0 1) *
       (Clamp (($airspeed - [double]$topo.flexWarmSpeed0) /
         [math]::Max(1.0, [double]$topo.flexWarmSpeed1 - [double]$topo.flexWarmSpeed0)) 0 1) *
-      (Clamp (([math]::Max(0.0, $gMag - [double]$topo.flexWarmG0) / 0.70) + $slip * 1.8) 0 1)
+      (Clamp ($slip * 1.8) 0 1)
     if ($flexGate -gt 1e-4) {
       $flexWarm = $flexGate * [double]$topo.flexWarmGain * $loadKgTh * $angHeat *
         [double]$comp.rollingRes * $flexModifier * $propRrDamp / $heatMassScale

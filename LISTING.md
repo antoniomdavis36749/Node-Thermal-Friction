@@ -16,8 +16,8 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 | Field | Value |
 | --- | --- |
 | **Title** | Node-Thermal Friction |
-| **Tagline** | Private tester — V2 node wear + thermals (friction A1). Public Repo paused. |
-| **Version** | 0.2.1 |
+| **Tagline** | Tire temperature, wear, and grip. Per-tire profiles. |
+| **Version** | 0.2.2 |
 | **Zip filename** | `NodeThermalFriction.zip` (stable Repo id; display title is Node-Thermal Friction) |
 | **Prefix** | Beta |
 
@@ -139,7 +139,7 @@ Gallery for that listing: tires unpack `mod_info/TWTRS_COMPAT/images/listing_her
 - Private-beta polish: Classic/Crew blank-stream + Cond labeling; duct Tuning copy; Compat README/inventory/pack script
 - Spectra honesty: truck/utility/AT/vintage labeled provisional (`tools/SPECTRA_STATUS.md`)
 - Round-2 fleet heat dial-back (tester-owned); numRays 16 baseline locked
-- Public Repo update still paused
+- Public source is `main` on Node-Thermal-Friction, version 0.2.2
 
 ## Changelog (0.1.2)
 

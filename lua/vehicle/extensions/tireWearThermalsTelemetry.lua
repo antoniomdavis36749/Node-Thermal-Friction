@@ -14,6 +14,7 @@ function M.install(F, deps)
     local getNativeAero = deps.getNativeAero
     local getEnvTemp = deps.getEnvTemp
     local getWaterFilmDepth = deps.getWaterFilmDepth
+    local getStintKm = deps.getStintKm
     local ensureTempNodes = deps.ensureTempNodes
     local nativeAeroWheelShare = deps.nativeAeroWheelShare
 
@@ -169,6 +170,7 @@ function M.install(F, deps)
         local copPct = math.floor(aeroLoadBase.copPct * 10) / 10
         local waterFilmDepth = getWaterFilmDepth()
         local envTemp = getEnvTemp()
+        local stintKm = (getStintKm and getStintKm()) or 0
         for wheelID, data in pairs(tyreData) do
             data.temp = ensureTempNodes(data.temp, envTemp)
             local grip = data.lastGrip or tyreGripTable[wheelID] or 0
@@ -183,8 +185,17 @@ function M.install(F, deps)
             local wc = wheelCache[wheelID]
             local rawLoad = (wc and wc.loadRaw) or 0
             local wheels = getWheels()
-            local wdName = (wheels and wheels.wheelRotators and wheels.wheelRotators[wheelID] and wheels.wheelRotators[wheelID].name) or ""
+            local wd = wheels and wheels.wheelRotators and wheels.wheelRotators[wheelID]
+            local wdName = (wd and wd.name) or ""
             local aeroLoadN = math.floor(nativeAeroWheelShare(wdName, rawLoad))
+            local nativeTreadC, nativeCoreC = -1, -1
+            local nativeId = wd and wd.wheelID
+            if obj and nativeId ~= nil and type(obj.getWheelAvgTemperature) == "function" then
+                local okT, avgK = pcall(obj.getWheelAvgTemperature, obj, nativeId)
+                local okC, coreK = pcall(obj.getWheelCoreTemperature, obj, nativeId)
+                if okT and type(avgK) == "number" then nativeTreadC = avgK - 273.15 end
+                if okC and type(coreK) == "number" then nativeCoreC = coreK - 273.15 end
+            end
             telem.csvBufCount = telem.csvBufCount + 1
             -- Legacy numeric prefix (unchanged) + escaped UI-stream suffix
             telem.csvBuffer[telem.csvBufCount] = string.format(
@@ -205,11 +216,19 @@ function M.install(F, deps)
                     data.lastPatchFrac or 0, data.lastPatchHeatScale or 1,
                     aeroLoadN, totalDownforceN, aeroFracPct)
                 .. F.csvEscape(data.lastDutyMods or "") .. ","
-                .. string.format("%.3f,%.3f,%.3f,%d,%d,%d,%.1f\n",
+                .. string.format("%.3f,%.3f,%.3f,%d,%d,%d,%.1f,%.3f,%.2f,%.2f,%.3f,%.2f,%.2f,%d,%.3f,%.4f\n",
                     data.lastDriveHeatGate or 0,
                     data.lastStreetSlipHeatScale or 1,
                     data.lastUtilNudge or 1,
-                    aeroDragN, aeroFrontN, aeroRearN, copPct)
+                    aeroDragN, aeroFrontN, aeroRearN, copPct,
+                    stintKm,
+                    data.conditionScalar or data.condition or 0,
+                    data.conditionNode or data.condition or 0,
+                    (data.nodeWearPeak or 0) * 100,
+                    nativeTreadC, nativeCoreC,
+                    data.layoutDampOn or 0,
+                    data.lastSlipRatio or 0,
+                    data.lastStickFlexHeat or 0)
         end
         if F.telemetryBufferNeedsFlush() then
             F.flushTelemetryBuffer()

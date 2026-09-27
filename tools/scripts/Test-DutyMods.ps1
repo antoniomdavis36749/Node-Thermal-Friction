@@ -1,4 +1,4 @@
-﻿# Light soft-sim: dutyMods gate eligibility (mirrors CalcTyreWear active-only ids).
+# Light soft-sim: dutyMods gate eligibility (mirrors CalcTyreWear active-only ids).
 # Phase 4: soft-cap magnitudes from profile packs; topo keeps enable ramps only.
 # Phase 5: purpose selects soft-cap ENABLE pack (street-like ON; circuit/rally/drag/drift OFF).
 $ErrorActionPreference = 'Stop'
@@ -24,6 +24,7 @@ $topo = @{
   driveStreetSlipSpeed0 = 3.5; driveStreetSlipSpeed1 = 14.0
   driveStreetSlipCapStart = 0.16; driveStreetSlipCapFull = 0.52
   driveStreetSlipG0 = 0.32; driveStreetSlipG1 = 0.58
+  driveStreetSlipCapEnable = $false
   drivePropDrivenThreshNm = 40.0; drivePropAwdExcessScale = 0.62
   flexWarmLoad0 = 120.0; flexWarmLoad1 = 400.0
   flexWarmSpeed0 = 2.0; flexWarmSpeed1 = 20.0; flexWarmG0 = 0.24
@@ -82,18 +83,15 @@ function Get-DutyMods([hashtable]$s) {
   $streetSlipHeatScale = 1.0
   $heatMin = [double]$mods.driveSlipHeatMin
   $propMin = [double]$mods.driveSlipPropMin
-  if ($softcapPurposeOk -and $slickDriveScale -ge 0.999 -and $brakeNm -lt 40 -and $propAbs -gt ($cruiseNm * 0.5) `
+  if ($topo.driveStreetSlipCapEnable -and $softcapPurposeOk -and $slickDriveScale -ge 0.999 -and $brakeNm -lt 40 -and $propAbs -gt ($cruiseNm * 0.5) `
       -and ($heatMin -lt 0.999 -or $propMin -lt 0.999)) {
     $v0 = [double]$topo.driveStreetSlipSpeed0
     $v1 = [double]$topo.driveStreetSlipSpeed1
     $speedRamp = Smooth01 (Clamp (($safeAirspeed - $v0) / [math]::Max(1.0, $v1 - $v0)) 0 1)
-    $g0 = [double]$topo.driveStreetSlipG0
-    $g1 = [double]$topo.driveStreetSlipG1
-    $gGate = 1.0 - (Clamp (($gMag - $g0) / [math]::Max(1e-3, $g1 - $g0)) 0 1)
     $s0 = [double]$topo.driveStreetSlipCapStart
     $s1 = [double]$topo.driveStreetSlipCapFull
     $slipRamp = Smooth01 (Clamp (($slipEnergy - $s0) / [math]::Max(1e-3, $s1 - $s0)) 0 1)
-    $blend = $speedRamp * $gGate * $slipRamp
+    $blend = $speedRamp * $slipRamp
     if ($blend -gt 1e-4) {
       $streetSlipHeatScale = 1.0 + (($heatMin - 1.0) * $blend)
     }
@@ -110,7 +108,7 @@ function Get-DutyMods([hashtable]$s) {
   if (-not $isAirborne -and $vehNotParked) {
     $flexGate = (Clamp (($loadKg - [double]$topo.flexWarmLoad0) / [math]::Max(1.0, [double]$topo.flexWarmLoad1 - [double]$topo.flexWarmLoad0)) 0 1) *
       (Clamp (($safeAirspeed - [double]$topo.flexWarmSpeed0) / [math]::Max(1.0, [double]$topo.flexWarmSpeed1 - [double]$topo.flexWarmSpeed0)) 0 1) *
-      (Clamp (([math]::Max(0.0, $gMag - [double]$topo.flexWarmG0) / 0.70) + ($slipEnergy * 1.8)) 0 1)
+      (Clamp ($slipEnergy * 1.8) 0 1)
     if ($flexGate -gt 1e-4) {
       $flexWarmHeat = $flexGate * [double]$topo.flexWarmGain
     }
@@ -167,11 +165,11 @@ if (Assert-Duty 'idle parked' $s '') { $pass++ } else { $fail++ }
 
 # FWD street hard accel rolling spin â€” soft-cap on
 $s = @{} + $base; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400; $s.drivenCount = 2
-if (Assert-Duty 'FWD street hard accel' $s 'fwd_slip_softcap') { $pass++ } else { $fail++ }
+if (Assert-Duty 'FWD street hard accel' $s '') { $pass++ } else { $fail++ }
 
 # Sport+ same path â€” milder id
 $s = @{} + $base; $s.isSportPlus = $true; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400
-if (Assert-Duty 'sport_plus hard accel' $s 'sport_plus_slip_softcap') { $pass++ } else { $fail++ }
+if (Assert-Duty 'sport_plus hard accel' $s '') { $pass++ } else { $fail++ }
 
 # Slick â€” soft-cap must stay off (slickDriveScale gate)
 $s = @{} + $base; $s.isSlick = $true; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400
@@ -214,7 +212,7 @@ if (Assert-Duty 'soft-sink via GM fluidDensity' $s 'soft_sink_damp') { $pass++ }
 
 # Combined: FWD soft-cap + soft sink
 $s = @{} + $base; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400; $s.contactDepth = 0.025
-if (Assert-Duty 'FWD soft-cap + soft-sink' $s 'fwd_slip_softcap,soft_sink_damp') { $pass++ } else { $fail++ }
+if (Assert-Duty 'FWD soft-cap + soft-sink' $s 'soft_sink_damp') { $pass++ } else { $fail++ }
 
 # Phase 5: purpose packs â€” same physics state, soft-cap only when purpose allows
 $s = @{} + $base; $s.purpose = 'tarmac_rally'; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400
@@ -230,7 +228,7 @@ $s = @{} + $base; $s.purpose = 'drag'; $s.airspeed = 18.0; $s.slip = 0.40; $s.gM
 if (Assert-Duty 'drag purpose (no street soft-cap)' $s '') { $pass++ } else { $fail++ }
 
 $s = @{} + $base; $s.purpose = 'wet'; $s.airspeed = 18.0; $s.slip = 0.40; $s.gMag = 0.20; $s.propNm = 400
-if (Assert-Duty 'wet purpose hard accel' $s 'fwd_slip_softcap') { $pass++ } else { $fail++ }
+if (Assert-Duty 'wet purpose hard accel' $s '') { $pass++ } else { $fail++ }
 
 $s = @{} + $base; $s.purpose = 'tarmac_rally'; $s.airspeed = 100.0; $s.slip = 0.04; $s.gMag = 0.12; $s.propNm = 300
 if (Assert-Duty 'tarmac_rally high-V (no street damp)' $s '') { $pass++ } else { $fail++ }

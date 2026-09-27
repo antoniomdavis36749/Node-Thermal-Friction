@@ -1,6 +1,22 @@
 # Tire Wear Thermals — structure splits (engineering reference)
 
-**Reminder:** Follow this process. Do **not** rush hot-path splits. One cold module at a time, verify locals, sync `-dev`, respawn, smoke-test.
+**Reminder:** Follow this process. Do **not** rush hot-path splits. One stage at a time. The load check for that stage must print OK, then respawn and smoke, before the next stage.
+
+## Staged loadout (architecture 3 toward 4)
+
+Each stage keeps the same numbers. The FWD layout-damp exit is a different claim. Do not use that exit as the architecture smoke.
+
+In-load verification is one print when the vehicle Lua loads. A missing function prints `ARCH stage N FAIL`. The car still loads. There is no second heat implementation behind a flag.
+
+| Stage | In-load check | Move |
+| --- | --- | --- |
+| 1 | Loaded clean 26 Sep 2026. Scintilla printed `ARCH stage 1 OK layoutDamp=0` | No formula move. |
+| 2 | Loaded clean 26 Sep 2026. Vehicle printed `ARCH stage 2 OK layoutDamp=0` | Rate and sample reads live in `ctwSenseThermal`. Underwater cooling and draft still run in prepare |
+| 3 | Loaded clean 26 Sep 2026. Two Scintilla spawns printed `ARCH stage 3 OK layoutDamp=0` | Slip, work, brake, and flex energy go into scratch. The integrator still writes the eight nodes |
+| 4 | Loaded clean 26 Sep 2026. Log printed `ARCH stage 4 OK layoutDamp=0` | Integrator calls `ctwAccumulateHeat`. `ctwEmitDuty` writes the duty line and does not write `data.temp` |
+| 5 | Loaded 26 Sep 2026. Burnside drag spawn printed `ARCH stage 5 OK layoutDamp=1` | Player stream is the lean tire card. Pitwall listens to `TireWearThermalsPitwall` and keeps the full payload. Classic and Crew stay on `TireWearThermals` |
+
+Stage 4 loaded and a 9.2 km Sport Plus stint still heated and cooled. Architecture rating is 4. Stage 5 printed `ARCH stage 5 OK` on the Burnside drag spawn.
 
 **V2 private tester `0.2.0` (Beta):** Public Repo update paused. Scalar flatspot removed.
 Friction/node-wear ownership: `tools/V2_FRICTION_CONTRACT.md`.

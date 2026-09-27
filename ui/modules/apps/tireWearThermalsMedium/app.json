@@ -1,7 +1,7 @@
 {
   "name": "Node-Thermal Friction Crew",
   "author": "Node-Thermal Friction",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "directive": "tireWearThermalsMedium",
   "domElement": "<tire-wear-thermals-medium></tire-wear-thermals-medium>",
   "types": [

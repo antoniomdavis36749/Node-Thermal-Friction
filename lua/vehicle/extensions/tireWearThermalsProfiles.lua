@@ -74,7 +74,7 @@ local M = {}
   HEAT GENERATION
     slipHeatRate        Skin heat from sliding / slip energy.
     workHeatRate        Skin/carcass heat from cornering work + vertical.
-    workHeatG0          g_mag below this → zero skin cornering work (default 0.22).
+    workHeatG0          Retired (chassis-G cornering work was replaced by slip power); Pitwall chip only.
     rollingRes          Rolling-resistance scale (hysteresis + torque heat).
     brakeGainRate       How strongly stock brake temps soak the rim node.
     scrubSensitivity    (see above) also feeds dynamic slip energy.
@@ -121,10 +121,15 @@ local M = {}
     hystSkinShare         Bulk RR/flex→skin leak (NOT × patchHeatScale).
     gripLevelScale        NTF grip level over native tire friction (frictionCoef and load
                           sensitivity stay with BeamNG's per-node model).
+    tipOverLoadRef        "axle": lateral cut compares the tire with its axle's mean load;
+                          "car" = old car-average reference (A/B only).
+    stickFlexSlipRatioFull / Zero
+                          Sticking-patch flex fades out between these native slip ratios.
+    slideWearLoadShare / staticLoadMaxSpeed / axleGroupGapM
+                          Sliding wear vs the tire's own static load; axle grouping by hub position.
     brakeSurfSoak/CoreSoak  Rim soak from brake surface (fast ≫) / core (lag).
     brakeEffSoakFloor     Glazing/efficiency floor on rim soak scale (η soft only).
     brakeRadiantCoef      Radiant brake surface → rim (T^4); area/duct/gain applied live.
-    -- Brake non-goals: no native rotor replace; no duct→brakeTypeSurfaceCoolingCoef write;
     -- no torque-fade ownership; tire-side soak/duct/read only.
     pressureColdRefreshTau / pressureTpmsDeadbandPsiS
                           Cold fill soft-refresh vs native; skip on TPMS inflate.
@@ -149,7 +154,9 @@ local M = {}
     driveStreetSlipCapEnable / Speed0/1 / CapStart/Full
                           Residual long-slip soft-cap (FWD accel cook; magnitudes =
                           profile driveSlipHeatMin / driveSlipPropMin). Off until A/B.
-    drivePropMassRefKg / MassScaleMin/Max  Scale cruise/excess Nm by sqrt(mass/ref).
+    driveRefWheelNm / driveTireScaleMin/Max
+                          Scale cruise/excess Nm by this tire's radius × static load / ref.
+    driveLayoutDampEnable false = A/B the gates without the FWD/AWD Soft and AWD excess damps.
     drivePropAwdExcessScale / DrivenThreshNm  AWD layout damp on excessPropGate.
     drivePropFwdSoftScale / FwdSoftCarcassScale / FwdSoftSoftnessMin
                           FWD Soft-like driven-front damp LOCKED (0.58/0.48). Keeps Hot;
@@ -223,17 +230,13 @@ local DEFAULT_MODS = {
 
 -- Named soft-cap packs. Stamped onto spectra/standalones.
 -- Phase 5: packs are magnitudes only; purposeAllowsStreetSoftcap() selects enable.
--- Pass 5/6: floors moved toward 1.0 after root drive-heat cuts (debt paydown; enable rules unchanged).
 local DRIVE_SOFTCAP_STREET = { driveSlipHeatMin = 0.90, driveSlipPropMin = 0.93, driveHighVCarcassScale = 0.80 }
--- Sport HEAT LOCKED for now (v7 + tiny slip/work bump 9.68/5.61). Between street and Plus.
 local DRIVE_SOFTCAP_SPORT = { driveSlipHeatMin = 0.92, driveSlipPropMin = 0.95, driveHighVCarcassScale = 0.87 }
 local DRIVE_SOFTCAP_SPORT_PLUS = { driveSlipHeatMin = 0.94, driveSlipPropMin = 0.97, driveHighVCarcassScale = 0.82 }
--- Track Day LOCKED: Plus (0.94/0.97/0.82) → Hard C2 OFF (1.0/1.0/1.0). Street gate still on.
 local DRIVE_SOFTCAP_TRACK_DAY = { driveSlipHeatMin = 0.97, driveSlipPropMin = 0.985, driveHighVCarcassScale = 0.91 }
 -- Vintage/bias-ply: gentler than street — historical rubber shouldn't need FWD soft-cap crutch.
 local DRIVE_SOFTCAP_VINTAGE = { driveSlipHeatMin = 0.95, driveSlipPropMin = 0.97, driveHighVCarcassScale = 0.88 }
 local DRIVE_SOFTCAP_OFF = { driveSlipHeatMin = 1.0, driveSlipPropMin = 1.0, driveHighVCarcassScale = 1.0 }
--- Purpose → soft-cap ENABLE pack (not a second profile table).
 local STREET_SOFTCAP_PURPOSES = {
     street = true, wet = true, winter = true, utility = true, commercial = true,
 }
@@ -268,8 +271,6 @@ local CHARACTER_SPORT = {
     grainRate = 0.00086, blisterRate = 0.00045,
     stintFadeRate = 1.15, camberWearMult = 1.06,
 }
--- Track Day LOCKED: between Sport Plus and Hard C2 (not Plus and Sport).
--- Plus blister #7e stays Plus-only; this pack is a Plus→Hard lerp.
 local CHARACTER_TRACK_DAY = {
     coldGripPower = 1.36, hotGripPower = 2.22,
     grainRate = 0.00042, blisterRate = 0.00062,
@@ -330,7 +331,7 @@ end
 -- Order matters: more specific tags BEFORE shorter substrings (sport_plus before sport).
 local DEFAULT_GRIP_COEFFS = {
     { "sport_plus", { 1.12, 0.22, -0.08 } },  -- Semi-slick / Scintilla lock peak ~1.26
-    { "track_day", { 1.15, 0.22, -0.08 } },   -- LOCKED ~Plus+2% peak (~1.29); 200TW-ish, not 40% Plus→Hard
+    { "track_day", { 1.15, 0.22, -0.08 } },
     { "supersoft_slick", { 1.46, 0.36, -0.12 } },
     { "soft_slick", { 1.42, 0.34, -0.12 } },
     { "medium_slick", { 1.38, 0.32, -0.12 } },
@@ -365,7 +366,6 @@ local STANDALONE_MODIFIERS = {
     drag = {
         adhesion = 0.58, airConductionRate = 0.018, airCoolingRate = 0.0175, brakeGainRate = 1.5,
         casingCompliance = 0.85, coreCoolRate = 0.021, coreVelCoolRate = 0.004, skinCoreConductance = 0.12,
-        -- Drag launch LOCKED (2026-08-30, native + ~1400 hp). 1.32 holds that level now that
         -- frictionCoef 1.3 on drag tires is applied only by BeamNG.
         gripMultiplier = 1.32, longGripMult = 1.18, latGripMult = 0.92,
         optimalPressure = 16, optimalTemp = 72, pressureSensitivity = 0.35, rollingRes = 1.55,
@@ -389,7 +389,6 @@ local STANDALONE_MODIFIERS = {
         bottomOutSensitivity = 1, scrubSensitivity = 1.3
     },
     vintage = {
-        -- Pass 5: cooler historical rubber (lower slip/work heat, more RR + thermal mass).
         -- Flavor via thermal window / RR / wear — gripMultiplier held (no μ dump).
         adhesion = 0.28, airConductionRate = 0.0135, airCoolingRate = 0.02375, brakeGainRate = 0.6,
         casingCompliance = 0.6, coreCoolRate = 0.0385, coreVelCoolRate = 0.0088, skinCoreConductance = 0.08,
@@ -515,9 +514,6 @@ local STANDALONE_MODIFIERS = {
     rally = {
         adhesion = 0.45, airConductionRate = 0.015, airCoolingRate = 0.0275, brakeGainRate = 1.05,
         casingCompliance = 0.55, coreCoolRate = 0.035, coreVelCoolRate = 0.008, skinCoreConductance = 0.08,
-        -- lat/long feel 2026-09-07: lat 1.07, long 1.02 (held).
-        -- Heat: tester feedback — abuse overshoot from 10.0/5.4 bump too aggressive;
-        -- revert slip/work to pre-bump 9.45/5.1 (2026-09-09). Wear/cooling held.
         gripMultiplier = 0.96, longGripMult = 1.02, latGripMult = 1.07,
         optimalPressure = 28, optimalTemp = 68, pressureSensitivity = 0.38, rollingRes = 1.12,
         staticCoolingRate = 0.08, slipHeatRate = 9.45, workHeatRate = 5.1, wearRate = 0.0006,
@@ -545,21 +541,12 @@ local STANDALONE_MODIFIERS = {
 -- Intermediate anchors (0.40 / 0.60 / 0.85) densify sport↔standard and AT↔MT leaps.
 local PROFILE_POINTS = {
     { tread = 0.30, profile = "sport_plus", mods = {
-        -- Scintilla sport plus WEAR LOCKED (#8). HEAT REOPENED 2026-09-10: cornering/load
-        -- workHeatRate cut ~12% (10.2→9.0); slip/rolling held — straight rolling deemed good.
-        -- ROUND-2 HEAT REOPEN (fleet mid-corner): work 9.0→8.55 (−5%) + slip 16.6→15.77 (−5%).
-        -- ROUND-3 HEAT REOPEN (fleet lateral-G): work 8.55→8.29 (−3%) + slip 15.77→14.82 (−6%);
-        -- rollingRes / wear locks held. Topology spread (g-boost/work coef/util/vert/velCool) shared.
-        -- Tester: ETK / low-camber street mid-speed turns, outside tire. velCool 0.50 held.
         adhesion = 0.52, airConductionRate = 0.015, airCoolingRate = 0.011, brakeGainRate = 1.35,
         casingCompliance = 0.45, coreCoolRate = 0.038, coreVelCoolRate = 0.0095, skinCoreConductance = 0.088,
         gripMultiplier = 1.04, longGripMult = 1.05, latGripMult = 1.02,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.75, rollingRes = 0.70,
-        -- ROUND-4: rear peak ~116C → under 100C. slip −8% / work −4%; rolling held.
         staticCoolingRate = 0.044, slipHeatRate = 13.63, workHeatRate = 7.96, wearRate = 0.0028,
-        -- Street scalar life LOCKED (Sport-ref ladder). Mild sc clock; feel = nodeWearScale 1.10.
         scalarTreadWearScale = 0.19,
-        -- Node feel LOCKED (Belasco 22 km FR Cond ~80% / peak ~20%). Band peak above Track Day.
         nodeWearScale = 1.10,
         treadInertia = 0.441, carcassInertia = 0.714, thermalReactionRate = 1.3, tempPlateau = 14,
         coldWidth = 52, hotWidth = 32, gripFloor = 0.24, coldWearMult = 1.908,
@@ -568,20 +555,12 @@ local PROFILE_POINTS = {
         bottomOutSensitivity = 1, scrubSensitivity = 1.15, skinVelCoolScale = 0.50, workHeatG0 = 0.04
     } },
     { tread = 0.40, profile = "track_day", mods = {
-        -- Track Day WEAR LOCKED. HEAT REOPENED 2026-09-10: workHeatRate 6.20→5.45 (~−12%);
-        -- slip 10.9 / rolling held. Abuse overshoot dial-back (cornering/load only).
-        -- ROUND-2 HEAT REOPEN: work 5.45→5.18 (−5%) + slip 10.9→10.355 (−5%); rolling/wear held.
-        -- ROUND-3 HEAT REOPEN: work 5.18→5.02 (−3%) + slip 10.355→9.734 (−6%); rolling/wear held.
         adhesion = 0.444, airConductionRate = 0.015, airCoolingRate = 0.020, brakeGainRate = 1.32,
         casingCompliance = 0.42, coreCoolRate = 0.036, coreVelCoolRate = 0.0083, skinCoreConductance = 0.090,
         gripMultiplier = 1.04, longGripMult = 1.08, latGripMult = 1.0,
         optimalPressure = 31, optimalTemp = 76, pressureSensitivity = 0.71, rollingRes = 0.88,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.068, slipHeatRate = 8.96, workHeatRate = 4.82, wearRate = 0.0033,
-        -- Street scalar life LOCKED (Sport-ref ladder). 108 km Belasco: sc still ~99% (secondary).
-        -- Feel cliff owned by nodeWearScale 1.0 — do not chase sc to match nd.
         scalarTreadWearScale = 0.20,
-        -- Node feel LOCKED (22 km FR ~82%; 108 km feel cliff). Below Plus 1.10 on band curve.
         nodeWearScale = 1.0,
         treadInertia = 0.471, carcassInertia = 0.763, thermalReactionRate = 1.22, tempPlateau = 16,
         coldWidth = 64, hotWidth = 52, gripFloor = 0.28, coldWearMult = 1.84,
@@ -590,20 +569,12 @@ local PROFILE_POINTS = {
         bottomOutSensitivity = 1.04, scrubSensitivity = 1.28, skinVelCoolScale = 0.80, workHeatG0 = 0.148
     } },
     { tread = 0.50, profile = "sport", mods = {
-        -- Sport WEAR LOCKED. HEAT REOPENED 2026-09-10: workHeatRate 5.61→4.94 (~−12%);
-        -- slip 9.68 / rolling held. Cornering/load overshoot dial-back.
-        -- ROUND-2 HEAT REOPEN: work 4.94→4.69 (−5%) + slip 9.68→9.20 (−5%); rolling/wear held.
-        -- ROUND-3 HEAT REOPEN: work 4.69→4.55 (−3%) + slip 9.20→8.65 (−6%); rolling/wear held.
-        -- Fleet mid-corner (not GT3): camber-proxy = slip+load, not dCamber/dt.
         adhesion = 0.42, airConductionRate = 0.015, airCoolingRate = 0.020, brakeGainRate = 1.2,
         casingCompliance = 0.5, coreCoolRate = 0.035, coreVelCoolRate = 0.008, skinCoreConductance = 0.076,
         gripMultiplier = 1.00, longGripMult = 1, latGripMult = 1,
         optimalPressure = 33, optimalTemp = 66, pressureSensitivity = 0.55, rollingRes = 0.82,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.065, slipHeatRate = 7.96, workHeatRate = 4.37, wearRate = 0.0026,
-        -- Street scalar life LOCKED ref (global ×0.15 Sport Belasco ~22 km band). Do not nudge.
         scalarTreadWearScale = 0.15,
-        -- Node feel LOCKED ref — today's Sport / PROFILE_POINTS baseline (1.0 = unchanged).
         nodeWearScale = 1.0,
         treadInertia = 0.483, carcassInertia = 0.782, thermalReactionRate = 1.2, tempPlateau = 18,
         coldWidth = 74, hotWidth = 55, gripFloor = 0.34, coldWearMult = 1.83,
@@ -613,15 +584,12 @@ local PROFILE_POINTS = {
     } },
     { tread = 0.60, profile = "standard", mods = {
         -- Mid sport↔standard (common passenger treadCoef ~0.55–0.65).
-        -- Pass 5: modest slip/work cut (~6%).
         adhesion = 0.41, airConductionRate = 0.01425, airCoolingRate = 0.02575, brakeGainRate = 1.05,
         casingCompliance = 0.55, coreCoolRate = 0.03675, coreVelCoolRate = 0.0084, skinCoreConductance = 0.072,
         gripMultiplier = 1.00, longGripMult = 1, latGripMult = 1,
         optimalPressure = 33, optimalTemp = 63, pressureSensitivity = 0.50, rollingRes = 0.82,
         staticCoolingRate = 0.0765, slipHeatRate = 8.25, workHeatRate = 4.27, wearRate = 0.000475,
-        -- Street scalar life LOCKED (Sport-ref ladder). Mild sc; feel = nodeWearScale 0.82.
         scalarTreadWearScale = 0.45,
-        -- Node feel LOCKED (Belasco 22 km FL Cond ~95%). Ease-off vs Sport 1.0.
         nodeWearScale = 0.82,
         treadInertia = 0.4935, carcassInertia = 0.799, thermalReactionRate = 1.225, tempPlateau = 17,
         coldWidth = 66, hotWidth = 55, gripFloor = 0.30, coldWearMult = 1.80,
@@ -632,15 +600,12 @@ local PROFILE_POINTS = {
     { tread = 0.70, profile = "standard", mods = {
         -- Modest overall μ bump (~+4% gm): street default; asphalt>loose gap via applyProfileSurfaceBias
         -- (street-family dry*1.02 / gravel|dirt*0.90 / mud*0.86) — not another global gm change.
-        -- Pass 5: modest slip/work cut (~6%).
         adhesion = 0.4, airConductionRate = 0.0135, airCoolingRate = 0.0275, brakeGainRate = 0.9,
         casingCompliance = 0.6, coreCoolRate = 0.0385, coreVelCoolRate = 0.0088, skinCoreConductance = 0.068,
         gripMultiplier = 1.00, longGripMult = 1, latGripMult = 1,
         optimalPressure = 33, optimalTemp = 60, pressureSensitivity = 0.45, rollingRes = 0.82,
         staticCoolingRate = 0.08, slipHeatRate = 7.9, workHeatRate = 4.22, wearRate = 0.0005,
-        -- Street scalar life LOCKED (Sport-ref ladder). Mild sc; feel = nodeWearScale 0.75.
         scalarTreadWearScale = 0.33,
-        -- Node feel LOCKED (Belasco 22 km FL Cond ~95%). Mildest performance-band ease-off.
         nodeWearScale = 0.75,
         treadInertia = 0.504, carcassInertia = 0.816, thermalReactionRate = 1.25, tempPlateau = 16,
         coldWidth = 58, hotWidth = 55, gripFloor = 0.26, coldWearMult = 1.77,
@@ -706,24 +671,14 @@ local PROFILE_POINTS = {
 }
 
 -- CONTINUOUS SLICK COMPOUND SPECTRUM: Chemically Decoupled Racing Compounds
--- HEAT REOPENED 2026-09-10: workHeatRate −~12% (cornering/load); slip + rollingRes held.
--- ROUND-2 HEAT REOPEN: work −5% + slip −5% each (fleet mid-corner spread); rolling/wear held.
--- ROUND-3 HEAT REOPEN: work −3% + slip −6% each (fleet lateral-G; slip-led); rolling/wear held.
--- Wear/scalar locks held. Tester: ETK / low-camber street — GT3 smoke only.
 local SLICK_SPECTRUM_POINTS = {
     { softness = 0.50, profile = "hard_slick", mods = {
-        -- Hard C2 WEAR LOCKED. HEAT REOPENED: work 7.8→6.86; slip 13.5 / rolling held.
-        -- ROUND-2: work 6.86→6.52 (−5%) + slip 13.5→12.83 (−5%).
-        -- ROUND-3: work 6.52→6.32 (−3%) + slip 12.83→12.06 (−6%).
         adhesion = 0.48, airConductionRate = 0.015, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.3, coreCoolRate = 0.038, coreVelCoolRate = 0.0088, skinCoreConductance = 0.110,
         gripMultiplier = 0.96, longGripMult = 1, latGripMult = 0.74,
         optimalPressure = 28, optimalTemp = 90, pressureSensitivity = 0.95, rollingRes = 0.98,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 11.10, workHeatRate = 6.07, wearRate = 0.00115,
-        -- Predictive scalar life OPEN from locked C5=4.7 (est. ~45–55 lap EOL).
         rollingWearCoef = 50, scalarTreadWearScale = 6.4,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.4536, carcassInertia = 0.7344, thermalReactionRate = 1.25, tempPlateau = 16.6,
         coldWidth = 61.6, hotWidth = 37.9, gripFloor = 0.24, coldWearMult = 1.86,
         hotWearMult = 3.15, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -731,18 +686,12 @@ local SLICK_SPECTRUM_POINTS = {
         bottomOutSensitivity = 1.1, scrubSensitivity = 1.55, skinVelCoolScale = 0.50, workHeatG0 = 0.04
     } },
     { softness = 0.575, profile = "hard_slick", mods = {
-        -- Hard mid HEAT REOPENED: work 8.1→7.13; slip/rolling held.
-        -- ROUND-2: work 7.13→6.77 (−5%) + slip 14.0→13.3 (−5%).
-        -- ROUND-3: work 6.77→6.57 (−3%) + slip 13.3→12.50 (−6%).
         adhesion = 0.50, airConductionRate = 0.01575, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.275, coreCoolRate = 0.0345, coreVelCoolRate = 0.008, skinCoreConductance = 0.115,
         gripMultiplier = 0.99, longGripMult = 1, latGripMult = 0.73,
         optimalPressure = 27.5, optimalTemp = 87, pressureSensitivity = 1.0, rollingRes = 1.00,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 11.50, workHeatRate = 6.31, wearRate = 0.00130,
-        -- Mid Hard↔Med predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 55, scalarTreadWearScale = 5.2,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.4263, carcassInertia = 0.6902, thermalReactionRate = 1.335, tempPlateau = 16.0,
         coldWidth = 59.5, hotWidth = 36.6, gripFloor = 0.24, coldWearMult = 1.905,
         hotWearMult = 3.225, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -750,18 +699,12 @@ local SLICK_SPECTRUM_POINTS = {
         bottomOutSensitivity = 1.1, scrubSensitivity = 1.60, skinVelCoolScale = 0.50, workHeatG0 = 0.04
     } },
     { softness = 0.65, profile = "medium_slick", mods = {
-        -- Medium C3 WEAR LOCKED. HEAT REOPENED: work 8.6→7.57; slip 15 / rolling held.
-        -- ROUND-2: work 7.57→7.19 (−5%) + slip 15.0→14.25 (−5%).
-        -- ROUND-3: work 7.19→6.97 (−3%) + slip 14.25→13.40 (−6%).
         adhesion = 0.52, airConductionRate = 0.0165, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.25, coreCoolRate = 0.031, coreVelCoolRate = 0.0072, skinCoreConductance = 0.120,
         gripMultiplier = 1.02, longGripMult = 1, latGripMult = 0.72,
         optimalPressure = 27, optimalTemp = 84, pressureSensitivity = 1.05, rollingRes = 1.02,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 12.33, workHeatRate = 6.69, wearRate = 0.00135,
-        -- Predictive scalar life OPEN from locked C5=4.7 (est. ~30–40 lap EOL).
         rollingWearCoef = 42, scalarTreadWearScale = 9.3,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.399, carcassInertia = 0.646, thermalReactionRate = 1.42, tempPlateau = 15.5,
         coldWidth = 57.5, hotWidth = 35.4, gripFloor = 0.24, coldWearMult = 1.95,
         hotWearMult = 3.30, grainTempRatio = 0.78, blisterTempRatio = 1.65, waterDrainage = 0,
@@ -769,18 +712,12 @@ local SLICK_SPECTRUM_POINTS = {
         bottomOutSensitivity = 1.1, scrubSensitivity = 1.65, skinVelCoolScale = 0.60, workHeatG0 = 0.04
     } },
     { softness = 0.725, profile = "medium_slick", mods = {
-        -- Medium mid HEAT REOPENED: work 8.9→7.83; slip/rolling held.
-        -- ROUND-2: work 7.83→7.44 (−5%) + slip 15.5→14.73 (−5%).
-        -- ROUND-3: work 7.44→7.22 (−3%) + slip 14.73→13.85 (−6%).
         adhesion = 0.535, airConductionRate = 0.016875, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.235, coreCoolRate = 0.031, coreVelCoolRate = 0.0074, skinCoreConductance = 0.122,
         gripMultiplier = 1.05, longGripMult = 1, latGripMult = 0.71,
         optimalPressure = 26.5, optimalTemp = 83, pressureSensitivity = 1.125, rollingRes = 1.05,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 12.74, workHeatRate = 6.93, wearRate = 0.00155,
-        -- Mid Med↔Soft predictive scalar (wearProd-adjusted est.).
         rollingWearCoef = 48, scalarTreadWearScale = 7.1,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.3717, carcassInertia = 0.6018, thermalReactionRate = 1.485, tempPlateau = 15.3,
         coldWidth = 56.8, hotWidth = 34.9, gripFloor = 0.24, coldWearMult = 1.971,
         hotWearMult = 3.375, grainTempRatio = 0.78, blisterTempRatio = 1.635, waterDrainage = 0,
@@ -788,19 +725,12 @@ local SLICK_SPECTRUM_POINTS = {
         bottomOutSensitivity = 1.15, scrubSensitivity = 1.70, skinVelCoolScale = 0.60, workHeatG0 = 0.04
     } },
     { softness = 0.80, profile = "soft_slick", mods = {
-        -- Soft C4 WEAR + scalar LOCKED. HEAT REOPENED: work 9.8→8.62; slip 17.5 / rolling held.
-        -- ROUND-2: work 8.62→8.19 (−5%) + slip 17.5→16.63 (−5%).
-        -- ROUND-3: work 8.19→7.94 (−3%) + slip 16.63→15.63 (−6%).
         adhesion = 0.55, airConductionRate = 0.01725, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.22, coreCoolRate = 0.031, coreVelCoolRate = 0.0076, skinCoreConductance = 0.130,
         gripMultiplier = 1.08, longGripMult = 1, latGripMult = 0.70,
         optimalPressure = 26, optimalTemp = 82, pressureSensitivity = 1.2, rollingRes = 1.22,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 14.38, workHeatRate = 7.62, wearRate = 0.00255,
-        -- Soft C4 scalar life LOCKED 2026-09-06: 4.7 (Belasco ~37 km fronts sc~69–70% sc-led;
-        -- mid-band 60–70% @ 35–45 km). Same scale as C5; longer life via lower wearProd. Heat held.
         rollingWearCoef = 70, scalarTreadWearScale = 4.7,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.3444, carcassInertia = 0.5576, thermalReactionRate = 1.55, tempPlateau = 15.1,
         coldWidth = 56.1, hotWidth = 34.5, gripFloor = 0.24, coldWearMult = 2.35,
         hotWearMult = 4.70, grainTempRatio = 0.78, blisterTempRatio = 1.62, waterDrainage = 0,
@@ -808,17 +738,12 @@ local SLICK_SPECTRUM_POINTS = {
         bottomOutSensitivity = 1.2, scrubSensitivity = 1.75, skinVelCoolScale = 0.85, workHeatG0 = 0.04
     } },
     { softness = 0.875, profile = "supersoft_slick", mods = {
-        -- C5 scalar LOCKED 4.7. HEAT REOPENED 2026-09-10: work 10.7→9.42; slip 19.5 / rolling held.
-        -- ROUND-2: work 9.42→8.95 (−5%) + slip 19.5→18.53 (−5%).
-        -- ROUND-3: work 8.95→8.68 (−3%) + slip 18.53→17.42 (−6%).
         adhesion = 0.565, airConductionRate = 0.017625, airCoolingRate = 0.014, brakeGainRate = 1.5,
         casingCompliance = 0.205, coreCoolRate = 0.031, coreVelCoolRate = 0.0078, skinCoreConductance = 0.138,
         gripMultiplier = 1.11, longGripMult = 1, latGripMult = 0.69,
         optimalPressure = 25.5, optimalTemp = 80, pressureSensitivity = 1.275, rollingRes = 1.39,
-        -- ROUND-4: slip −8% / work −4%; rolling/wear held.
         staticCoolingRate = 0.060, slipHeatRate = 16.03, workHeatRate = 8.33, wearRate = 0.00355,
         rollingWearCoef = 92, scalarTreadWearScale = 4.7,
-        -- Predictive grip-window starting point (Sport Plus shape scaled by this opt). Not Belasco-locked.
         treadInertia = 0.3171, carcassInertia = 0.5134, thermalReactionRate = 1.615, tempPlateau = 14.7,
         coldWidth = 54.7, hotWidth = 33.7, gripFloor = 0.24, coldWearMult = 2.73,
         hotWearMult = 6.025, grainTempRatio = 0.78, blisterTempRatio = 1.59, waterDrainage = 0,
@@ -1036,7 +961,6 @@ local ATV_UTV_SPECTRUM_POINTS = {
 }
 
 -- CONTINUOUS RETRO SPECTRUM: Flexible Cross-Ply Bias overlays up to Classic Radial Belts
--- Pass 5: lower race-like heat gen, more RR + thermal mass (historical rubber; no gm dump).
 local VINTAGE_SPECTRUM_POINTS = {
     { tread = 0.50, profile = "vintage_biasply_vintage", mods = {
         adhesion = 0.28, airConductionRate = 0.0135, airCoolingRate = 0.02375, brakeGainRate = 0.6,
@@ -1083,7 +1007,6 @@ local VINTAGE_SPECTRUM_POINTS = {
 }
 
 -- Phase 4/5: stamp duty soft-cap magnitudes onto spectra / street-like standalones.
--- Street continuum: Sport HEAT LOCKED (own pack) → Plus → Track Day (Plus→Hard lerp). Hard C2 / slicks OFF.
 -- Vintage gentler pack; drag/drift/rally keep DEFAULT 1.0 (purpose skips the enable path).
 stampSpectrumDriveSoftcap(PROFILE_POINTS, function(name)
     if name == "sport_plus" then return DRIVE_SOFTCAP_SPORT_PLUS end

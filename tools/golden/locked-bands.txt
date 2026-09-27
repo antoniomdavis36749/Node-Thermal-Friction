@@ -1,0 +1,49 @@
+const CAMBER_COL_BASE 0.006000
+const CAMBER_COL_SLICK_SCALE_MAX 0.220000
+const CAMBER_COL_SLICK_SCALE_MIN 0.080000
+const CAMBER_COL_SPORTPLUS_SCALE_MAX 0.450000
+const CAMBER_COL_SPORTPLUS_SCALE_MIN 0.300000
+const CAMBER_COL_SPORT_SCALE_MAX 0.580000
+const CAMBER_COL_SPORT_SCALE_MIN 0.400000
+const CAMBER_COL_STANDARD_SCALE_MAX 0.680000
+const CAMBER_COL_STANDARD_SCALE_MIN 0.520000
+const CAMBER_COL_TRACKDAY_SCALE_MAX 0.400000
+const CAMBER_COL_TRACKDAY_SCALE_MIN 0.260000
+const CAMBER_COL_TRUCK_SCALE_MAX 0.780000
+const CAMBER_COL_TRUCK_SCALE_MIN 0.620000
+const CAMBER_COL_VINTAGE_SCALE_MAX 0.740000
+const CAMBER_COL_VINTAGE_SCALE_MIN 0.580000
+const CAMBER_DEG_ARM 1.000000
+const CAMBER_DEG_ARM_SLICK 2.000000
+const CAMBER_DEG_ZERO 0.850000
+const CAMBER_FRAC_CAP 1.150000
+const CAMBER_FRAC_REF 4.000000
+const CAMBER_SLIP_F_MIN 40.000000
+const CAMBER_SLIP_F_REF 180.000000
+const SCALAR_GRIP_FADE_FLOOR 0.700000
+profile drag.gripMultiplier 1.320000
+profile drag.longGripMult 1.180000
+profile soft_slick.scalarTreadWearScale 4.700000
+profile sport.nodeWearScale 1.000000
+profile sport_plus.nodeWearScale 1.100000
+profile standard_060.nodeWearScale 0.820000
+profile standard_070.nodeWearScale 0.750000
+profile supersoft_slick.scalarTreadWearScale 4.700000
+profile track_day.nodeWearScale 1.000000
+stick 0.00 0.000000 11.668415
+stick 0.12 0.120000 11.921099
+stick 0.18 0.180000 8.028719
+stick 0.24 0.240000 4.054050
+stick 0.30 0.300000 0.000000
+stick 0.31 0.310000 0.000000
+topo driveLayoutDampEnable 1.000000
+topo drivePropAwdSoftCarcassScale 0.380000
+topo drivePropAwdSoftScale 0.450000
+topo drivePropFwdSoftCarcassScale 0.480000
+topo drivePropFwdSoftScale 0.580000
+topo driveStreetSlipCapEnable 0.000000
+topo gripLevelScale 0.800000
+topo stickFlexGain 0.220000
+topo stickFlexSlipRatioFull 0.120000
+topo stickFlexSlipRatioZero 0.300000
+topo stickFlexSlipRef 0.450000

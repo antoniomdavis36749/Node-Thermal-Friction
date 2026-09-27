@@ -25,26 +25,77 @@ function M.install(F, deps)
     local setDrivenWheelCount = deps.setDrivenWheelCount
     local setDriveLayoutMode = deps.setDriveLayoutMode
     local TempCarcassToAvgTemp = deps.TempCarcassToAvgTemp
+    local axleLoadSum, axleLoadCount = {}, {}
+
+    -- Axles and front/rear from hub positions along the car's forward axis (not wheel names).
+    -- Wheels closer than axleGroupGapM share an axle (duals, steered pairs). Single-axle
+    -- vehicles keep the name-based isFront from init.
+    local function resolveAxleGeometry(wheels)
+        local fwd = objCall("getDirectionVector")
+        if not fwd then return end
+        local coords = {}
+        for i, wd in pairs(wheels.wheelRotators) do
+            local data = tyreData[i]
+            local p1 = data and wd.node1 and objCall("getNodePosition", wd.node1)
+            if p1 then
+                local x, y, z = p1.x, p1.y, p1.z
+                local p2 = wd.node2 and objCall("getNodePosition", wd.node2)
+                if p2 then x, y, z = (x + p2.x) * 0.5, (y + p2.y) * 0.5, (z + p2.z) * 0.5 end
+                coords[#coords + 1] = { i = i, c = x * fwd.x + y * fwd.y + z * fwd.z }
+            end
+        end
+        if #coords > 0 then
+            table.sort(coords, function(a, b) return a.c > b.c end)
+            local gap = topo.axleGroupGapM or 0.35
+            local axleId, lastC = 0, nil
+            for k = 1, #coords do
+                if not lastC or (lastC - coords[k].c) > gap then axleId = axleId + 1 end
+                lastC = coords[k].c
+                tyreData[coords[k].i].axleId = axleId
+            end
+            local front, rear = coords[1].c, coords[#coords].c
+            if front - rear > 0.5 then
+                local mid = (front + rear) * 0.5
+                for k = 1, #coords do
+                    tyreData[coords[k].i].isFront = coords[k].c > mid
+                end
+            end
+        end
+        -- 0 = no hub position: skipped by axle load sums, never re-probed this spawn.
+        for i in pairs(wheels.wheelRotators) do
+            if tyreData[i] and tyreData[i].axleId == nil then tyreData[i].axleId = 0 end
+        end
+    end
 
     F.prepareWheelFrame = function(dt, localizedEnvTemp, invQuat, upVector, airspeed)
         local wheels = getWheels()
         if not wheels or not wheels.wheelRotators then return end
+        for i in pairs(wheels.wheelRotators) do
+            if tyreData[i] and tyreData[i].axleId == nil then
+                resolveAxleGeometry(wheels)
+                break
+            end
+        end
         -- P1: count driven wheels + F/R layout for AWD / FWD Soft-like damp
         local nDriven = 0
         local nFrontDriven = 0
         local nRearDriven = 0
         local propThresh = topo.drivePropDrivenThreshNm or 40
-        for _, wdCount in pairs(wheels.wheelRotators) do
+        for iCount, wdCount in pairs(wheels.wheelRotators) do
             if abs(wdCount.propulsionTorque or 0) > propThresh then
                 nDriven = nDriven + 1
-                local nLower = string.lower(tostring(wdCount.name or ""))
-                if string.match(nLower, "^f") then
+                local isFront = tyreData[iCount] and tyreData[iCount].isFront
+                if isFront == nil then
+                    isFront = string.match(string.lower(tostring(wdCount.name or "")), "^f") and true or false
+                end
+                if isFront then
                     nFrontDriven = nFrontDriven + 1
-                elseif string.match(nLower, "^r") then
+                else
                     nRearDriven = nRearDriven + 1
                 end
             end
         end
+        local vehSpeed = F.getVehicleAirspeedRef and F.getVehicleAirspeedRef() or 0
         setDrivenWheelCount(nDriven)
         if nFrontDriven > 0 and nRearDriven > 0 then
             setDriveLayoutMode("awd")
@@ -87,8 +138,26 @@ function M.install(F, deps)
                 local airborneState = (not wd.contactMaterialID1 or wd.contactMaterialID1 == -1) or (loadRaw <= 0)
                 w.loadRaw, w.isAirborne = loadRaw, airborneState
 
+                -- This tire's own static load: settles while the car is slow, holds while driving.
+                -- Until the first slow second it tracks load slowly so rolling spawns still get a value.
+                if not airborneState and loadRaw > 50 then
+                    local slow = vehSpeed < (topo.staticLoadMaxSpeed or 1.5)
+                    local ref = data.staticLoadN
+                    if not ref then
+                        ref = loadRaw
+                    elseif slow or not data.staticLoadSettled then
+                        ref = ref + (loadRaw - ref) * min(1.0, dt / (slow and 0.5 or 2.0))
+                    end
+                    data.staticLoadN = ref
+                    if slow then
+                        data.staticLoadSlowT = (data.staticLoadSlowT or 0) + dt
+                        if data.staticLoadSlowT >= 1.0 then data.staticLoadSettled = true end
+                    end
+                end
+
                 -- This wheel's slip angle toward its own outer (+) or inner (-) shoulder, from hub velocity.
                 local latTarget = 0
+                local groundSpeed = vehSpeed
                 if axX and not airborneState and wd.node1 and wd.node2 then
                     local v1 = objCall("getNodeVelocityVector", wd.node1)
                     local v2 = objCall("getNodeVelocityVector", wd.node2)
@@ -97,8 +166,12 @@ function M.install(F, deps)
                         local vAxis = (vx * axX + vy * axY + vz * axZ) * outDir
                         local vPlane = sqrt(max(0, vx * vx + vy * vy + vz * vz - vAxis * vAxis))
                         latTarget = max(-1, min(1, atan2(vAxis, max(3.0, vPlane)) / (topo.latSlipAngleRef or 0.10)))
+                        groundSpeed = sqrt(vx * vx + vy * vy + vz * vz)
                     end
                 end
+                w.groundSpeed = groundSpeed
+                -- Patch slip speed over ground speed; the 3 m/s floor keeps crawling from reading as a slide.
+                w.slipRatio = abs(wd.lastSlip or 0) / max(3.0, groundSpeed)
                 local latPrev = w.latSlipDir or 0
                 w.latSlipDir = latPrev + (latTarget - latPrev) * min(1.0, dt / max(0.02, topo.latSlipEmaTau or 0.10))
 
@@ -180,6 +253,24 @@ function M.install(F, deps)
             end
         end
 
+        -- Mean load of each axle: left/right split without the car's weight, aero or pitch.
+        for k in pairs(axleLoadSum) do axleLoadSum[k], axleLoadCount[k] = nil, nil end
+        for i in pairs(wheels.wheelRotators) do
+            local data, w = tyreData[i], wheelCache[i]
+            local id = data and data.axleId
+            if w and id and id > 0 then
+                axleLoadSum[id] = (axleLoadSum[id] or 0) + (w.loadRaw or 0)
+                axleLoadCount[id] = (axleLoadCount[id] or 0) + 1
+            end
+        end
+        for i in pairs(wheels.wheelRotators) do
+            local data, w = tyreData[i], wheelCache[i]
+            local id = data and data.axleId
+            if w then
+                local n = id and axleLoadCount[id] or 0
+                w.axleLoadMean = (n >= 2) and (axleLoadSum[id] / n) or nil
+            end
+        end
     end
 
     F.runFixedPhysicsSteps = function(dt, localizedEnvTemp)
@@ -233,7 +324,7 @@ function M.install(F, deps)
                         if w.isTireDeflated or w.isBroken then
                             F.applyWheelFriction(wheel, 1.0)
                         else
-                        -- Raw thermal grip → native lock (brake lock fade disabled; see ENABLE_BRAKE_LOCK_FADE)
+                            -- Raw thermal grip. Brake lock fade stays off; BeamNG owns lock.
                             local longGrip = data.lastLongGripRaw or data.lastLongGrip or 1.0
                             local latGrip = data.lastLatGripRaw or data.lastLatGrip or longGrip
                             local fade = 0

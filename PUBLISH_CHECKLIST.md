@@ -1,8 +1,7 @@
 # BeamNG Repo publish checklist
 
-> **Deferred:** Public BeamNG Repo **update** is still paused. Private tester **`0.2.1`
-> (Beta)** is the current small-group drop (`RELEASE_CHECKLIST_TESTERS.md`). Use this
-> checklist only if you deliberately resume a public zip upload.
+> **Public source:** `main` on Node-Thermal-Friction is the 0.2.2 tree. The BeamNG
+> resource zip is a separate upload of `NodeThermalFriction.zip` from `Pack-Release.ps1`.
 
 Branches: **`testing/main`** (active polish) → merge to **`main`** (GitHub default / Repo source link)  
 Working folder: `Node-Thermal-Friction-dev` (local git sync under `mods/unpacked/`)  

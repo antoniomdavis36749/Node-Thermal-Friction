@@ -56,6 +56,7 @@ function M.install(F, deps)
         guiStream.packAirDelta = 0
         guiStream.envTempRange = 0
         guiStream.stintKm = 0
+        guiStream.verifyNote = ""
         guiStream.odoKm = 0
         guiStream.airspeedMps = 0
         guiStream.airspeedMph = 0
@@ -299,7 +300,8 @@ function M.install(F, deps)
                             -- Token after last underscore (FL / wheel_FL) so "wheel" does not fake left.
                             local n = string.lower(tostring(wd.name or entry.name or ""))
                             local token = string.match(n, "([^_]+)$") or n
-                            local isFront = not not string.match(token, "^f")
+                            local isFront = data.isFront
+                            if isFront == nil then isFront = not not string.match(token, "^f") end
                             if isFront then frontLoad = frontLoad + loadN else rearLoad = rearLoad + loadN end
                             if string.find(token, "l", 1, true) then
                                 leftLoad = leftLoad + loadN
@@ -413,6 +415,48 @@ function M.install(F, deps)
                 guiStream.weightLeftPct, guiStream.weightRightPct = 0, 0
             end
 
+    end
+
+    -- Player Classic/Crew payload. Pitwall keeps the full guiStream.
+    local PLAYER_WHEEL_KEYS = {
+        "name", "profile", "tempCategory", "condition", "conditionScalar", "conditionNode",
+        "nodeWearPeak", "tyreGrip", "pressure", "targetHotPressure", "optimalPressure",
+        "avgTemp", "working_temp", "rimTemp", "stintFade", "graining", "blistering",
+        "camber", "initialPressure", "surfaceDamage",
+    }
+    local playerStream = { data = {}, playerLean = 1 }
+
+    F.syncPlayerHudStream = function()
+        playerStream.vehId = guiStream.vehId
+        playerStream.resetGen = guiStream.resetGen
+        playerStream.mpRemote = guiStream.mpRemote
+        playerStream.streamTag = guiStream.streamTag
+        local src = guiStream.data or {}
+        local dst = playerStream.data
+        for i = 1, #src do
+            local s = src[i]
+            local d = dst[i]
+            if not d then
+                d = { temp = { 0, 0, 0, 0, 0, 0, 0, 0 }, zoneCondition = { 100, 100, 100 } }
+                dst[i] = d
+            end
+            if s then
+                for k = 1, #PLAYER_WHEEL_KEYS do
+                    local key = PLAYER_WHEEL_KEYS[k]
+                    d[key] = s[key]
+                end
+                local st, dt = s.temp, d.temp
+                if st and dt then
+                    for ti = 1, 8 do dt[ti] = st[ti] end
+                end
+                local sz, dz = s.zoneCondition, d.zoneCondition
+                if sz and dz then
+                    dz[1], dz[2], dz[3] = sz[1], sz[2], sz[3]
+                end
+            end
+        end
+        for i = #src + 1, #dst do dst[i] = nil end
+        return playerStream
     end
 end
 

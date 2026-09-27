@@ -2,6 +2,8 @@
 
 Internal experimental rule. Clean-room node wear later must obey this.
 
+Live procedure and the open A/B: `tools/VERIFICATION.md`. Read it before a drive or a retune.
+
 ## Goal
 
 One grip story: thermal-core (heat, PSI, compounds, surfaces) plus
@@ -12,7 +14,7 @@ future node wear (local contact damage). Never two absolute friction writers.
 | Layer | Owns | Must not |
 | --- | --- | --- |
 | **Thermal core** (current Node-Thermal Friction) | Skin/carcass/rim/air temps, ducts, PSI, compound curves, surface bias, wheel-level baseline μ via `setFrictionThermalSensitivity` | Per-node mass, local flat geometry, a second thermal model |
-| **Node wear** (future, clean-room) | Per-tread-node wear energy, relative contact friction/mass, flats / camber scallop feel | Second PSI model, second full thermal sim, absolute overwrite of wheel μ without reading thermal baseline |
+| **Node wear** (Policy A, live) | Per-tread-node wear energy, relative contact friction/mass, flats / camber scallop feel | Second PSI model, second full thermal sim, absolute overwrite of wheel μ without reading thermal baseline |
 | **UI** | Pitwall thermals + (later) wear map | Two competing tire apps as the default story |
 
 ## Friction policy (pick before node spike)
@@ -38,6 +40,22 @@ Smoked on Scintilla GT3 and a normal car. Do not reopen without a new Belasco mi
 - `frictionCoef` and JBeam load sensitivity stay with BeamNG. NTF level is `gripLevelScale` **0.80**. Drag `gripMultiplier` **1.32**.
 - Shoulder heat follows each wheel's slip angle and standard camber (`camberStd`). Chassis G does not pick a shoulder.
 - Street residual-slip soft-cap stays **off** until a dedicated A/B.
+
+## Phase 2 tire-normalized inputs — CODED 2026-09-26, GT3 smoke passed
+
+Scintilla GT3 smoke passed (tip-over, still feels natural). FWD hard exits with damps on: small drive-tire heat bump, like RWD (smoke). Street heat is logged at 26.8 km on the balanced Corse (`tools/output/corse-street-bank-telemetry.csv`): both temperatures plateaued by 10 km, and native temperature stayed a second thermometer. Layout damp stays on after the FWD medium-slick A/B. Stick flex fade is logged: zero above slip ratio 0.30 (`tools/history/LOCKS.md`). Drag `longGripMult` 1.18 held on two Burnside launches. Locked-band outputs are in `tools/golden/locked-bands.txt`. The open card is stripping NodeProbe from the release zip (`tools/VERIFICATION.md`).
+
+Unchanged on an even four-wheel 1500 kg car with 0.33 m wheels; other cars move toward per-tire physics.
+
+- Axles and front/rear come from hub positions along the car (`axleGroupGapM`), not wheel names.
+- Each tire keeps its own static load (`data.staticLoadN`), settled below `staticLoadMaxSpeed`.
+- Sliding wear load term = `slideWearLoadShare` × load / own static load (was load / vehicle mass).
+- Blister cornering work = the wheel's slip angle × its share of the axle load (was chassis G).
+- Drive Nm gates × radius × static load / `driveRefWheelNm` (was √mass). `driveLayoutDampEnable`
+  A/Bs the FWD/AWD Soft and AWD excess damps.
+- Stick flex fades out between native slip ratio `stickFlexSlipRatioFull` and `Zero`.
+- Hydroplaning reads hub ground speed; the chassis-G convection bonus is gone.
+- Tip-over lateral cut compares the tire with its axle's mean load (`tipOverLoadRef = "axle"`).
 
 ## Clean-room
 

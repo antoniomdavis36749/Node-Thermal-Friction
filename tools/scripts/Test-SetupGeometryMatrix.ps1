@@ -40,12 +40,10 @@ function Calc-BiasWeights([double]$loadBias, [double]$pressureRatio) {
   return @{ L = $weightLeft / $sum; C = $weightCenter / $sum; R = $weightRight / $sum }
 }
 
-# Live combinedBias (prepareWheelFrame) -- SIGNED lateral G (gy_gfx, vehicle-right positive)
-# gLatBias = g_lat * wheelDir * 0.28; outer shoulder of each wheel heats under lateral load.
-# g_mag (unsigned) still owns the heat-scale paths; only bias directionality changes.
-function Get-CombinedBias([double]$camberDeg, [double]$gLat, [double]$wheelDir = 1.0) {
-  $gLatBias = $gLat * $wheelDir * 0.28
-  return (-$camberDeg * 0.12 * $wheelDir) + $gLatBias
+# Live combinedBias. camberStd is already side-consistent (negative = top-in).
+# latSlipDir > 0 slides toward the outer shoulder. wheelDir does not enter.
+function Get-CombinedBias([double]$camberStd, [double]$latSlipDir) {
+  return (-$camberStd * 0.12) - (0.28 * $latSlipDir)
 }
 
 # Live pressure grip scales (CalcPressureGripScales, dry paved)
@@ -140,11 +138,11 @@ function Simulate-Corner([hashtable]$cfg, [double]$camberDeg, [double]$toeDeg, [
   $slipBase = 0.18
   $toeScrub = Get-ToeScrub $toeDeg $surfSpeed ([double]$cfg.ScrubSens)
   $slip = $slipBase + $toeScrub
-  $dynSlip = ($slip + $toeScrub) * (1.0 + [math]::Abs($gMag) * 0.15)
+  $dynSlip = $slip
 
-  # Live: signed g_lat * wheelDir; gSignedForBias is signed lateral G (vehicle-right positive)
-  $gLatForBias = if ($null -ne $gSignedForBias) { $gSignedForBias } else { $gMag }
-  $combinedBias = Get-CombinedBias $camberDeg $gLatForBias $wheelDir
+  $latSlipDir = 0.0
+  if ($null -ne $gSignedForBias) { $latSlipDir = [double]$gSignedForBias }
+  $combinedBias = Get-CombinedBias $camberDeg $latSlipDir
 
   $airT = $amb + 8.0
   $dynPsi = Get-DynamicPsi $coldPsi $airT $amb ([double]$cfg.Compliance)
@@ -166,7 +164,7 @@ function Simulate-Corner([hashtable]$cfg, [double]$camberDeg, [double]$toeDeg, [
 
   for ($i = 0; $i -lt $n; $i++) {
     $seh = $dynSlip / (1.0 + $dynSlip * 0.12)
-    $gWork = [math]::Max(0.0, $gMag - 0.22)
+    $gWork = 0.0
     $wArr = @([double]$weights.L, [double]$weights.C, [double]$weights.R)
     for ($z = 0; $z -lt 3; $z++) {
       $w = $wArr[$z]
@@ -176,7 +174,7 @@ function Simulate-Corner([hashtable]$cfg, [double]$camberDeg, [double]$toeDeg, [
       $raw = $raw + ((0.0078 * $seh * $seh * $loadCoeff * [double]$cfg.SlipHeat) +
         (0.145 * $rel * [double]$cfg.WorkHeat * 1.1 / (1.0 + $seh * $seh))) * 1.05 / $tyreW
       $effAir = $airspeed / (1.0 + $airspeed / 220.0)
-      $retain = 1.0 / (1.0 + [math]::Min(0.18, [math]::Max(0.0, $gMag - 0.20) * 0.22))
+      $retain = 1.0
       $velCool = [math]::Pow($effAir, 0.8) * [double]$cfg.AirCool * 0.155 * $retain
       $conv = ($skin[$z] - $amb) * ([double]$cfg.StaticCool * 0.04 + $velCool)
       $trackCond = ($skin[$z] - $track) * 0.012 * $w
@@ -278,18 +276,12 @@ foreach ($t in @(0.0, 0.15, 0.5, 1.0, 2.0)) {
 }
 
 [void]$sb.AppendLine('')
-[void]$sb.AppendLine('--- Instant: combinedBias (SIGNED g_lat; wheelDir=+1 left, -1 right) ---')
-[void]$sb.AppendLine('  Left corner: g_lat=-1.05 -> outer(right) wheel wheelDir=-1 gets bias>0 (rightRing hot)')
-[void]$sb.AppendLine('  Right corner: g_lat=+1.05 -> outer(left) wheel wheelDir=+1 gets bias<0 (leftRing hot)')
+[void]$sb.AppendLine('--- Instant: combinedBias (camberStd, latSlipDir). Same on both sides of the car. ---')
 foreach ($c in @(0.0, -2.0, -4.0)) {
-  foreach ($gLat in @(0.0, 1.05, -1.05)) {
-    foreach ($wd in @(1.0, -1.0)) {
-      $b = Get-CombinedBias $c $gLat $wd
-      $side = if ($wd -eq 1.0) { 'L-wheel' } else { 'R-wheel' }
-      $corner = if ($gLat -gt 0.1) { 'Rcorner' } elseif ($gLat -lt -0.1) { 'Lcorner' } else { 'straight' }
-      $line = '  camber={0:N1}deg gLat={1:N2} {2} wDir={3:N0} -> bias={4:N3}' -f $c, $gLat, $corner, $wd, $b
-      [void]$sb.AppendLine($line)
-    }
+  foreach ($lat in @(0.0, 1.0, -1.0)) {
+    $b = Get-CombinedBias $c $lat
+    $line = '  camberStd={0:N1}deg latSlip={1:N2} -> bias={2:N3}' -f $c, $lat, $b
+    [void]$sb.AppendLine($line)
   }
 }
 
@@ -446,13 +438,13 @@ $line = '  Rake F load +12% vs -12%: avgSkin {0:N1}->{1:N1}  wear/min {2:N3}->{3
 [void]$sb.AppendLine('Caster     | Absent                            | n/a                       | Leave alone')
 [void]$sb.AppendLine('Rake       | Implicit via BeamNG downForce     | F/R load scales heat/wear | Soft path OK;')
 [void]$sb.AppendLine('           | (no explicit pitch/rake)          |                           | no rake input')
-[void]$sb.AppendLine('g->bias    | Signed g_lat*wheelDir*0.28        | Outer shoulder per wheel  | Implemented  ')
+[void]$sb.AppendLine('shoulder   | camberStd and latSlipDir          | wheelDir does not flip it | Live         ')
 
 [void]$sb.AppendLine('')
 [void]$sb.AppendLine('=== RANKED RECOMMENDATIONS ===')
 [void]$sb.AppendLine('1. KEEP PSI path (three-band perfect/normal/outer; stock fills land mild). Camber + toe OK.')
 [void]$sb.AppendLine('2. LEAVE CASTER alone (correct: trail/KPI is chassis steering feel, not tyre mu).')
-[void]$sb.AppendLine('3. DONE: signed g_lat*wheelDir*0.28 into combinedBias -- outer shoulder per wheel under lateral load.')
+[void]$sb.AppendLine('3. Shoulder bias is camberStd and this wheel slip direction. Chassis lateral G is not an input.')
 [void]$sb.AppendLine('4. DONE: toe soft-sat v/(1+v/Vref) Vref=70 m/s -- scrub persists more realistically at mid-high speed.')
 [void]$sb.AppendLine('5. OPTIONAL later: explicit rake unused; F/R load from BeamNG already covers pitch transfer.')
 [void]$sb.AppendLine('6. Pressure window retuned for stock fills -- see Test-PressureWindow.ps1.')
@@ -481,9 +473,35 @@ $line = '  Rake F load +12% vs -12%: avgSkin {0:N1}->{1:N1}  wear/min {2:N3}->{3
 [void]$sb.AppendLine(('c4_lat={0:N3}' -f $c4.LatGrip))
 [void]$sb.AppendLine(('cam_window={0:N2}' -f $c0.CamWindow))
 
+$fail = 0
+$sameSide = Get-CombinedBias -2.0 1.0
+$otherSide = Get-CombinedBias -2.0 1.0
+if ([math]::Abs($sameSide - $otherSide) -gt 1e-6) {
+  [void]$sb.AppendLine(' FAIL: camberStd bias is not side-consistent.')
+  $fail++
+}
+$outward = Get-CombinedBias -2.0 1.0
+$inward = Get-CombinedBias -2.0 -1.0
+if (-not ($outward -lt $inward)) {
+  [void]$sb.AppendLine(' FAIL: outward slip did not move bias toward the outer shoulder.')
+  $fail++
+} else {
+  [void]$sb.AppendLine((' OK: camberStd -2, outward bias={0:N3}, inward bias={1:N3}. wheelDir is not in the formula.' -f $outward, $inward))
+}
+$hotG = Simulate-Corner $sp -2.0 0.0 31.0 $baseLoad 1.40
+$calmG = Simulate-Corner $sp -2.0 0.0 31.0 $baseLoad 0.10
+$hotAvg = ($hotG.AvgL + $hotG.AvgC + $hotG.AvgR) / 3.0
+$calmAvg = ($calmG.AvgL + $calmG.AvgC + $calmG.AvgR) / 3.0
+if ([math]::Abs($hotAvg - $calmAvg) -gt 0.05) {
+  [void]$sb.AppendLine((' FAIL: chassis G changed skin {0:N2} vs {1:N2}.' -f $calmAvg, $hotAvg))
+  $fail++
+} else {
+  [void]$sb.AppendLine((' OK: chassis G 0.10 and 1.40 share skin {0:N1} C.' -f $hotAvg))
+}
+
 $text = $sb.ToString()
 Set-Content -Path $outPath -Value $text -Encoding UTF8
 Write-Host $text
 Write-Host ""
 Write-Host "Wrote $outPath"
-exit 0
+if ($fail -gt 0) { exit 1 } else { exit 0 }

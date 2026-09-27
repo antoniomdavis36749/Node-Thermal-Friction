@@ -20,35 +20,20 @@ local LOCK_COL_RATE = 0.016 -- base /s at slipF≈LOCK_SLIP_F_REF (tuned under s
 local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
 local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
 local ENABLE_CAMBER_ENERGY_COLE = true
--- Soft base; continuous ramp from 1° (street gentle → race loud).
--- Soft life A/B (slick/circuit only): A2 arm 2.0° + A3 camF curve (quieter than flat ×0.30).
 -- Sport/street keep full base + 1.0° arm (Bolide scallop unchanged).
 local CAMBER_COL_BASE = 0.006
--- Soft life A3b LOCKED (2026-08-31): 0.08→0.22 after C5 EOL probe (57 km fronts peak
--- ~15–22% vs baseline ~11–14% @47 km under 0.05→0.14; Cond stayed sc-led). Arm 2.0° held.
--- Street/TD/Sport camber ladders untouched.
 local CAMBER_COL_SLICK_SCALE_MIN = 0.08
 local CAMBER_COL_SLICK_SCALE_MAX = 0.22
--- Track Day LOCKED (Belasco 22 km ×2 + A/B): pre-mute peak ~25–29% / Cond ~71–75%;
--- after 0.26→0.40 fronts Cond ~92% / peak ~8%, node-led. Soft life / Sport unchanged.
 local CAMBER_COL_TRACKDAY_SCALE_MIN = 0.26
 local CAMBER_COL_TRACKDAY_SCALE_MAX = 0.40
--- Sport Plus LOCKED (Belasco 22 km confirm): fronts Cond ~90% / peak ~6–11%;
--- slightly louder than TD (Plus one step street-ward). Soft / Sport (non-Plus) separate.
 local CAMBER_COL_SPORTPLUS_SCALE_MIN = 0.30
 local CAMBER_COL_SPORTPLUS_SCALE_MAX = 0.45
--- Sport LOCKED (Belasco 22 km): fronts Cond ~93–94% / peak ~3–7% (cooler than opt).
--- Louder scale than Plus but Cond drop can undershoot Plus if Sport stays Cold/cruise.
 local CAMBER_COL_SPORT_SCALE_MIN = 0.40
 local CAMBER_COL_SPORT_SCALE_MAX = 0.58
--- Standard LOCKED (est. from Belasco 22 km @ ×1.0: fronts Cond ~85–88% / peak ~12–15%).
--- Mild mute → target Cond ~90–93%; louder than Sport (more street). Profile "standard" only.
 local CAMBER_COL_STANDARD_SCALE_MIN = 0.52
 local CAMBER_COL_STANDARD_SCALE_MAX = 0.68
--- Vintage LOCKED (est. mild, one step street-ward of Standard). Profile/spectrum "vintage*".
 local CAMBER_COL_VINTAGE_SCALE_MIN = 0.58
 local CAMBER_COL_VINTAGE_SCALE_MAX = 0.74
--- Truck/commercial LOCKED (est. mild; purpose commercial or *truck* / light_truck).
 local CAMBER_COL_TRUCK_SCALE_MIN = 0.62
 local CAMBER_COL_TRUCK_SCALE_MAX = 0.78
 local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
@@ -56,7 +41,7 @@ local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when lo
 local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
 local CAMBER_FRAC_REF = 4.0 -- |camber|−ZERO over this → frac≈1 (~4.85° = full)
 local CAMBER_FRAC_CAP = 1.15
-local CAMBER_SLIP_F_REF = 180 -- was 500; camber scrub slipF << lock, REF starved cole
+local CAMBER_SLIP_F_REF = 180 -- camber scrub force is far below lock force; a lock-sized ref starves the cole
 local CAMBER_SLIP_F_MIN = 40 -- N
 local LOCK_RING_HALF_WIDTH = 2
 local LOCK_RING_OFFSET_WEIGHT = { [0] = 1.0, [1] = 0.45, [2] = 0.22 }
@@ -67,7 +52,7 @@ local ENABLE_DRIFT_SLIP_ARM = true
 local DRIFT_SLIP_ARM = 0.32 -- sustained slide (above lock arm 0.18)
 local DRIFT_OMEGA_MIN = 18 -- rad/s; spinning, not lock
 local DRIFT_LOAD_MIN = 800
-local DRIFT_SLIP_RATE = 0.017 -- provisional: was 0.022 (~16% Cond @ 65s burnout); aim ~10–12% @ 60s
+local DRIFT_SLIP_RATE = 0.017
 
 local DRIFT_PROP_DRIVEN = 40 -- |propulsionTorque| Nm; below = undriven (camber mute)
 local DRIFT_CAMBER_PARK_OMEGA = 4 -- rad/s; nearly stopped → mute camber
@@ -157,7 +142,6 @@ local function driftSlipArmEligible(data)
     return isDriftPurpose(data) or isSportProfile(data)
 end
 
--- PROFILE_POINTS performance-band knob; default 1.0 = Sport-locked node rate.
 local function nodeWearScaleForWheel(data)
     local mods = data and data.interpolatedMods
     local s = mods and mods.nodeWearScale
@@ -170,7 +154,6 @@ local function camberArmDegForWheel(data)
 end
 
 -- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
--- Street-track ladder LOCKED through Truck; else ×1.0 (UTV/utility/rally/etc.).
 local function camberColScaleForWheel(data, camberFrac)
     local t = max(0, min(1, camberFrac or 0))
     if isSlickOrCircuit(data) then
@@ -646,7 +629,6 @@ function M.install(F, deps)
                         local slipHits = peek and (peek.slipHits or 0) or 0
                         local peakCid = peek and (peek.peakCid or 0) or 0
                         if slipF >= LOCK_SLIP_F_MIN and slipHits > 0 then
-                            -- Map slipF → same slipCap shape as legacy slipE path
                             local slipCap = min(1.4, slipF / max(1.0, LOCK_SLIP_F_REF))
                             rate = LOCK_COL_RATE * min(1.45, max(0.15, slipCap) / 0.45)
                             if peakCid > 0 then energyCid = peakCid end

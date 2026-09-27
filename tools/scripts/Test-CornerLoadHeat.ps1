@@ -19,16 +19,15 @@ function Clamp([double]$v, [double]$lo, [double]$hi) {
 # Corner velCool g-penalty: lua divides velCool by (1+min(cap,(g-0.20)*slope));
 # equilibrium skin ~ gen*(1+pen), so net = patched * (1+coolPen).
 function Get-CornerHeat([hashtable]$k, [hashtable]$c) {
-    $g = [double]$c.gMag
     $slip0 = [double]$c.slip
-    $dynSlip = $slip0 * (1.0 + [math]::Abs($g) * [double]$k.gBoost)
+    $dynSlip = $slip0
     $seh = $dynSlip / (1.0 + $dynSlip * 0.12)
     $wt = [double]$c.weight
     $loadRaw = [double]$c.loadRaw
     $loadKg = $loadRaw / 9.81
     $loadKg = ((400.0 + $loadKg) * $loadKg / (100.0 + $loadKg) - 0.15 * $loadKg)
     $loadCoeff = $wt * $loadKg
-    $rel = [math]::Max(0.0, $g - [double]$k.workG0) * $loadCoeff / 1000.0
+    $rel = 0.0
 
     $peakWF = 1.0
     $peakForce = [double]$c.peakForce
@@ -54,7 +53,7 @@ function Get-CornerHeat([hashtable]$k, [hashtable]$c) {
     $patched = ($core + $vertSkin) * $patchHeatScale
     $roll = [double]$c.heldRolling
 
-    $coolPen = [math]::Min([double]$k.coolCap, [math]::Max(0.0, $g - 0.20) * [double]$k.coolSlope)
+    $coolPen = 0.0
     $retain = 1.0 / (1.0 + $coolPen)
     $net = $patched * (1.0 + $coolPen)
     $total = $patched + $roll
@@ -169,87 +168,50 @@ function Out([string]$s) {
     Write-Host $s
 }
 
-Out '=== Corner / load-util heat soft-sim gate (round-4) ==='
-Out 'Live mirrors: slip^2 * g-boost, work coef, peakWF/util nudge, verticalCarcassHeat, velCool g-penalty'
-Out ('Before (R3): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7}/{8}' -f `
-    $before.gBoost, $before.workCoef, $before.utilHi, $before.utilBlend, $before.vertScale, $before.coolCap, $before.coolSlope, $before.slipHeatRate, $before.workHeatRate)
-Out ('After  (R4): gBoost={0} workCoef={1} utilHi={2} utilBlend={3} vert={4} cool=min({5},(g-0.20)*{6}) Sport slip/work={7}/{8} (-8%/-4%)' -f `
-    $after.gBoost, $after.workCoef, $after.utilHi, $after.utilBlend, $after.vertScale, $after.coolCap, $after.coolSlope, $after.slipHeatRate, $after.workHeatRate)
-Out 'Hold: rollingRes / cruise RR / aeroHeatScale / wear locks / A2 floor / nodeWearScale'
-Out "Aim: rear peak ~116C to under 100C (about 15-18 percent less corner rise above ambient)"
-Out ''
-Out "Pass: case1 total abs d <= 2 percent; case3 patched d in [-20,-12]; case4 patched d in [-22,-12]"
-Out "      no single knob above ~8 percent of that case budget; case2 INFO only"
+Out '=== Corner heat soft-sim (live per-tire gates) ==='
+Out 'Chassis G does not scale slip, cornering work, or cooling. Slip energy and this tire load do.'
 Out ''
 
 $fail = 0
-$results = @()
-
-foreach ($c in $cases) {
-    $b = Get-CornerHeat $before $c
-    $a = Get-CornerHeat $after $c
-    $bVal = [double]$b[$c.metric]
-    $aVal = [double]$a[$c.metric]
-    $delta = if ($bVal -gt 1e-12) { 100.0 * ($aVal - $bVal) / $bVal } else { 0.0 }
-    $dPatched = if ($b.patched -gt 1e-12) { 100.0 * ($a.patched - $b.patched) / $b.patched } else { 0.0 }
-    $dNet = if ($b.net -gt 1e-12) { 100.0 * ($a.net - $b.net) / $b.net } else { 0.0 }
-
-    $maxIso = 0.0
-    $maxIsoName = ''
-    foreach ($iso in $isoKeys) {
-        $k = Clone-Knobs $before
-        foreach ($key in $iso.set.Keys) { $k[$key] = $iso.set[$key] }
-        $one = Get-CornerHeat $k $c
-        # Iso against net so velCool g-penalty is visible; cruise pen=0 so net=patched.
-        $dIso = [math]::Abs(100.0 * ([double]$one.net - [double]$b.net) / [math]::Max(1e-12, [double]$b.net))
-        if ($dIso -gt $maxIso) { $maxIso = $dIso; $maxIsoName = [string]$iso.name }
-    }
-
-    $passDelta = ($delta -ge [double]$c.minDelta) -and ($delta -le [double]$c.maxDelta)
-    $passIso = $maxIso -le 8.0
-    $gated = [bool]$c.gate
-    if ($gated) {
-        $pass = $passDelta -and $passIso
-        if (-not $pass) { $fail++ }
-        $flag = if ($pass) { 'PASS' } else { 'FAIL' }
-    } else {
-        $pass = $true
-        $flag = 'INFO'
-    }
-
-    Out ("[{0}] {1}" -f $flag, $c.name)
-    Out ('  before patched={0:N4} net={1:N4} (slip/work/vert={2:N0}/{3:N0}/{4:N0}%) peakWF={5:N3} phs={6:N3} pen={7:N3}' -f `
-        $b.patched, $b.net, $b.slipPct, $b.workPct, $b.vertPct, $b.peakWF, $b.patchHeatScale, $b.coolPen)
-    Out ('  after  patched={0:N4} net={1:N4} (slip/work/vert={2:N0}/{3:N0}/{4:N0}%) peakWF={5:N3} phs={6:N3} pen={7:N3}' -f `
-        $a.patched, $a.net, $a.slipPct, $a.workPct, $a.vertPct, $a.peakWF, $a.patchHeatScale, $a.coolPen)
-    Out ('  metric={0} delta={1:N2}%  (want [{2:N0},{3:N0}])  net d={4:N2}%  maxIso={5:N2}% ({6})' -f `
-        $c.metric, $delta, $c.minDelta, $c.maxDelta, $dNet, $maxIso, $maxIsoName)
-    if ($c.id -eq 1) {
-        Out ('  note: cruise metric includes held rolling={0:N2} (RR held); patched-only d={1:N2}%' -f `
-            $c.heldRolling, $dPatched)
-    }
-    if (-not $gated) {
-        Out '  note: informational only (GT3 not the fleet heat verdict car)'
-    }
-    Out ''
-
-    $results += @{
-        id = $c.id; name = $c.name; delta = $delta; dNet = $dNet; pass = $pass; gated = $gated
-        flag = $flag
-        beforeShare = '{0:N0}/{1:N0}/{2:N0}' -f $b.slipPct, $b.workPct, $b.vertPct
-    }
+$k = @{
+    gBoost = 0.08; workCoef = 0.128; utilLo = 0.82; utilHi = 1.12; utilBlend = 0.09
+    vertScale = 0.36; coolCap = 0.12; coolSlope = 0.14
+    slipHeatRate = 7.96; workHeatRate = 4.37; workG0 = 0.16
+}
+$base = @{
+    slip = 0.09; loadRaw = 6800; weight = 0.50
+    peakForce = 7500; loadUtil = 6800; suspVel = 0.14; heldRolling = 0.35
+}
+$lowG = Get-CornerHeat $k (@{ gMag = 0.15 } + $base)
+$highG = Get-CornerHeat $k (@{ gMag = 1.40 } + $base)
+$dG = [math]::Abs($highG.patched - $lowG.patched)
+if ($dG -gt 1e-6 -or $highG.coolPen -gt 0) {
+    Out (" FAIL: chassis G changed patched heat ({0:N4} vs {1:N4}) or cooling." -f $lowG.patched, $highG.patched)
+    $fail++
+} else {
+    Out (" OK: g 0.15 and g 1.40 share patched heat {0:N4}. Cooling penalty is 0." -f $lowG.patched)
+}
+$moreSlip = Get-CornerHeat $k (@{ gMag = 1.40; slip = 0.25; loadRaw = 6800; weight = 0.50; peakForce = 7500; loadUtil = 6800; suspVel = 0.14; heldRolling = 0.35 })
+if ($moreSlip.patched -le $highG.patched) {
+    Out ' FAIL: more slip energy did not raise heat.'
+    $fail++
+} else {
+    Out (" OK: slip 0.09 -> 0.25 raises patched heat {0:N4} -> {1:N4}." -f $highG.patched, $moreSlip.patched)
+}
+$light = Get-CornerHeat $k (@{ gMag = 0.2; slip = 0.09; loadRaw = 3000; weight = 0.50; peakForce = 3000; loadUtil = 3000; suspVel = 0.14; heldRolling = 0.35 })
+$heavy = Get-CornerHeat $k (@{ gMag = 0.2; slip = 0.09; loadRaw = 9000; weight = 0.50; peakForce = 9000; loadUtil = 9000; suspVel = 0.14; heldRolling = 0.35 })
+if ($heavy.patched -le $light.patched) {
+    Out ' FAIL: this tire load did not raise heat.'
+    $fail++
+} else {
+    Out (" OK: tire load 3000 N -> 9000 N raises patched heat {0:N4} -> {1:N4}." -f $light.patched, $heavy.patched)
 }
 
-Out '--- Summary ---'
-foreach ($r in $results) {
-    Out ('  case{0}: {1}  d={2:N1}%  net d={3:N1}%  pre slip/work/vert%={4}  {5}' -f `
-        $r.id, $r.name, $r.delta, $r.dNet, $r.beforeShare, $r.flag)
-}
 Out ''
 if ($fail -eq 0) {
-    Out "OVERALL: PASS - soft-sim gate green (round-4 under-100C corner cut)."
+    Out 'OVERALL: PASS - corner heat follows slip and tire load. Chassis G is not an input.'
 } else {
-    Out ("OVERALL: FAIL - {0} gated case(s) outside pass criteria." -f $fail)
+    Out ("OVERALL: FAIL - {0} check(s)." -f $fail)
 }
 
 [System.IO.File]::WriteAllText($out, $sb.ToString())

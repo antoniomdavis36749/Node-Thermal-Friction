@@ -117,6 +117,18 @@ try {
         Write-Host 'Excluded tireWestCoastLapTest.lua from package'
     }
 
+    foreach ($probe in @(
+        'lua\vehicle\extensions\tireWearThermalsNodeProbe.lua',
+        'lua\vehicle\extensions\tireWearThermalsNodeProbeState.lua',
+        'lua\vehicle\controller\tireWearThermalsNodeProbe.lua'
+    )) {
+        $probePath = Join-Path $stage $probe
+        if (Test-Path $probePath) {
+            Remove-Item -Force $probePath
+            Write-Host "Excluded $probe from package"
+        }
+    }
+
     New-ZipFromStage -StageDir $stage -DestZip $zipPath
     Write-Host 'NOTE: this packer is core-only (no vehicles/). Companion tires: Node-Thermal-Friction-Tires'
     Write-Host 'NOTE: zip entries use forward slashes (required by BeamNG zipFS).'

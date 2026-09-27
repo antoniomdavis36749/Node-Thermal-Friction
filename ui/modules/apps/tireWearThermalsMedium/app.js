@@ -313,7 +313,8 @@ angular.module("beamng.apps")
                 var rafRunning = false;
                 var targetWheels = [];
                 var WHEEL_LERP_KEYS = [
-                    "condition", "tyreGrip", "pressure", "avgTemp",
+                    "condition", "conditionScalar", "conditionNode", "nodeWearPeak",
+                    "tyreGrip", "pressure", "avgTemp",
                     "working_temp", "rimTemp", "stintFade",
                     "graining", "blistering"
                 ];

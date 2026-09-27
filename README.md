@@ -1,13 +1,15 @@
 # Node-Thermal Friction
 
-> **Private tester `0.2.1` (Beta)** — V2 node wear + thermals locked for small-group /
-> private MP. Public BeamNG Repo update still paused. See
+> **`0.2.2` (Beta)** — public source on `main`. V2 node wear + per-tire thermals. See
 > `tools/V2_FRICTION_CONTRACT.md` and `tools/V2_NODE_WEAR_SPIKE.md`.
 > Friction **A1**: node μ owns contact feel; soft scalar ×0.15 ages Cond; flatspot
 > removed; lock is native. Soft life A3b + Soft→Med→Hard Belasco ladder locked.
 > Round-2 fleet heat dial-back is **tester-owned** (no further rate edits unless they
 > report a clear miss). **Pitwall Heavy** is **dev/testers-only** (git / `-dev`; not in
 > release zip). Classic / Crew are the player-facing HUDs.
+>
+> Where to read: `tools/DOCUMENTATION.md`. The open test is `tools/VERIFICATION.md`.
+> The copy loaded for this stretch is `mods/unpacked/Node-Thermal-Friction-work`.
 
 A variation / continuation of earlier open-source BeamNG.drive tire thermals/wear mods.
 Upstream authors are listed under **Credits** below.
@@ -56,7 +58,7 @@ BeamNG requires the runtime folders below; do not rename them.
 | `tools/` | Dev soft-sims, WC lap triggers, fixtures — not required to play |
 | `.vscode/settings.json` | Editor Lua language-server config only |
 
-See `tools/README.md` for soft-sim / telemetry workflow.  
+See `tools/DOCUMENTATION.md` for which file owns each claim, then `tools/README.md` for soft-sim / telemetry workflow.  
 Optional vehicle parts (JBeam clones / extra configs): **Node-Thermal-Friction-Tires** — not shipped in this repo. See **`COMPAT_TIRES.md`**.
 
 ## Local dev install (unpacked)
@@ -67,6 +69,8 @@ Use **`-dev`** folder names under `mods/unpacked/` so Repo release zips never co
 | --- | --- |
 | Core (this repo) | `Node-Thermal-Friction-dev` |
 | Node-Thermal Friction Tires (`Node-Thermal-Friction-Tires`) | `Node-Thermal-Friction-Tires-dev` |
+
+This stretch is loaded from `Node-Thermal-Friction-work`. Packing still uses the `-dev` folder name so a Repo zip does not overwrite that working copy.
 
 Enable **only one** core thermals unpack at a time (disable original/Redux). **Testers stay on `-dev` files** — disable the BeamNG Repo copies of Node-Thermal Friction (core **39082** / Compat **39083**) while git-unpacked mods are enabled, so Repo zips cannot overwrite local work. Public listing is for other players; tester feedback should come from `-dev`.
 

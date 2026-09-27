@@ -1,5 +1,7 @@
 # Dev tools
 
+Procedure and the open A/B: `VERIFICATION.md`. Read it before a drive or a retune.
+
 Helpers for soft-sims, West Coast lap telemetry, and profile transforms.
 
 | Path | Purpose |
@@ -7,14 +9,17 @@ Helpers for soft-sims, West Coast lap telemetry, and profile transforms.
 | `scripts/` | PowerShell / Python helpers |
 | `fixtures/` | Race track / Belasco path inputs |
 | `output/` | Generated CSV, status JSON, soft-sim dumps (gitignored) |
-| `V2_FRICTION_CONTRACT.md` | Experimental V2: thermal vs node-wear friction ownership |
+| `DOCUMENTATION.md` | Which file owns each claim. Read this before the older notes |
+| `history/` | Changelog, locks, and failures. Reviewable outside Lua comments |
+| `VERIFICATION.md` | Open test and what that test is allowed to change |
+| `V2_FRICTION_CONTRACT.md` | Who writes grip, Phase 1 lock, Phase 2 status |
 | `V2_NODE_WEAR_SPIKE.md` | Clean-room node wear spike flags + retest |
 | `SPECTRA_STATUS.md` | Locked vs provisional / fallback compound bands |
 | `REFACTOR_SPLITS.md` | Module split / Lua locals process |
 
 ## West Coast lap / telemetry
 
-Triggers live in `tools/` (VFS: `mods/unpacked/Node-Thermal-Friction-dev/tools`):
+Triggers live in `tools/` (VFS: `mods/unpacked/Node-Thermal-Friction-work/tools`):
 
 - `RUN_WC_MANUAL_TEL` — manual drive + CSV telemetry
 - `RUN_WC_GT4_TEST` — auto AI Belasco test
@@ -24,7 +29,7 @@ Triggers live in `tools/` (VFS: `mods/unpacked/Node-Thermal-Friction-dev/tools`)
 Outputs go to `tools/output/` (`wc-*-lap-*.csv/json/txt`).
 
 Vehicle CSV (armed only via `setTelemetryCsv` / West Coast runners; off by default) keeps the
-legacy `wall..film` columns, then appends UI-stream fields: `profile,profile1,profile2,purpose,classifyReason,patchFrac,patchHeatScale,aeroLoadN,totalDownforceN,aeroFracPct,dutyMods,driveHeatGate,streetSlipScale,utilNudge,aeroDragN,aeroFrontN,aeroRearN,copPct`.
+legacy `wall..film` columns, then appends UI-stream fields: `profile,profile1,profile2,purpose,classifyReason,patchFrac,patchHeatScale,aeroLoadN,totalDownforceN,aeroFracPct,dutyMods,driveHeatGate,streetSlipScale,utilNudge,aeroDragN,aeroFrontN,aeroRearN,copPct,stintKm,condScalar,condNode,nodeWearPct,nativeTreadC,nativeCoreC,layoutDamp`.
 `aeroLoadN` / `totalDownforceN` / `aeroFracPct` are **native triangle aero** (`calcTotalAeroForces` / CoP axle split), not the old speed×48% estimate. Suffix `aeroDragN,aeroFrontN,aeroRearN,copPct` are extra native channels. `dutyMods` / profile strings are CSV-quoted when they contain commas. Parsers that only use
 legacy indices (e.g. `Summarize-WcTelemetry.ps1` cols 0–13) stay compatible.
 

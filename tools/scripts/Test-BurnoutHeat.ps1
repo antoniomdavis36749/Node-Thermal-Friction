@@ -121,8 +121,8 @@ function SimulateBurnout {
 
   $propAbs = [math]::Abs($propNm)
   $excessPropGate = Clamp (($propAbs - [double]$topo.drivePropCruiseNm) / [math]::Max(1.0, [double]$topo.drivePropExcessFullNm)) 0 1
-  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($gMag * 0.45) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
-  if (($slip -lt 0.06) -and ($gMag -lt 0.28) -and ($brakeNm -lt 40)) {
+  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
+  if (($slip -lt 0.06) -and ($brakeNm -lt 40)) {
     $driveHeatGate = $driveHeatGate * 0.15
   }
   $driveHeatGate = [math]::Max($driveHeatGate, $excessPropGate)
@@ -143,7 +143,7 @@ function SimulateBurnout {
     }
 
     $loadCoeff = $wt * $loadKg
-    $gWork = [math]::Max(0.0, $gMag - 0.22)
+    $gWork = 0.0
     $rel = $gWork * $loadCoeff / 1000.0
     $peakWork = 1.0
     $slideMuScale = Clamp ($jbeamSlideMu / [math]::Max(0.2, $jbeamMu)) 0.5 1.6
@@ -183,7 +183,7 @@ function SimulateBurnout {
       $combinedAir = $airspeed + $surfaceRotVel * 0.35
     }
     $effAir = $combinedAir / (1.0 + ($combinedAir / 220.0))
-    $cornerRetain = 1.0 / (1.0 + [math]::Min(0.18, [math]::Max(0.0, $gMag - 0.20) * 0.22))
+    $cornerRetain = 1.0
     $velCool = [math]::Pow([math]::Max(0.01, $effAir), 0.8) * [double]$knobs.airCool * 0.155 * $cornerRetain
     $coolBias = 1.0
     if (-not $DisableFreeBeltCool -and -not $DisableAllSoftCaps) {

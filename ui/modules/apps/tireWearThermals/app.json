@@ -1,7 +1,7 @@
 {
   "name": "Node-Thermal Friction Classic",
   "author": "Node-Thermal Friction",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "directive": "tireWearThermals",
   "domElement": "<tire-wear-thermals></tire-wear-thermals>",
   "types": [

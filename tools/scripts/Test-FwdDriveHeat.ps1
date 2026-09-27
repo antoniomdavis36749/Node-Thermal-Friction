@@ -1,4 +1,4 @@
-﻿# FWD vs RWD drive-slip heat soft-sim (street residual spin cook).
+# FWD vs RWD drive-slip heat soft-sim (street residual spin cook).
 # Mirrors CalcTyreWear: driveHeatGate + excess prop + street driven-slip soft-cap
 # (driveStreetSlip*). Compares BEFORE (scale=1) vs AFTER (live soft-cap).
 #
@@ -209,8 +209,8 @@ function Simulate-DriveHeat {
   $streetHeat = [double]$scales.heat
   $streetProp = [double]$scales.prop
 
-  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($gMag * 0.45) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
-  if (($slip -lt 0.06) -and ($gMag -lt 0.28) -and ($brakeNm -lt 40)) {
+  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($(if ($brakeNm -gt 40) { 1.0 } else { 0.0 })))
+  if (($slip -lt 0.06) -and ($brakeNm -lt 40)) {
     $halfCruise = [double]$topo.drivePropCruiseNm * 0.5
     if ($propAbs -gt $halfCruise) {
       $driveHeatGate = $driveHeatGate * (0.15 + 0.85 * (Clamp (($propAbs - $halfCruise) / [math]::Max(1.0, $halfCruise)) 0 1))
@@ -242,8 +242,8 @@ function Simulate-DriveHeat {
     0.075 * [double]$comp.rollingRes * $flexModifier
 
   $cruiseRR = 1.0
-  if (($slip -lt 0.08) -and ($gMag -lt 0.35) -and ($brakeNm -lt 50)) { $cruiseRR = 0.48 }
-  elseif (($slip -lt 0.15) -and ($gMag -lt 0.55)) { $cruiseRR = 0.72 }
+  if (($slip -lt 0.08) -and ($brakeNm -lt 50)) { $cruiseRR = 1.0 }
+  elseif (($slip -lt 0.15)) { $cruiseRR = 1.0 }
 
   $propRrDamp = 1.0
   if (($carcassPropScale -lt 0.999) -and ($excessPropGate -gt 1e-4)) {
@@ -259,7 +259,7 @@ function Simulate-DriveHeat {
     $seh = ($slip / (1.0 + $slip * 0.12)) * $streetHeat
     $sehWork = $slip / (1.0 + $slip * 0.12)
     $loadCoeff = $wt * $loadKgTh
-    $gWork = [math]::Max(0.0, $gMag - 0.22)
+    $gWork = 0.0
     $rel = $gWork * $loadCoeff / 1000.0
 
     $raw = ($seh * 0.05 + $netTorque * 0.002) * 3.0 * $wt
@@ -273,7 +273,7 @@ function Simulate-DriveHeat {
     $gain = ($raw / $heatMassScale) * $thermFric * $patchHeatScale *
       (1.0 + ([double]$topo.drivePropSlipWorkMult - 1.0) * $excessSkin * $streetHeat)
 
-    $cornerRetain = 1.0 / (1.0 + [math]::Min(0.18, [math]::Max(0.0, $gMag - 0.20) * 0.22))
+    $cornerRetain = 1.0
     $velCool = [math]::Pow([math]::Max(0.01, $effAir), 0.8) * $airCool * 0.155 * $cornerRetain
     $tempDelta = $skin - $ENV_C
     $conv = $tempDelta * ($staticCool * 0.04 + $velCool) * $climateScale * $freeBeltBias

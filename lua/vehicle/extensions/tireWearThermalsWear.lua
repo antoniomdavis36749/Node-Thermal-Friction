@@ -22,8 +22,6 @@ function M.install(F, deps)
         return max(1.0, opt or cold or 25.0)
     end
     local MISSING = deps.missing
-    local getVehicleMass = deps.getVehicleMass
-    local getWheelCount = deps.getWheelCount
 
     -- Reload bridged thermals from ctw (prepare step writes these each wheel tick).
     F.ctwIntegrateWearDamage = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
@@ -35,7 +33,6 @@ function M.install(F, deps)
         local loadRaw = ctw.loadRaw or 0
         local slipEnergy = ctw.slipEnergy or 0
         local sideSlipEnergy = ctw.sideSlipEnergy or 0
-        local g_mag = ctw.g_mag or 0
         local tyreWidthCoeff = ctw.tyreWidthCoeff or 1
         local propulsionTorque = ctw.propulsionTorque or 0
         local brakeTorque = ctw.brakeTorque or 0
@@ -68,8 +65,6 @@ function M.install(F, deps)
         local vehNotParked = ctw.vehNotParked or 0
         local sf = ctw.sf or {}
         local groundModel = ctw.groundModel or MISSING
-        local vehicleMass = getVehicleMass()
-        local wheelCount = getWheelCount()
 
         -- HEAT CYCLES: compound hardens (more wear, less grip) — not reduced wear
         if not data.cycleHeated and avgWeightedTemp >= current_optimal_temp * 0.85 then
@@ -103,13 +98,11 @@ function M.install(F, deps)
         local zoneWearDelta = { 0, 0, 0 }
         -- Soft scalar tread (Friction coherence A1): ages HUD Cond/zones via min(scalar, node);
         -- does NOT feed grip wearPenalty while node spike on. Leak/puncture may still use Cond.
-        -- Base ×0.15 LOCKED (Sport Belasco clean ~22 km FR ~0.9%). Mild life curve around that
         -- center: slower when fresh, faster late — Cond/leak clocks only (no μ).
-        -- Optional mods.scalarTreadWearScale overrides mid (Sport ref 0.15 LOCKED; slick C5 4.7);
         -- early/late scale proportionally so the curve shape holds.
         local ENABLE_SCALAR_TREAD_WEAR = true
         local ENABLE_SCALAR_RATE_CURVE = true
-        local SCALAR_TREAD_WEAR_SCALE = 0.15 -- mid-life center (LOCKED Sport band reference)
+        local SCALAR_TREAD_WEAR_SCALE = 0.15
         local SCALAR_SCALE_EARLY = 0.12 -- fresh (lifeUsed→0)
         local SCALAR_SCALE_LATE = 0.22 -- late life ceiling
         local SCALAR_LIFE_EARLY_END = 0.03 -- 3% used → reach center
@@ -133,7 +126,8 @@ function M.install(F, deps)
                     tempWearPenalty = lerp(1.0, coldWearMult, max(0.0, min(1.0, (0.80 - tempDistWeighted) / 0.50)))
                 end
 
-                local slidingWear = 20.0 * ((loadRaw or max(100, vehicleMass)) / (max(100, vehicleMass) * 9.81) * (slipEnergy / (1.0 + slipEnergy * (topo.slideWearEnergySat or 0.35))) * tempWearPenalty / tyreWidthCoeff)
+                local loadShare = (topo.slideWearLoadShare or 0.25) * loadRaw / max(200, data.staticLoadN or loadRaw)
+                local slidingWear = 20.0 * (loadShare * (slipEnergy / (1.0 + slipEnergy * (topo.slideWearEnergySat or 0.35))) * tempWearPenalty / tyreWidthCoeff)
                 local surfaceWearScale = 1.0
                 if isIceSurface then
                     surfaceWearScale = lerp(0.25, 0.10, treadCoef)
@@ -213,7 +207,6 @@ function M.install(F, deps)
         end
         local scaleWearModifier = (mods.wearRate or 0.0005) * 2000
 
-        -- Flatspot removed (V2 experimental): scalar lock→μ tax was low value vs Beam
         -- pressureWheel articulation. Revisit as clean-room node wear later.
         data.flatSpot = 0
 
@@ -247,8 +240,6 @@ function M.install(F, deps)
         data.clog = max(0, min(1.0, clog))
 
         -- Graining: cold compound + lateral scrub on hard surfaces (not total slip alone).
-        -- GRAIN #1: thresh 0.10→0.045 (live Pitwall corner slip); decay 0.012→0.0035;
-        -- rolling polish cap 0.008→0.003. Sport/Plus grainTempRatio 0.88 + rate ×2.
         local grain = data.graining or 0
         local grainColdLimit = current_working_temp * grainTempRatio
         local latGrainWork = max(sideSlipEnergy, slipEnergy * 0.55)
@@ -279,9 +270,14 @@ function M.install(F, deps)
         local blisterSlipStart = 0.14
         local slipForBlister = max(slipEnergy, sideSlipEnergy * 0.85)
         local slipAbuse = (slipForBlister > blisterSlipStart) and min(2.0, slipForBlister / blisterSlipStart) or 0
+        -- Cornering work on this tire: its own slip angle, weighted by its share of the axle load.
+        local latWork = abs(w.latSlipDir or 0)
+        if w.axleLoadMean and w.axleLoadMean > 50 then
+                latWork = latWork * max(0.5, min(1.5, loadRaw / w.axleLoadMean))
+        end
         local workAbuse = 0
-        if g_mag > 0.70 then
-                workAbuse = min(1.25, (g_mag - 0.70) / 0.40) * 0.85
+        if latWork > 0.70 then
+                workAbuse = min(1.25, (latWork - 0.70) / 0.40) * 0.85
         end
         local blisterAbuse = max(slipAbuse, workAbuse)
         local rumbleBlisterScale = 1.0
@@ -313,7 +309,6 @@ function M.install(F, deps)
         -- Progressive puncture (BeamNG pressure-group leak), not instant deflate.
         -- Heat leak is carcass-gated and recomputed each step (not sticky). A high-speed
         -- yaw/slide used to flash SKIN avgWeightedTemp past 165 and latch leakRatePa forever
-        -- → delayed blowout. Tester: spinout heat spike must not latch leak from skin flash.
         -- Spike/puncture: stock wheels.lua owns setGroupPressure while isPunctured.
         -- Slicks: higher heat-leak floor so WC hotlaps don't "slow flat" near the working window;
         -- soft_slick used to inherit the street 165C gate when optTemp < 80.
@@ -354,7 +349,6 @@ function M.install(F, deps)
 
         data.currentPressurePSI = dynamicPressurePSI
         data.luaPressurePSI = dynamicPressurePSI
-        -- Native group gauge (Pa→PSI); optional rate-limited hot write-back for soft-body stiffness
         local nativePSI = getNativeGroupPressurePSI(wd)
         local dPdt = 0
         if nativePSI then
@@ -398,7 +392,6 @@ function M.install(F, deps)
                     end
                 end
 
-                -- Safe hot PSI write-back: Lua Gay-Lussac absolute → native group (rate-limited).
                 -- Skip UP-writes while rubber is still cold (straight-line fronts never leave ~28°C).
                 -- Always allow pull-down: hop/PV chatter trips dP/dt ≥ 8 and used to freeze native at 38 PSI.
                 local luaGauge = (thermalAbsPSI or warmAbsolutePressurePSI or 0) - 14.696

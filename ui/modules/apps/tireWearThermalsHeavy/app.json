@@ -2,7 +2,7 @@
   "name": "Node-Thermal Friction Pitwall",
   "description": "Dev Pitwall: 8-node temps, node-spike / cole energy, elevation/env, pressure, drive heat, surface μ, suspension, slip.",
   "author": "Node-Thermal Friction",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "directive": "tireWearThermalsHeavy",
   "domElement": "<tire-wear-thermals-heavy></tire-wear-thermals-heavy>",
   "types": [

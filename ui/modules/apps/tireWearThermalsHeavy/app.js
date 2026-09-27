@@ -287,6 +287,7 @@ angular.module("beamng.apps")
                     </style>
 
                     <div class="tth-dev-banner">DEV / TESTING — not for public release</div>
+                    <div class="tth-dev-banner" ng-if="verifyNote" style="background: #78350f; color: #fde68a; font-weight: bold;">{{ verifyNote }}</div>
                     <div class="tth-header">
                         <span class="tth-title">NODE-THERMAL FRICTION<span class="tth-dev-subtitle">Pitwall · capture-first · node spike</span></span>
                         <span class="tth-header-meta">
@@ -756,7 +757,7 @@ angular.module("beamng.apps")
             restrict: "EA",
             link: function (scope, element, attrs) {
                 var StreamsManager = window.StreamsManager || ($injector.has("StreamsManager") ? $injector.get("StreamsManager") : null);
-                var streamsList = ["TireWearThermals"];
+                var streamsList = ["TireWearThermalsPitwall"];
 
                 if (StreamsManager) {
                     StreamsManager.add(streamsList);
@@ -845,6 +846,7 @@ angular.module("beamng.apps")
                 scope.streamHz = 30;
                 scope.envTempRange = 0;
                 scope.stintKm = 0;
+                scope.verifyNote = '';
                 scope.odoKm = 0;
                 scope.airspeedMps = 0;
                 scope.airspeedMph = 0;
@@ -944,6 +946,9 @@ angular.module("beamng.apps")
                 };
 
                 var DUTY_MOD_LABELS = {
+                    verify_layout_damp_off: 'VERIFY layout damp OFF',
+                    fwd_soft_drive_damp: 'FWD soft drive damp',
+                    awd_soft_front_damp: 'AWD soft front damp',
                     fwd_slip_softcap: 'FWD slip soft-cap',
                     street_slip_softcap: 'Street slip soft-cap',
                     sport_plus_slip_softcap: 'Sport+ slip soft-cap',
@@ -1569,6 +1574,7 @@ angular.module("beamng.apps")
                     targetMeta.yawRateDeg = dataStream.yawRateDeg !== undefined ? dataStream.yawRateDeg : targetMeta.yawRateDeg;
 
                     if (dataStream.streamHz !== undefined) scope.streamHz = dataStream.streamHz;
+                    if (dataStream.verifyNote !== undefined) scope.verifyNote = dataStream.verifyNote || '';
 
                     if (structural) {
                         // Wheel-count change or same-id resetGen bump: snap cold, drop RAF lerp.
@@ -1631,13 +1637,13 @@ angular.module("beamng.apps")
 
                 scope.$on("VehicleChange", resetNtfStreamBind);
                 scope.$on("VehicleFocusChanged", resetNtfStreamBind);
-                scope.$on("TireWearThermals", function (event, dataStream) {
+                scope.$on("TireWearThermalsPitwall", function (event, dataStream) {
                     ingestStream(dataStream);
                 });
 
                 scope.$on("streamsUpdate", function (event, streams) {
-                    if (streams && streams.TireWearThermals) {
-                        ingestStream(streams.TireWearThermals);
+                    if (streams && streams.TireWearThermalsPitwall) {
+                        ingestStream(streams.TireWearThermalsPitwall);
                     }
                 });
             }

@@ -181,7 +181,9 @@ angular.module("beamng.apps")
                     var segGap = 2;
                     var sectionWidth = (treadW - segGap * 2) / 3.0;
                     for (var i = 0; i < 3; i++) {
-                        var tempVal = temps[i] || 0;
+                        // Zones are outer|middle|inner; mirror right-side cells so outer faces outward.
+                        var zi = right ? 2 - i : i;
+                        var tempVal = temps[zi] || 0;
                         var sectionColor = getTempColor(tempVal, d);
 
                         var crad = Math.min(5.0, sectionWidth * 0.25);
@@ -201,7 +203,7 @@ angular.module("beamng.apps")
                         ctx.fill();
 
                         // Fill color representing remaining tread (per O|M|I zone)
-                        var zoneCond = zoneConds[i];
+                        var zoneCond = zoneConds[zi];
                         if (zoneCond === undefined || zoneCond === null) zoneCond = condition;
                         if (zoneCond > 1) {
                             var ft = 1.0 - (zoneCond / 100);

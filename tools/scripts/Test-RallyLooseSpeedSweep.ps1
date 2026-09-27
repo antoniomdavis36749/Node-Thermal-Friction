@@ -210,8 +210,8 @@ function Simulate-Cruise {
   $workHeat = [double]$comp.workHeat * $heatAdapt
 
   # Drive gates (straight cruise choke + excess prop) — match live / asphalt sweep
-  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5) + ($gMag * 0.45))
-  if (($slip -lt 0.06) -and ($gMag -lt 0.28)) {
+  $driveHeatGate = [math]::Min(1.0, ($slip * 2.5))
+  if (($slip -lt 0.06)) {
     $halfCruise = [double]$topo.drivePropCruiseNm * 0.5
     if ($propAbs -gt $halfCruise) {
       $driveHeatGate = $driveHeatGate * (0.15 + 0.85 * (Clamp (($propAbs - $halfCruise) / [math]::Max(1.0, $halfCruise)) 0 1))
@@ -242,8 +242,8 @@ function Simulate-Cruise {
     0.075 * [double]$comp.rollingRes * $flexModifier
 
   $cruiseRR = 1.0
-  if (($slip -lt 0.08) -and ($gMag -lt 0.35)) { $cruiseRR = 0.48 }
-  elseif (($slip -lt 0.15) -and ($gMag -lt 0.55)) { $cruiseRR = 0.72 }
+  if (($slip -lt 0.08) -and ($gMag -lt 0.35)) { $cruiseRR = 1.0 }
+  elseif (($slip -lt 0.15)) { $cruiseRR = 1.0 }
   # mud/dirt often land in 0.72 soft-cap band (slip 0.08–0.15)
 
   $propRrDamp = 1.0
@@ -278,7 +278,7 @@ function Simulate-Cruise {
 
     $seh = $slip / (1.0 + $slip * 0.12)
     $loadCoeff = $wt * $loadKgTh
-    $gWork = [math]::Max(0.0, $gMag - 0.22)
+    $gWork = 0.0
     $rel = $gWork * $loadCoeff / 1000.0
 
     $raw = ($seh * 0.05 + $netTorque * 0.002) * 3.0 * $wt
@@ -292,7 +292,7 @@ function Simulate-Cruise {
     $gain = ($raw / $heatMassScale) * $thermFric * $patchHeatScale *
       (1.0 + ([double]$topo.drivePropSlipWorkMult - 1.0) * $excessSkin)
 
-    $cornerRetain = 1.0 / (1.0 + [math]::Min(0.18, [math]::Max(0.0, $gMag - 0.20) * 0.22))
+    $cornerRetain = 1.0
     $velCool = [math]::Pow([math]::Max(0.01, $effAir), 0.8) * $airCool * 0.155 * $cornerRetain
     $tempDelta = $skin - $env
     $conv = $tempDelta * ($staticCool * 0.04 + $velCool) * $climateScale * $freeBeltBias * $convScale
@@ -320,7 +320,7 @@ function Simulate-Cruise {
         [math]::Max(1.0, [double]$topo.flexWarmLoad1 - [double]$topo.flexWarmLoad0)) 0 1) *
       (Clamp (($airspeed - [double]$topo.flexWarmSpeed0) /
         [math]::Max(1.0, [double]$topo.flexWarmSpeed1 - [double]$topo.flexWarmSpeed0)) 0 1) *
-      (Clamp (([math]::Max(0.0, $gMag - [double]$topo.flexWarmG0) / 0.70) + $slip * 1.8) 0 1)
+      (Clamp ($slip * 1.8) 0 1)
     if ($flexGate -gt 1e-4) {
       $flexWarm = $flexGate * [double]$topo.flexWarmGain * $loadKgTh * $angHeat *
         [double]$comp.rollingRes * $flexModifier * $propRrDamp / $heatMassScale
