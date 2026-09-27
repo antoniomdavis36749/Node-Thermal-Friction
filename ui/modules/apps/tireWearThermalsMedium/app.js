@@ -301,11 +301,10 @@ angular.module("beamng.apps")
                     StreamsManager.add(streamsList);
                 }
 
-                // Client-side smooth motion: Lua ~30 Hz; RAF lerps display toward targets.
-                // Digest is throttled (~20 Hz): full $digest every RAF stalls CEF under binding load.
+
                 var LERP_K = 12;
                 var LERP_EPS = 0.05;
-                var DIGEST_INTERVAL_MS = 50; // ~20 Hz Angular updates; RAF still lerps at display rate
+                var DIGEST_INTERVAL_MS = 50;
                 var DIAG_HIDE_THRESHOLD = 1.5;
                 var rafId = null;
                 var lastRafTs = 0;
@@ -516,7 +515,7 @@ angular.module("beamng.apps")
                     if (document.hidden) return false;
                     var el = element[0];
                     if (!el) return false;
-                    // Detached / display:none apps have no layout box — skip RAF work.
+
                     return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
                 }
 
@@ -586,7 +585,7 @@ angular.module("beamng.apps")
                     lastRafTs = ts;
                     var alpha = Math.min(1, LERP_K * dt);
                     var moved = lerpDisplay(alpha);
-                    // Throttle digests: RAF keeps lerping the model; Angular rebinds at ~20 Hz.
+
                     if (!moved || !lastDigestTs || (ts - lastDigestTs) >= DIGEST_INTERVAL_MS) {
                         lastDigestTs = ts;
                         digestDisplay();

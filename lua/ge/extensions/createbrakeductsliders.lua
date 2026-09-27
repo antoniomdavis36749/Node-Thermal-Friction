@@ -25,7 +25,7 @@ local function makeDuctVar(name, title, subCategory, savedVal)
         maxDis = 100,
         step = 1,
         stepDis = 1,
-        default = 1, -- Closed by default: most cars have no ducts
+        default = 1,
         val = savedVal or 1
     }
 end
@@ -91,10 +91,10 @@ local function onVehicleSpawned(vehID)
         end
     end
 
-    lastSentFront, lastSentRear = nil, nil -- force mailbox refresh
+    lastSentFront, lastSentRear = nil, nil
 end
 
--- Restore slider values when a config with vars is applied mid-spawn
+
 local function onSpawnCCallback(vehID)
     if not variablesById[vehID] then return end
     local ok, configDataIn = pcall(function()
