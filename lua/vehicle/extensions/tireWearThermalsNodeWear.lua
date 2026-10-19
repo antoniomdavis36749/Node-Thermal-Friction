@@ -1,12 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsNodeWear.lua
--- Credits: Node-Thermal Friction V2 experimental. Clean-room vs BeamNG APIs only (no third-party node-wear ports).
--- Policy A: thermal core owns wheel setFrictionThermalSensitivity; this layer only scales
--- tread-node friction/mass via obj:setNodeFrictionSlidingCoefs / obj:setNodeMass.
---
--- Phase 2: lock/scrub wear spreads across wd.treadNodes ring (BeamNG pressureWheel API).
--- Lock/camber energy: gated slipForce from nodeCollision probe (ENABLE_*_ENERGY_COLE) or slipEnergy.
--- A3 HUD bridge (Friction coherence A1): condition = min(scalar, node peak);
--- zone O|M|I from outer/inner ring (display only). Soft scalar does not tax grip.
 local M = {}
 
 local min, max, abs = math.min, math.max, math.abs
@@ -14,13 +5,13 @@ local min, max, abs = math.min, math.max, math.abs
 local ENABLE_NODE_WEAR_SPIKE = true
 local ENABLE_RING_WEAR = true
 local ENABLE_HUD_BRIDGE_A3 = true
--- Gated energy swap: arm gates stay ω/slipE/camber; rate from probe slipF when armed.
+
 local ENABLE_LOCK_ENERGY_COLE = true
-local LOCK_COL_RATE = 0.016 -- base /s at slipF≈LOCK_SLIP_F_REF (tuned under slipE 0.024)
-local LOCK_SLIP_F_REF = 1800 -- N → slipCap ~1.0
-local LOCK_SLIP_F_MIN = 80 -- N; ignore rolling noise inside lock arm
+local LOCK_COL_RATE = 0.016
+local LOCK_SLIP_F_REF = 1800
+local LOCK_SLIP_F_MIN = 80
 local ENABLE_CAMBER_ENERGY_COLE = true
--- Sport/street keep full base + 1.0° arm (Bolide scallop unchanged).
+
 local CAMBER_COL_BASE = 0.006
 local CAMBER_COL_SLICK_SCALE_MIN = 0.08
 local CAMBER_COL_SLICK_SCALE_MAX = 0.22
@@ -36,26 +27,24 @@ local CAMBER_COL_VINTAGE_SCALE_MIN = 0.58
 local CAMBER_COL_VINTAGE_SCALE_MAX = 0.74
 local CAMBER_COL_TRUCK_SCALE_MIN = 0.62
 local CAMBER_COL_TRUCK_SCALE_MAX = 0.78
-local CAMBER_DEG_ARM = 1.0 -- Sport/street wear off below this
-local CAMBER_DEG_ARM_SLICK = 2.0 -- Soft life A2; race camber still arms when loaded
-local CAMBER_DEG_ZERO = 0.85 -- slight head-start so 1.0° is a whisper, not zero
-local CAMBER_FRAC_REF = 4.0 -- |camber|−ZERO over this → frac≈1 (~4.85° = full)
+local CAMBER_DEG_ARM = 1.0
+local CAMBER_DEG_ARM_SLICK = 2.0
+local CAMBER_DEG_ZERO = 0.85
+local CAMBER_FRAC_REF = 4.0
 local CAMBER_FRAC_CAP = 1.15
-local CAMBER_SLIP_F_REF = 180 -- camber scrub force is far below lock force; a lock-sized ref starves the cole
-local CAMBER_SLIP_F_MIN = 40 -- N
+local CAMBER_SLIP_F_REF = 180
+local CAMBER_SLIP_F_MIN = 40
 local LOCK_RING_HALF_WIDTH = 2
 local LOCK_RING_OFFSET_WEIGHT = { [0] = 1.0, [1] = 0.45, [2] = 0.22 }
--- Drift prototype: sustained-slip node arm while spinning (lock needs ω<14 — RWD
--- never arms). Eligible: drift compound OR plain Sport (native BX Pro drift configs
--- mount Sport, no rear drift tire option). Camber guard mutes undriven/park scallop.
+
 local ENABLE_DRIFT_SLIP_ARM = true
-local DRIFT_SLIP_ARM = 0.32 -- sustained slide (above lock arm 0.18)
-local DRIFT_OMEGA_MIN = 18 -- rad/s; spinning, not lock
+local DRIFT_SLIP_ARM = 0.32
+local DRIFT_OMEGA_MIN = 18
 local DRIFT_LOAD_MIN = 800
 local DRIFT_SLIP_RATE = 0.017
 
-local DRIFT_PROP_DRIVEN = 40 -- |propulsionTorque| Nm; below = undriven (camber mute)
-local DRIFT_CAMBER_PARK_OMEGA = 4 -- rad/s; nearly stopped → mute camber
+local DRIFT_PROP_DRIVEN = 40
+local DRIFT_CAMBER_PARK_OMEGA = 4
 
 local function isSlickOrCircuit(data)
     if not data then return false end
@@ -93,7 +82,6 @@ local function isSportPlusProfile(data)
     return result
 end
 
--- Plain Sport only — must not match sport_plus.
 local function isSportProfile(data)
     if not data or isSportPlusProfile(data) then return false end
     if data.plainSportProfile ~= nil then return data.plainSportProfile end
@@ -130,7 +118,6 @@ local function isVintageProfile(data)
     return result
 end
 
--- Commercial spectrum + light_truck standalones (*truck* / light_truck in profile).
 local function isTruckOrCommercialProfile(data)
     if not data then return false end
     if data.truckProfile ~= nil then return data.truckProfile end
@@ -165,7 +152,6 @@ local function isDriftPurpose(data)
     return result
 end
 
--- Drift slip arm + camber guard: true drift compound, or plain Sport (not Plus).
 local function driftSlipArmEligible(data)
     return isDriftPurpose(data) or isSportProfile(data)
 end
@@ -181,7 +167,6 @@ local function camberArmDegForWheel(data)
     return isSlickOrCircuit(data) and CAMBER_DEG_ARM_SLICK or CAMBER_DEG_ARM
 end
 
--- Soft life A3: slick/circuit scale follows camberFrac (not a flat mute).
 local function camberColScaleForWheel(data, camberFrac)
     local t = max(0, min(1, camberFrac or 0))
     if isSlickOrCircuit(data) then
@@ -215,8 +200,6 @@ local function camberColScaleForWheel(data, camberFrac)
     return 1.0
 end
 
--- Continuous: 1.0°≈0.04 · 2°≈0.29 · 3°≈0.54 · ~5°≈1.0 (cap 1.15).
--- armDeg gates off (Sport 1.0° / slick 2.0°); ramp shape unchanged.
 local function camberFracFromDeg(camberDegAbs, armDeg)
     local a = abs(camberDegAbs or 0)
     local arm = armDeg or CAMBER_DEG_ARM
@@ -269,7 +252,6 @@ function M.install(F, deps)
         return nil
     end
 
-    -- JBeam order: per ray, outer tread then inner tread (even idx = outer in pair).
     local function camberNodeWeight(ringIdx, camberDeg, wheelDir)
         local isOuter = (ringIdx % 2 == 1)
         local camSign = (camberDeg or 0) * (wheelDir or 1)
@@ -320,10 +302,6 @@ function M.install(F, deps)
         return rate
     end
 
-    -- Circumferential map for Pitwall: one sample per ray = max(outer, inner) wear %.
-    -- JBeam treadNodes order: outer, inner, … around the tire. Left/right axles wind
-    -- opposite ways, so reverse display order when wheelDir < 0 so all Pitwall rings
-    -- advance the same direction when rolling forward.
     local function publishRingMap(data, wd, contactCid)
         local treadNodes = wd and wd.treadNodes
         local n = treadNodeCount(treadNodes)
@@ -381,9 +359,6 @@ function M.install(F, deps)
         data.nodeWearRingFlip = flip and 1 or 0
     end
 
-    -- Friction coherence A1: HUD condition / O|M|I = min(scalar tread, node peak/zones).
-    -- Soft scalar is display/stint aging only; grip wearPenalty skipped while spike on
-    -- (node μ owns contact feel — no double tax). See tools/V2_FRICTION_CONTRACT.md.
     local function publishHudBridgeA3(data, wd)
         if not ENABLE_HUD_BRIDGE_A3 or not data then return end
         if not data.zoneCondition then data.zoneCondition = { 100, 100, 100 } end
@@ -416,7 +391,7 @@ function M.install(F, deps)
                 end
             end
         end
-        -- Prefer peak so middle never reads healthier than overall when only one side wore
+
         local mMax = (oMax + iMax) * 0.5
         local n1 = max(0, min(100, 100 * (1.0 - oMax)))
         local n2 = max(0, min(100, 100 * (1.0 - mMax)))
@@ -424,13 +399,12 @@ function M.install(F, deps)
         data.zoneCondition[1] = min(s1, n1)
         data.zoneCondition[2] = min(s2, n2)
         data.zoneCondition[3] = min(s3, n3)
-        -- Keep dedicated scalar life for Pitwall A1 audit (sc vs nd vs Cond) + rate curve.
-        -- Prefer scalarTreadCondition (never node-min'd); fall back to pre-min condition.
+
         data.conditionScalar = data.scalarTreadCondition or scalarCond
         data.conditionNode = nodeCond
         local hybrid = min(data.conditionScalar or scalarCond, nodeCond)
         data.condition = hybrid
-        -- Share of Cond drop attributable to node (0=scalar-led, 100=fully node-led).
+
         local drop = max(0.5, 100 - hybrid)
         local scV = data.conditionScalar or scalarCond
         data.conditionNodeLead = max(0, min(100, (scV - hybrid) / drop * 100))
@@ -574,7 +548,7 @@ function M.install(F, deps)
         data.nodeCamFrac = 0
         data.nodeCamColScale = 1
         data.nodeCamArmDeg = CAMBER_DEG_ARM
-        -- Do not clear A3 here — air/off must keep peak-based Classic % until reset / spike off
+
     end
 
     F.resetNodeWearSpike = function()
@@ -623,7 +597,7 @@ function M.install(F, deps)
                 local armDeg = camberArmDegForWheel(data)
                 local camAbs = abs(w.camber or 0)
                 local camArm = cid and camAbs >= armDeg and loadN > 800 and slip > 0.08
-                -- Drift/Sport camber guard: setup camber on undriven/parked fronts must not farm Cond.
+
                 if camArm and driftEligible then
                     local propAbs = abs(wd.propulsionTorque or 0)
                     if propAbs < DRIFT_PROP_DRIVEN or ang < DRIFT_CAMBER_PARK_OMEGA then

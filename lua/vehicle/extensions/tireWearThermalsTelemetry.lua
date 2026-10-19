@@ -1,6 +1,5 @@
--- lua/vehicle/extensions/tireWearThermalsTelemetry.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
--- Optional CSV telemetry (cold path; buffered I/O, not on thermal integrate step).
+
 local M = {}
 
 local min, max = math.min, math.max
@@ -23,7 +22,6 @@ function M.install(F, deps)
         return nil
     end
 
-    -- Quote CSV fields that contain comma/quote/newline (dutyMods lists use commas).
     F.csvEscape = function(value)
         local s = tostring(value or "")
         if s == "" then return "" end
@@ -33,7 +31,6 @@ function M.install(F, deps)
         return s
     end
 
-    -- Write header once per path. An older file keeps its rows. New columns go to a sibling.
     F.ensureTelemetryHeader = function(ioLib, path)
         if not ioLib or not path then return path end
         if telem.headerReady then return telem.path or path end
@@ -81,7 +78,6 @@ function M.install(F, deps)
         telem.csvBufCount = 0
     end
 
-    -- Batch-append buffered lines in one open/write/close. Safe to call often (no-op if empty).
     F.flushTelemetryBuffer = function(ioLib)
         ioLib = ioLib or F.getTelemetryIo()
         if not ioLib or not telem.path then
@@ -137,8 +133,6 @@ function M.install(F, deps)
         return line ~= "" and line or "none"
     end
 
-    -- A run is one spawn, reset, or reload, or one tire setup inside it.
-    -- Its #RUN row waits for the first sample with built tires.
     F.newTelemetryRun = function(reason)
         telem.runSeq = (telem.runSeq or 0) + 1
         local clockStamp = nil
@@ -154,7 +148,6 @@ function M.install(F, deps)
         telem.runSig = nil
     end
 
-    -- Per-tire compound and rolling scale. A change mid-stint starts a new run.
     F.telemetrySetupSig = function()
         local sig = {}
         for wheelID, data in pairs(tyreData) do
@@ -191,7 +184,6 @@ function M.install(F, deps)
         telem.runHeaderDue = false
     end
 
-    -- Flush pending samples first so #RESET stays chronologically after them.
     F.appendTelemetryResetMarker = function(ioLib, path, reason)
         ioLib = ioLib or F.getTelemetryIo()
         if not ioLib or not path then return end
@@ -221,8 +213,6 @@ function M.install(F, deps)
         F.appendTelemetryResetMarker(ioLib, path, reason or "vehicle_reload")
     end
 
-    -- Seconds above the hot edge, and seconds within 2°C of that flash's peak.
-    -- A short flash that falls back inside the plateau is the acceptable corner spike.
     F.trackHotFlashes = function(dt)
         if not dt or dt <= 0 or dt > 0.5 then return end
         if type(tyreData) ~= "table" then return end
@@ -274,8 +264,7 @@ function M.install(F, deps)
 
     F.writeTelemetryIfEnabled = function(dt)
         F.trackHotFlashes(dt)
-        -- Optional CSV telemetry (disabled by default). Samples go to an in-memory buffer;
-        -- disk I/O only on flush (safety timer / line cap / disable / reset / explicit).
+
         if not telem.csvEnabled then return end
         telem.timer = telem.timer + dt
         if telem.timer < telem.interval then
@@ -289,7 +278,7 @@ function M.install(F, deps)
         if not telem.path then
             telem.path = "tire_thermals_telemetry.csv"
         end
-        -- Ensure header once while armed (not every sample).
+
         if not telem.headerReady then
             local ioLib = F.getTelemetryIo()
             if ioLib then
@@ -336,7 +325,7 @@ function M.install(F, deps)
             local wd = wheels and wheels.wheelRotators and wheels.wheelRotators[wheelID]
             local wdName = (wd and wd.name) or ""
             local propNm = (wd and wd.propulsionTorque) or 0
-            -- Same gate as drivePropDrivenThreshNm. Above 40 N·m the tire is driven.
+
             local driven = math.abs(propNm) > 40 and 1 or 0
             local aeroLoadN = math.floor(nativeAeroWheelShare(wdName, rawLoad))
             local nativeTreadC, nativeCoreC = -1, -1
@@ -348,7 +337,7 @@ function M.install(F, deps)
                 if okC and type(coreK) == "number" then nativeCoreC = coreK - 273.15 end
             end
             telem.csvBufCount = telem.csvBufCount + 1
-            -- Legacy numeric prefix (unchanged) + escaped UI-stream suffix
+
             telem.csvBuffer[telem.csvBufCount] = string.format(
                 "%.3f,%.2f,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.3f,%.3f,%.3f,%.2f,%.2f,%.2f,%d,%.2f,%.2f,%.2f,",
                 wall, tNow, tostring(wheelID), data.condition or 0,

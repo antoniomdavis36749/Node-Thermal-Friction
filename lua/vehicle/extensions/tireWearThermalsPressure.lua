@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsPressure.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -28,9 +27,6 @@ function M.install(F, deps)
         objPcall("setGroupPressure", pg, pa)
     end
 
-    -- Progressive pressure leak via BeamNG native pressure-group API.
-    -- Used for Node-Thermal Friction-owned thermal/wear leaks ONLY. Spike-strip / wd.isPunctured
-    -- leaks are owned by stock wheels.lua — never call this while isPunctured.
     F.applyPressureLeakPa = function(wd, leakPaPerSec, dt)
         if isRemoteMpVehicle() then return nil end
         if not wd or leakPaPerSec <= 0 then return nil end
@@ -43,17 +39,12 @@ function M.install(F, deps)
         return newP
     end
 
-    -- Gauge PSI from native pressure group (absolute Pa → PSI). nil if unavailable.
     F.getNativeGroupPressurePSI = function(wd)
         local absPa = getGroupPressurePa(wd)
         if not absPa then return nil end
         return max(0.1, (absPa - 101325) / 6894.757)
     end
 
-    -- Hot tgt from this group's native cold fill (not a flat spectrum absolute).
-    -- Profile optimalPressure is the design hot when cold ≈ opt/1.06 (highway ~104→110).
-    -- When stock fill is far (drag rears ~82 vs design ~104), keep the same rise on cold.
-    -- Captures 2026-08-30: flat 110 falsely marked drag rears UNDER while Cold.
     local HOT_OVER_COLD = 1.06
     local NATIVE_COLD_BAND = 0.12
     local HOT_RISE_MIN = 1.5
@@ -69,7 +60,6 @@ function M.install(F, deps)
         return coldPSI + rise
     end
 
-    -- Tuning-menu cold fill ($tirepressure_F / _R, else $tirepressure). nil if unset.
     F.getTuneColdFillPSI = function(isFront)
         local v = getV()
         if not (v and v.data and type(v.data.variables) == "table") then return nil end
@@ -86,7 +76,6 @@ function M.install(F, deps)
         return nil
     end
 
-    -- One-shot native restore (spawn / leftover write-back). Gauge PSI → absolute Pa.
     F.setNativeGroupPressurePSI = function(wd, gaugePSI)
         if isRemoteMpVehicle() then return nil end
         if not wd or type(gaugePSI) ~= "number" then return nil end
@@ -95,7 +84,6 @@ function M.install(F, deps)
         return gaugePSI
     end
 
-    -- True when TPMS / tirePressureControl / inflate electrics look active (don't fight user/AI fill).
     F.isTirePressureInflateActive = function()
         local ev = electrics and electrics.values
         if not ev then return false end
@@ -108,8 +96,6 @@ function M.install(F, deps)
         return false
     end
 
-    -- Rate-limited Gay-Lussac hot absolute Pa → native pressure group (soft-body stiffness).
-    -- Deadband skips tiny deltas; min floor matches BeamNG puncture path. nil if unavailable / no-op.
     F.applyHotPressureWriteback = function(wd, targetAbsPa, dt, maxPsiPerSec, deadbandPsi)
         if isRemoteMpVehicle() then return nil end
         if not wd or type(targetAbsPa) ~= "number" or not dt or dt <= 0 then return nil end
@@ -133,4 +119,3 @@ function M.install(F, deps)
 end
 
 return M
-

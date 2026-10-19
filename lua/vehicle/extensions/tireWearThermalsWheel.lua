@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsWheel.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -74,7 +73,6 @@ function M.install(F, deps)
     local remapSlickSoftness = deps.remapSlickSoftness
     local isRemoteMpVehicle = deps.isRemoteMpVehicle
 
-    -- Brake duct (tuning menu / mailbox)
     F.getBrakeDuctPercent = function(isFront)
         local idx = isFront and 1 or 2
         local key = isFront and "$WheelCoolingDuctFront" or "$WheelCoolingDuctRear"
@@ -93,9 +91,6 @@ function M.install(F, deps)
         return DUCT_DEFAULT_PCT
     end
 
-    -- 50% is neutral: soak 1.0 and no extra tire air.
-    -- 1% keeps the warming lever (soak 1.15, air unchanged).
-    -- 100% is fully open (soak 0.85, air up to MAX_DUCT_AIR_FACTOR).
     F.ductPercentToFactors = function(ductPct)
         local pct = max(1, min(100, ductPct or DUCT_DEFAULT_PCT))
         if pct <= 50 then
@@ -106,7 +101,6 @@ function M.install(F, deps)
         return lerp(1.0, MAX_DUCT_AIR_FACTOR, open), lerp(1.0, 0.85, open), open
     end
 
-    -- JBeam construction factors (cached per wheel at init)
     F.getWheelJBeamData = function(wd)
         local v = getV()
         if not wd or not v or not v.data or type(v.data.wheels) ~= "table" then return nil end
@@ -119,7 +113,6 @@ function M.install(F, deps)
         return nil
     end
 
-    -- One-shot cache of stock BeamNG tyre/brake construction factors
     F.collectBaseWheelFactors = function(wd)
         local jb = F.getWheelJBeamData(wd) or {}
         local frictionCoef = tonumber(wd.frictionCoef) or tonumber(jb.frictionCoef) or 1.0
@@ -132,7 +125,6 @@ function M.install(F, deps)
         local radius = tonumber(wd.radius) or tonumber(jb.radius) or 0.3
         local hubRadius = tonumber(wd.hubRadius) or tonumber(jb.hubRadius) or (radius * 0.65)
 
-        -- Mass: prefer explicit tire/hub totals, else node weights × ray count estimate
         local rayCount = tonumber(wd.rayCount) or tonumber(jb.numRays) or 16
         local tireNodeW = tonumber(jb.nodeWeight) or tonumber(wd.nodeWeight)
         local hubNodeW = tonumber(jb.hubNodeWeight) or tonumber(wd.hubNodeWeight)
@@ -143,11 +135,10 @@ function M.install(F, deps)
         tireMass = max(2.0, tireMass or 8.0)
         hubMass = max(2.0, hubMass or 6.0)
 
-        -- Sidewall stiffness proxy → rolling resistance tendency (docs: higher spring → better RR / sharper peak)
         local sideSpring = tonumber(jb.tireSideBeamSpring) or tonumber(jb.hubSideBeamSpring) or tonumber(wd.tireSideBeamSpring) or 0
         local rrFromSidewall = 1.0
         if sideSpring > 0 then
-            -- Normalize around a typical street sidewall (~2e5–6e5)
+
             rrFromSidewall = max(0.75, min(1.35, sideSpring / 400000))
         end
 
@@ -193,7 +184,7 @@ function M.install(F, deps)
                     if type(wt.brakeCoreTemperature) == "number" then core = wt.brakeCoreTemperature end
                 end
             end
-            -- Legacy fallbacks
+
             if surface == envTemp and type(wd.brakeThermal) == "table" and type(wd.brakeThermal.brakeTemp) == "number" then
                 surface = wd.brakeThermal.brakeTemp
                 core = surface
@@ -201,18 +192,13 @@ function M.install(F, deps)
         end
         return surface, core
     end
-    --[[
-      Wheel suspension state in vehicle-local frame (+Z up).
-      Compression > 0 when the hub rises into the arch (bump).
-      Ride height adapts slowly while settled so spawn pose / settling does not fake bottom-out.
-      Damper velocity is d(hubZ)/dt — not hub−COM world velocity (that mixes yaw/pitch/roll).
-    ]]
-    local susp = {  -- packed: frees 4 main-chunk locals
+
+    local susp = {
         velClamp = 10.0,
-        softBumpM = 0.022,   -- start of bump stress (m of compression)
-        hardBumpM = 0.065,   -- strong bottom-out region
-        droopM = 0.035,      -- unloading / droop threshold
-        rideAdapt = 0.55,    -- 1/s adaptive ride-height rate when settled
+        softBumpM = 0.022,
+        hardBumpM = 0.065,
+        droopM = 0.035,
+        rideAdapt = 0.55,
     }
 
     F.updateWheelSuspension = function(w, data, wd, dt, invQuat, upVector)
@@ -243,7 +229,7 @@ function M.install(F, deps)
             local hubVec = fillVec(1, hx, hy, hz)
             hubLocalZ = hubVec and (invQuat * hubVec).z or hz
         elseif upVector then
-            -- Fallback: project hub offset onto vehicle up (node pos is vehicle-relative)
+
             hubLocalZ = hx * upVector.x + hy * upVector.y + hz * upVector.z
         else
             hubLocalZ = hz
@@ -252,20 +238,18 @@ function M.install(F, deps)
         local lastZ = w.suspHubZ
         w.suspHubZ = hubLocalZ
 
-        -- Damper velocity from local hub Z derivative (stable vs body rotation)
         local suspVel = 0
         if lastZ ~= nil then
             suspVel = (hubLocalZ - lastZ) / dt
             if suspVel > susp.velClamp then suspVel = susp.velClamp
             elseif suspVel < -susp.velClamp then suspVel = -susp.velClamp end
         end
-        -- Light smoothing
+
         local prevVel = w.suspensionVelocitySmoothed or suspVel
         suspVel = prevVel + (suspVel - prevVel) * min(1.0, dt * 25.0)
         w.suspensionVelocitySmoothed = suspVel
         w.suspensionVelocity = suspVel
 
-        -- Adaptive ride height: only crawl toward hubZ when nearly settled and loaded
         local loadN = wd.downForce or 0
         local airborne = (not wd.contactMaterialID1 or wd.contactMaterialID1 == -1) or loadN <= 0
         local ride = data.rideHeightZ
@@ -277,28 +261,23 @@ function M.install(F, deps)
             data.rideHeightZ = ride
         end
 
-        -- +compression when hub rises above ride height (into the arch)
         local compression = hubLocalZ - ride
         w.suspCompression = compression
-        w.suspensionDeflection = compression -- keep legacy field name (= bump positive)
+        w.suspensionDeflection = compression
 
         local bump = max(0, compression - susp.softBumpM)
         local droop = max(0, -compression - susp.droopM)
         w.suspBump = bump
         w.suspDroop = droop
 
-        -- Stress: geometric bump + damper bump-stop (compression with downward body / upward wheel vel)
-        -- suspVel > 0 ⇒ hub rising ⇒ bump stroke
         local bumpVel = max(0, suspVel)
         local hard = max(0, compression - susp.hardBumpM)
         local stress = bump * 12.0 + hard * 35.0 + bumpVel * bumpVel * 0.45
-        -- Soft saturate so highway chatter cannot runaway
+
         stress = stress / (1.0 + stress * 0.35)
         w.suspStress = stress
     end
 
-    -- Resolve native wheel object for setFrictionThermalSensitivity (index vs wheelID/cid).
-    -- The handle is stable until the next tyre init, so the 100 Hz step does not rebuild it.
     F.resolveWheelFrictionTarget = function(wheelIndex, wd)
         local held = frictionWheelByIndex[wheelIndex]
         if held and type(held.setFrictionThermalSensitivity) == "function" then
@@ -313,8 +292,6 @@ function M.install(F, deps)
         return rememberFrictionWheel(wheelIndex, wd)
     end
 
-    -- One multiplier per wheel. The last three arguments are BeamNG's low / middle / high
-    -- temperature bands (not axes); the -300..1e7 band keeps every tire on the middle one.
     F.applyWheelFriction = function(wheel, grip)
         if isRemoteMpVehicle() then return end
         if not wheel or type(wheel.setFrictionThermalSensitivity) ~= "function" then return end
@@ -325,10 +302,9 @@ function M.install(F, deps)
         if not wheels or not wheels.wheelRotators then return end
         for k in pairs(tyreData) do tyreData[k] = nil end
         for k in pairs(frictionWheelByIndex) do frictionWheelByIndex[k] = nil end
-        resetStintDistance() -- new stint / reload gate for Pitwall trip
-        classifyCache.rallyDamper = nil -- re-probe on part reload / re-init
-    
-        -- Dynamically count active wheels to scale load-sensitivity curves for multi-axle trucks/duallys
+        resetStintDistance()
+        classifyCache.rallyDamper = nil
+
         local count = 0
         for _ in pairs(wheels.wheelRotators) do
             count = count + 1
@@ -342,14 +318,11 @@ function M.install(F, deps)
             local radius = wd.radius or 0.3
             local width = wd.tireWidth or wd.tyreWidth or wd.width or 0.2
             local hubRadius = wd.hubRadius or (radius * 0.65)
-        
-            -- Resolve and permanently cache the static profile configuration to save CPU cycles
+
             local initialMods = {}
             local p1, p2, factor, mods = getInterpolatedProfile(treadCoef, softnessCoef, tirePartName, initialMods, radius, width, hubRadius)
             local optTemp = mods and mods.optimalTemp or WORKING_TEMP
-        
-            -- Slicks: mild blanket preheat. Street: partial ambient→opt soak (sun/garage).
-            -- Skin starts cooler than carcass so freestream doesn't fight a fully-soaked tread.
+
             local isRacingTire = string.find(p1 or "", "slick") or string.find(p2 or "", "slick")
             local preheatBlend = isRacingTire and SLICK_PREHEAT_BLEND or STREET_PREHEAT_BLEND
             local envNow = getEnvTemp()
@@ -362,9 +335,7 @@ function M.install(F, deps)
             local slickProfile = (string.find(profile1Lower, "slick", 1, true)
                 or string.find(profile2Lower, "slick", 1, true)) and true or false
             local coldPSI = max(1.0, wd.pressure or 25.0)
-            -- Prefer live pressure-group fill when available (matches stock TPMS / cold set).
-            -- If native is still pumped from a previous hop/write-back loop, restore the
-            -- tuning-menu slider so a respawn/reload does not inherit 40 PSI Cold.
+
             do
                 local nativeCold = getNativeGroupPressurePSI(wd)
                 if nativeCold then coldPSI = max(1.0, nativeCold) end
@@ -379,11 +350,11 @@ function M.install(F, deps)
             tyreData[i] = {
                 working_temp = optTemp,
                 temp = { skinStart, skinStart, skinStart, carcassStart, carcassStart, carcassStart, carcassStart, carcassStart },
-                spawnAge = 0, -- seconds since init; drives SPAWN_CONV_GRACE_S
+                spawnAge = 0,
                 condition = 100,
-                scalarTreadCondition = 100, -- A1 pure scalar life (rate curve + sc); never node-min'd
+                scalarTreadCondition = 100,
                 scalarWearScale = 0.15,
-                zoneCondition = { 100, 100, 100 }, -- Outer / Middle / Inner wear (per-zone)
+                zoneCondition = { 100, 100, 100 },
                 nodeWearPeak = 0,
                 nodeWearContact = 0,
                 nodeContactCid = 0,
@@ -399,28 +370,28 @@ function M.install(F, deps)
                 nodeWearRingN = 0,
                 nodeWearRingFlip = 0,
                 clog = 0, graining = 0, blistering = 0,
-                surfaceDamage = 0, -- Max of distinct damage modes (UI aggregate)
+                surfaceDamage = 0,
                 heatCycles = 0, cycleHeated = false, coolTimer = 0,
                 hotStintTime = 0, stintFade = 0,
-                stintMaxAvgTemp = 0, -- Pitwall: peak EffectiveTyreTemp this stint (resets with initTyreData)
+                stintMaxAvgTemp = 0,
                 leakRatePa = 0, punctureSeverity = 0,
                 lastGrip = 1, lastLongGrip = 1, lastLatGrip = 1,
                 lastLongGripRaw = 1, lastLatGripRaw = 1,
                 lockFade = 0,
                 coldPressurePSI = coldPSI,
-                -- Per pressure-group: hot tgt seeded from native cold (spectrum opt = design).
+
                 targetHotPressurePSI = seedHotTargetPSI(coldPSI, mods and mods.optimalPressure),
                 luaPressurePSI = coldPSI,
                 nativePressurePSI = coldPSI,
                 lastNativePSI = coldPSI,
                 contactDepthSmooth = 0,
                 patchHeatScaleSmooth = nil,
-                rideHeightZ = nil, -- adaptive suspension baseline (set on first settled sample)
+                rideHeightZ = nil,
                 isFront = isFront,
                 softnessRemap = remapSlickSoftness(softnessCoef),
                 profile1 = p1,
                 profile2 = p2,
-                -- Cached lowers for CalcTyreWear / grip hot paths (profiles are static after init)
+
                 profile1Lower = profile1Lower,
                 profile2Lower = profile2Lower,
                 profileBook = F.buildProfileBook(profile1Lower, profile2Lower),
@@ -448,7 +419,7 @@ function M.install(F, deps)
             end
         end
         if sx == nil and pos1 and pos2 then
-            -- Spindle midpoint when tread contact node is missing
+
             sx = vehPos.x + (pos1.x + pos2.x) * 0.5
             sy = vehPos.y + (pos1.y + pos2.y) * 0.5
             sz = vehPos.z + (pos1.z + pos2.z) * 0.5
@@ -464,35 +435,26 @@ function M.install(F, deps)
         local nlen = sqrt(nx * nx + ny * ny + nz * nz)
         if nlen < 0.5 then return nil end
         nx, ny, nz = nx / nlen, ny / nlen, nz / nlen
-        -- mapmgr returns (0,0,1) when height probes miss; on a steep bank that reintroduces
-        -- gravity-frame camber. Prefer vehicle-frame fallback instead.
+
         if upVector and abs(nz) > 0.998 and (upVector.z or 1) < 0.90 then
             return nil
         end
         return nx, ny, nz
     end
 
-    -- Spindle camber/toe: ROAD-RELATIVE when loaded with a valid contact normal; otherwise
-    -- VEHICLE frame via invQuat (same path as updateWheelSuspension).
-    -- getNodePosition is an offset from the vehicle origin in world axes; using raw world-Z as
-    -- "camber" treats bank angle as camber (NASCAR ovals: ~24–30° → grip collapse on asphalt).
-    -- Road-relative (advancedwheeldebug-style surfaceNormalBelow) keeps setup camber on bank and
-    -- picks up body-roll vs surface; vehicle-frame fallback covers airborne / missing normals.
     F.calculateWheelAlignment = function(i, wd, invQuat, upVector)
         if not wd or not wd.node1 or not wd.node2 then return 0, 0, 0, 0 end
         local pos1 = objCall("getNodePosition", wd.node1)
         local pos2 = objCall("getNodePosition", wd.node2)
         if not pos1 or not pos2 then return 0, 0, 0, 0 end
-    
+
         local dx, dy, dz = pos1.x - pos2.x, pos1.y - pos2.y, pos1.z - pos2.z
         local dist = sqrt(dx*dx + dy*dy + dz*dz)
         if dist < 1e-5 then return 0, 0, 0, 0 end
-    
-        -- World-axis spindle (kept for road-normal camber before vehicle-frame transform)
+
         local wax, way, waz = dx / dist, dy / dist, dz / dist
         local lax, lay, laz = wax, way, waz
 
-        -- Prefer road-relative camber while the tyre is loaded and a surface normal is available
         local camberFromRoad = false
         local camberRad, camberDeg
         local loadRaw = wd.downForce or 0
@@ -507,7 +469,6 @@ function M.install(F, deps)
             end
         end
 
-        -- World-axis spindle → vehicle frame for toe (and camber fallback)
         if invQuat and vec3 then
             local axisVec = fillVec(1, lax, lay, laz)
             local axis = axisVec and (invQuat * axisVec) or nil
@@ -517,17 +478,16 @@ function M.install(F, deps)
                 lax, lay, laz = lax / len, lay / len, laz / len
             end
         elseif upVector then
-            -- Camber only: spindle · vehicle-up (toe stays world-approx without a full basis)
+
             laz = max(-0.999, min(0.999, lax * upVector.x + lay * upVector.y + laz * upVector.z))
         end
-    
+
         if not camberFromRoad then
-            -- Camber: angle of spindle vs vehicle horizontal (Z-up in vehicle frame)
+
             camberRad = -asin(max(-0.999, min(0.999, laz)))
             camberDeg = deg(camberRad)
         end
-    
-        -- Toe: stay vehicle-frame (road-relative toe is noisy; grip path is camber-led)
+
         local sideSign = 1
         if invQuat and vec3 then
             local hubVec = fillVec(2, pos1.x, pos1.y, pos1.z)
@@ -539,7 +499,6 @@ function M.install(F, deps)
         local toeRad = atan2(lay * sideSign, abs(lax))
         local toeDeg = deg(toeRad)
 
-        -- outSign: +1 when node1 is the outer axle node (BeamNG default), -1 when it is inner.
         local outSign = nil
         if invQuat and vec3 then
             outSign = (lax * sideSign >= 0) and 1 or -1
@@ -550,4 +509,3 @@ function M.install(F, deps)
 end
 
 return M
-

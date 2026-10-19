@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsTemp.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -13,18 +12,16 @@ function M.install(F, deps)
     local lerp = deps.lerp
 
     F.CalcBiasWeights = function(loadBias, pressureRatio)
-        -- combinedBias / pressureRatio can be unset before first prepareWheelFrame
+
         loadBias = loadBias or 0
         pressureRatio = pressureRatio or 1.0
         local dampedBias = loadBias * 0.40
         local weightLeft = max(0.15, -0.75 * dampedBias + 1)
         local weightRight = max(0.15, 0.75 * dampedBias + 1)
-    
+
         local loadBiasSq = dampedBias * dampedBias
         local weightCenter = (loadBiasSq < 1e-5) and 1 or max(0, -1 / (1 + 5 / loadBiasSq) + 1)
-    
-        -- Under-inflation expands footprint to outer shoulders (concave structural collapsing)
-        -- Over-inflation balloons tire centerline (crown bulging)
+
         if pressureRatio < 1.0 then
             local underInfFactor = (1.0 - pressureRatio) * 0.40
             weightLeft = weightLeft * (1.0 + underInfFactor)
@@ -36,12 +33,12 @@ function M.install(F, deps)
             weightRight = weightRight * max(0.4, 1.0 - overInfFactor * 1.2)
             weightCenter = weightCenter * (1.0 + overInfFactor * 1.5)
         end
-    
+
         local weightSum = weightLeft + weightCenter + weightRight
         if weightSum <= 0 then weightSum = 1 end
         return weightLeft / weightSum, weightCenter / weightSum, weightRight / weightSum
     end
-    -- Migrate legacy 5-node tables (skin×3, core, air) → 8-node in place
+
     F.ensureTempNodes = function(temps, envTemp)
         envTemp = envTemp or getEnvTemp()
         if type(temps) ~= "table" then
@@ -53,7 +50,7 @@ function M.install(F, deps)
             end
             return temps
         end
-        -- Legacy: [1..3]=skin, [4]=single carcass, [5]=air
+
         local core = temps[4] or envTemp
         local air = temps[5] or envTemp
         temps[1] = temps[1] or envTemp
@@ -79,7 +76,6 @@ function M.install(F, deps)
         return (temps[4] or fallbackEnv) * wLeft + (temps[5] or fallbackEnv) * wCenter + (temps[6] or fallbackEnv) * wRight
     end
 
-    -- Skin-led grip thermometer with carcass lag; cold → more carcass weight (P2)
     F.EffectiveTyreTemp = function(temps, loadBias, pressureRatio, localEnvTemp, mods)
         local skin = F.TempRingsToAvgTemp(temps, loadBias, pressureRatio, localEnvTemp)
         local carcass = F.TempCarcassToAvgTemp(temps, loadBias, pressureRatio, localEnvTemp)
@@ -88,9 +84,9 @@ function M.install(F, deps)
         if mods then
             local tOpt = mods.optimalTemp or WORKING_TEMP
             local coldW = max(15.0, mods.coldWidth or DEFAULT_MODS.coldWidth)
-            -- 0 at/above opt, 1 when skin is ~0.65·coldWidth below opt
+
             local coldness = max(0.0, min(1.0, (tOpt - skin) / (coldW * 0.65)))
-            coldness = coldness * coldness * (3.0 - 2.0 * coldness) -- smoothstep
+            coldness = coldness * coldness * (3.0 - 2.0 * coldness)
             blend = lerp(topo.gripBlendWarm, topo.gripBlendCold, coldness)
         end
         return skin * (1.0 - blend) + carcass * blend
@@ -102,4 +98,3 @@ function M.install(F, deps)
 end
 
 return M
-

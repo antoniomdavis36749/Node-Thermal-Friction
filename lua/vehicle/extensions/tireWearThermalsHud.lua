@@ -1,6 +1,5 @@
--- lua/vehicle/extensions/tireWearThermalsHud.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
--- guiStream init/flush only. Physics loop lives in tireWearThermalsPhysicsLoop.lua.
+
 local M = {}
 
 function M.install(F, deps)
@@ -92,13 +91,13 @@ function M.install(F, deps)
                 carcassAvg = ENV_TEMP, rimTemp = ENV_TEMP, airTemp = ENV_TEMP,
                 brakeSurface = ENV_TEMP, brakeCore = ENV_TEMP, brakeThermalEfficiency = 1,
                 contactDepth = 0, underWater = false,
-                -- Surface / contact diagnostics
+
                 surfaceName = "unknown", surfaceType = "generic",
                 muStatic = 1, muSlide = 1, rough = 0,
                 loadN = 0, loadPct = 0, peakForce = 0, dynamicRadius = 0.3,
                 wheelSpeedMps = 0, wheelSpeedMph = 0,
                 slipEnergy = 0, longSlip = 0, sideSlip = 0,
-                -- Suspension diagnostics
+
                 suspCompressionMm = 0, suspVel = 0, suspStress = 0, suspBumpMm = 0, suspDroopMm = 0,
                 airborne = false,
                 profile = "standard", profile1 = "", profile2 = "", compoundClass = "standard",
@@ -125,7 +124,6 @@ function M.install(F, deps)
         end
     end
 
-    -- Physics tick: no spindle force FX (arcade applyForce path removed)
     F.update = function(_dt)
     end
 
@@ -298,7 +296,7 @@ function M.install(F, deps)
                         local loadN = entry.loadN or 0
                         if loadN > 0 then
                             totalLoad = totalLoad + loadN
-                            -- Token after last underscore (FL / wheel_FL) so "wheel" does not fake left.
+
                             local n = string.lower(tostring(wd.name or entry.name or ""))
                             local token = string.match(n, "([^_]+)$") or n
                             local isFront = data.isFront
@@ -363,8 +361,7 @@ function M.install(F, deps)
 
                     local hotTgt = math.max(1.0, entry.targetHotPressure or entry.optimalPressure or 25)
                     local avgT = EffectiveTyreTemp(data.temp, w.combinedBias or 0, (entry.pressure or 0) / hotTgt, localizedEnvTemp, interpolatedMods)
-                    -- Profile opt window, unscaled. working_temp is this tire's optimalTemp.
-                    -- tempPlateau, coldWidth, and hotWidth stay the compound knobs.
+
                     local opt = entry.working_temp or WORKING_TEMP
                     local plateau = (interpolatedMods and interpolatedMods.tempPlateau) or 15
                     local coldW = (interpolatedMods and interpolatedMods.coldWidth) or 55
@@ -389,7 +386,7 @@ function M.install(F, deps)
                         entry.tempCategory = "Normal"
                     end
                     entry.avgTemp = math.floor(avgT * 10) / 10
-                    -- Stint peak avg (same EffectiveTyreTemp as live avg); resets on vehicle reload / initTyreData
+
                     if not w.isBroken and avgT > (data.stintMaxAvgTemp or 0) then
                         data.stintMaxAvgTemp = avgT
                     end
@@ -398,7 +395,7 @@ function M.install(F, deps)
             end
 
             if pitwallOpen() then
-            -- Native triangle aero (aeroDebug APIs). Heat uses full wd.downForce (scale 1.0).
+
             guiStream.totalDownforceN = math.floor(nativeAero.liftN)
             guiStream.aeroDragN = math.floor(nativeAero.dragN)
             guiStream.aeroFrontN = math.floor(nativeAero.frontN)
@@ -429,8 +426,6 @@ function M.install(F, deps)
 
     end
 
-    -- Separate HUD pipelines. Classic is the smallest set. Crew adds the life row.
-    -- Pitwall keeps the full guiStream and is published only while that app is open.
     local CLASSIC_WHEEL_KEYS = {
         "name", "profile", "tempCategory", "condition", "tyreGrip", "pressure",
         "avgTemp", "working_temp", "optimalTemp", "tempPlateau", "coldWidth", "hotWidth",

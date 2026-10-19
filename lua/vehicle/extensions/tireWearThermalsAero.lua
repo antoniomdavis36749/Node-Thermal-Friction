@@ -1,6 +1,5 @@
--- lua/vehicle/extensions/tireWearThermalsAero.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
--- Native aero sample for Pitwall/CSV (display path; heat uses wd.downForce at scale 1.0).
+
 local M = {}
 
 local min, max, abs = math.min, math.max, math.abs
@@ -55,8 +54,6 @@ M.reset = function(state)
     state.nFront, state.nRear = 0, 0
 end
 
--- Stock aeroDebug.lua: calcTotalAeroForces + CoP torque → axle downforce. Display/CSV only.
--- One pcall fence: missing 0.35 APIs or userdata :dot/:cross throw skip this frame.
 local function sampleInner(state, ctx)
     local obj = ctx.obj
     local wheels = ctx.wheels
@@ -157,7 +154,6 @@ M.wheelShare = function(state, name, loadN)
     return 0
 end
 
--- Phase 3: load_kg multiplier for heat. 1.0 = no discount. Writes data.aeroHeatThermalFrac.
 M.heatThermalFrac = function(state, data, name, loadRaw, airspeed, topo)
     local frac = 1.0
     local scale = topo.aeroHeatScale

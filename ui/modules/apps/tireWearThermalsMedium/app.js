@@ -308,7 +308,6 @@ angular.module("beamng.apps")
                 }
                 setCrewOpen(true);
 
-
                 var LERP_K = 12;
                 var LERP_EPS = 0.05;
                 var DIGEST_INTERVAL_MS = 50;
@@ -327,8 +326,6 @@ angular.module("beamng.apps")
 
                 scope.wheels = [];
 
-                // Descriptors the HUD actually prints. SPECTRA_STATUS provisional bands.
-                // Standard stays untagged: a commercial Standard is tagged from purpose.
                 var PROVISIONAL_DESCRIPTORS = {
                     "all-terrain": true,
                     "mud-terrain": true,
@@ -407,7 +404,6 @@ angular.module("beamng.apps")
                     return t * t * (3 - 2 * t);
                 }
 
-                // Color from this tire's profile opt window.
                 scope.getTempColor = function (tempVal, wheel) {
                     var sat = 80;
                     var lit = 45;
@@ -467,7 +463,7 @@ angular.module("beamng.apps")
                     w.surfaceTemps = ensureArr3(w.surfaceTemps, t[0], t[1], t[2]);
                     w.carcassTemps = ensureArr3(w.carcassTemps, t[3], t[4], t[5]);
                     if (w.rimTemp === undefined || w.rimTemp === null) w.rimTemp = t[6] || 0;
-                    // A3: O|M|I from stream; fall back to overall condition (peak-based when spike on)
+
                     var c = w.condition !== undefined && w.condition !== null ? w.condition : 100;
                     var zc = w.zoneCondition;
                     if (!zc || zc.length !== 3) {

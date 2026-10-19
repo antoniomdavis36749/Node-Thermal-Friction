@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsWear.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -23,7 +22,6 @@ function M.install(F, deps)
     end
     local MISSING = deps.missing
 
-    -- Reload bridged thermals from ctw (prepare step writes these each wheel tick).
     F.ctwIntegrateWearDamage = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         local avgWeightedTemp = ctw.avgWeightedTemp or localEnvTemp or getEnvTemp()
         local current_optimal_temp = ctw.current_optimal_temp or WORKING_TEMP
@@ -66,7 +64,6 @@ function M.install(F, deps)
         local sf = ctw.sf or {}
         local groundModel = ctw.groundModel or MISSING
 
-        -- HEAT CYCLES: compound hardens (more wear, less grip) — not reduced wear
         if not data.cycleHeated and avgWeightedTemp >= current_optimal_temp * 0.85 then
                 data.cycleHeated = true
                 data.coolTimer = 0
@@ -81,33 +78,28 @@ function M.install(F, deps)
                 data.coolTimer = 0
         end
 
-        -- Stint fade: time spent near/above optimal window (stintFadeRate scales kinetics)
         local stintFadeRate = mods.stintFadeRate or DEFAULT_MODS.stintFadeRate or 1.0
         if avgWeightedTemp >= current_optimal_temp * 0.90 then
                 data.hotStintTime = (data.hotStintTime or 0) + dt * stintFadeRate
         elseif avgWeightedTemp < current_optimal_temp * 0.70 then
                 data.hotStintTime = max(0, (data.hotStintTime or 0) - dt * 0.15)
         end
-        -- ~0–12% grip loss over a long hot stint (~20 min at peak @ rate 1.0)
+
         data.stintFade = min(0.12, (data.hotStintTime or 0) / 10000)
 
-        -- Heat-cycle wear gain folded into stintFadeRate (compound stint character)
         local cycleWearMultiplier = 1.0 + (data.heatCycles or 0) * (0.06 * stintFadeRate)
-    
+
         local wear = 0
         local zoneWearDelta = { 0, 0, 0 }
-        -- Soft scalar tread (Friction coherence A1): ages HUD Cond/zones via min(scalar, node);
-        -- does NOT feed grip wearPenalty while node spike on. Leak/puncture may still use Cond.
-        -- center: slower when fresh, faster late — Cond/leak clocks only (no μ).
-        -- early/late scale proportionally so the curve shape holds.
+
         local ENABLE_SCALAR_TREAD_WEAR = true
         local ENABLE_SCALAR_RATE_CURVE = true
         local SCALAR_TREAD_WEAR_SCALE = 0.15
-        local SCALAR_SCALE_EARLY = 0.12 -- fresh (lifeUsed→0)
-        local SCALAR_SCALE_LATE = 0.22 -- late life ceiling
-        local SCALAR_LIFE_EARLY_END = 0.03 -- 3% used → reach center
-        local SCALAR_LIFE_LATE_START = 0.12 -- 12% used → start late ramp
-        local SCALAR_LIFE_LATE_FULL = 0.30 -- 30% used → full late rate
+        local SCALAR_SCALE_EARLY = 0.12
+        local SCALAR_SCALE_LATE = 0.22
+        local SCALAR_LIFE_EARLY_END = 0.03
+        local SCALAR_LIFE_LATE_START = 0.12
+        local SCALAR_LIFE_LATE_FULL = 0.30
         local scalarMid = SCALAR_TREAD_WEAR_SCALE
         do
             local profileMid = mods and mods.scalarTreadWearScale
@@ -144,9 +136,9 @@ function M.install(F, deps)
                         surfaceWearScale = lerp(0.85, 0.50, treadCoef)
                     end
                 end
-        
+
                 wear = tempDistToWearMult(tempDistWeighted) * (slidingWear + (vehNotParked * abs(propulsionTorque * 0.008 - brakeTorque * 0.025) * 0.3 * TORQUE_ENERGY_MULTIPLIER) * 0.08 + angularVel * 0.0005 * (ctw.rollingWearCoef or 1.0)) * (wearRate * cycleWearMultiplier / max(0.7, min(1.3, tyreWidth / 0.2))) * (1.0 + min(0.75, (w.suspStress or 0) * 0.35 * bottomOutSens)) * surfaceWearScale * dt
-                -- Mild scalar-rate curve from dedicated scalar life (never hybrid / node peak).
+
                 local scalarScale = scalarMid
                 if ENABLE_SCALAR_RATE_CURVE then
                     local lifeUsed = max(0, min(1, (100 - (data.scalarTreadCondition or 100)) * 0.01))
@@ -164,7 +156,6 @@ function M.install(F, deps)
                 data.scalarWearScale = scalarScale
                 wear = wear * scalarScale
 
-                -- Path A2: secondary contact (kerb+asphalt) mild wear bump when ID2 rougher — spike excluded upstream
                 do
                     local dualB = ctw.dualContactBlend or 0
                     if dualB > 1e-4 then
@@ -175,7 +166,6 @@ function M.install(F, deps)
                     end
                 end
 
-                -- Excess-camber wear: neutral at camberWearMult=1.0 (bit-identical); >1 adds mild shoulder wear
                 do
                     local cwm = mods.camberWearMult or DEFAULT_MODS.camberWearMult or 1.0
                     if abs(cwm - 1.0) > 1e-6 then
@@ -184,7 +174,6 @@ function M.install(F, deps)
                     end
                 end
 
-                -- Per-zone wear follows load bias weights (outer/middle/inner)
                 zoneWearDelta[1] = wear * wLeft * 3
                 zoneWearDelta[2] = wear * wCenter * 3
                 zoneWearDelta[3] = wear * wRight * 3
@@ -196,10 +185,10 @@ function M.install(F, deps)
                 data.zoneCondition[zi] = max(0, min(100, (data.zoneCondition[zi] or 100) - (zoneWearDelta[zi] or 0)))
             end
             data.condition = max(0, min(100, (data.zoneCondition[1] + data.zoneCondition[2] + data.zoneCondition[3]) / 3))
-            -- True scalar life (A1 sc): never min'd with node — drives rate curve + Pitwall sc
+
             data.scalarTreadCondition = max(0, min(100, (data.scalarTreadCondition or 100) - wear))
         else
-            -- Thermal-first: hold full tread so grip curves stay temp/PSI/surface-driven
+
             data.zoneCondition[1], data.zoneCondition[2], data.zoneCondition[3] = 100, 100, 100
             data.condition = 100
             data.scalarTreadCondition = 100
@@ -207,10 +196,6 @@ function M.install(F, deps)
         end
         local scaleWearModifier = (mods.wearRate or 0.0005) * 2000
 
-        -- DISTINCT surface modes: clog (loose + offroad/rally only) / grain / blister
-        -- isDryPaved already from shared flags (includes hard_smooth)
-
-        -- Dirt packing vs self-cleaning — street/sport/slick never accumulate clog
         local clog = data.clog or 0
         local depthPack = min(1.5, max(0, contactDepth or 0) * 3.0)
         local p1Clog = data.profile1Lower or ""
@@ -225,7 +210,7 @@ function M.install(F, deps)
                 if isRallyClog then packRate = packRate * 0.55 end
                 clog = clog + packRate * dt
         else
-                -- Street compounds / dry pave: clear any residual clog quickly
+
                 local cleanBoost = clogEligible and 1.0 or 3.0
                 if string.find(gmName, "sand") or string.find(gmName, "gravel") then cleanBoost = cleanBoost * 2.5 end
                 if isDryPaved then cleanBoost = cleanBoost * 1.3 end
@@ -236,7 +221,6 @@ function M.install(F, deps)
         if not clogEligible then clog = min(clog, 0) end
         data.clog = max(0, min(1.0, clog))
 
-        -- Graining: cold compound + lateral scrub on hard surfaces (not total slip alone).
         local grain = data.graining or 0
         local grainColdLimit = current_working_temp * grainTempRatio
         local latGrainWork = max(sideSlipEnergy, slipEnergy * 0.55)
@@ -251,7 +235,7 @@ function M.install(F, deps)
                 local grainDecay = 0
                 local warmFloor = current_working_temp * max(0.82, grainTempRatio + 0.06)
                 if avgWeightedTemp >= warmFloor and avgWeightedTemp <= (current_working_temp * 1.15) and latGrainWork < (grainSlipThresh * 0.85) then
-                    grainDecay = 0.0035 -- polish in window; was 0.012 (erased out-lap grain)
+                    grainDecay = 0.0035
                 end
                 if not isAirborne and abs(angularVel) > 3.0 and latGrainWork < (grainSlipThresh * 1.8) then
                     grainDecay = grainDecay + min(0.003, 0.00035 * abs(angularVel))
@@ -260,14 +244,12 @@ function M.install(F, deps)
         end
         data.graining = max(0, min(1.0, grain))
 
-        -- Blistering: overheat + (light slip OR loaded Hot corner). Does not heal.
-        -- Pass #7e: half #7d rate for this run. Gate + rumble damp unchanged.
         local blister = data.blistering or 0
         local blisterStart = current_working_temp * blisterTempRatio
         local blisterSlipStart = 0.14
         local slipForBlister = max(slipEnergy, sideSlipEnergy * 0.85)
         local slipAbuse = (slipForBlister > blisterSlipStart) and min(2.0, slipForBlister / blisterSlipStart) or 0
-        -- Cornering work on this tire: its own slip angle, weighted by its share of the axle load.
+
         local latWork = abs(w.latSlipDir or 0)
         if w.axleLoadMean and w.axleLoadMean > 50 then
                 latWork = latWork * max(0.5, min(1.5, loadRaw / w.axleLoadMean))
@@ -291,7 +273,6 @@ function M.install(F, deps)
             data.surfaceDamage = max(data.clog or 0, data.graining or 0, data.blistering or 0)
     end
 
-    -- Pressure leak, native PSI sync, hot write-back (separate local budget from damage).
     F.ctwIntegrateWearPressure = function(wheelID, dt, localEnvTemp, wd, w, data, mods)
         local avgWeightedTemp = ctw.avgWeightedTemp or localEnvTemp or getEnvTemp()
         local current_optimal_temp = ctw.current_optimal_temp or WORKING_TEMP
@@ -303,12 +284,6 @@ function M.install(F, deps)
         local thermalAbsPSI = ctw.thermalAbsPSI or warmAbsolutePressurePSI
         local dynamicPressurePSI = ctw.dynamicPressurePSI
 
-        -- Progressive puncture (BeamNG pressure-group leak), not instant deflate.
-        -- Heat leak is carcass-gated and recomputed each step (not sticky). A high-speed
-        -- yaw/slide used to flash SKIN avgWeightedTemp past 165 and latch leakRatePa forever
-        -- Spike/puncture: stock wheels.lua owns setGroupPressure while isPunctured.
-        -- Slicks: higher heat-leak floor so WC hotlaps don't "slow flat" near the working window;
-        -- soft_slick used to inherit the street 165C gate when optTemp < 80.
         local nativeOwnsSpikeLeak = wd.isPunctured and true or false
         local leak = 0
         local carcassLeakTemp = ctw.avgCarcassTemp or avgWeightedTemp
@@ -319,7 +294,7 @@ function M.install(F, deps)
             data.slickProfile = isSlickLeak
         end
         if (data.blistering or 0) > 0.70 and carcassLeakTemp > current_optimal_temp * 1.30 then
-                leak = max(leak, lerp(0, 22000, min(1, (data.blistering - 0.70) / 0.30))) -- Pa/s
+                leak = max(leak, lerp(0, 22000, min(1, (data.blistering - 0.70) / 0.30)))
         end
         local heatLeakStart = isSlickLeak and 195 or (((mods.optimalTemp or 65) >= 80) and 185 or 165)
         if carcassLeakTemp > heatLeakStart then
@@ -330,20 +305,20 @@ function M.install(F, deps)
         end
         data.leakRatePa = leak
         if nativeOwnsSpikeLeak then
-                -- Defer pressure writes to native; track UI severity + follow native gauge.
+
                 data.punctureSeverity = min(1.0, (data.punctureSeverity or 0) + dt * 0.02)
-                -- Informational rate for HUD / diagnostics (does not drive setGroupPressure).
+
                 data.leakRatePa = max(leak, wd.punctureLeakRate or 20000)
         elseif leak > 0 then
                 local newAbs = applyPressureLeakPa(wd, leak, dt)
                 if newAbs then
                     data.punctureSeverity = min(1.0, (data.punctureSeverity or 0) + dt * 0.02)
-                    -- Finalize with native deflate only at BeamNG min pressure
+
                     if newAbs <= 105500 then
                         deflateTireCompat(wheelID)
                     end
                 elseif (data.blistering or 0) >= 0.95 and avgWeightedTemp > (data.working_temp * max(1.25, blisterTempRatio - 0.05)) then
-                    -- Fallback when pressure groups unavailable
+
                     deflateTireCompat(wheelID)
                 end
         end
@@ -357,13 +332,11 @@ function M.install(F, deps)
                 dPdt = abs(nativePSI - prevNative) / max(dt, 1e-3)
                 data.lastNativePSI = nativePSI
                 data.nativePressurePSI = nativePSI
-                -- Prefer live BeamNG pressure-group reading when leaking or native spike-puncture owns writes
+
                 if (data.leakRatePa or 0) > 0 or nativeOwnsSpikeLeak then
                     data.currentPressurePSI = nativePSI
                 else
-                    -- User/TPMS fill: only treat as a garage setpoint when the CAR is slow.
-                    -- Hop/airborne fronts at 170 mph used to look parked (angularVel forced 0)
-                    -- and PV/contact spikes tripped dP/dt ≥ 8 PSI/s, so Cold chased native to ~40.
+
                     local tpmsPsiS = topo.pressureTpmsDeadbandPsiS or 8.0
                     local garageSpeed = topo.pressureColdRefreshMaxSpeed or 4.0
                     local inGarage = vehicleSpeed < garageSpeed
@@ -377,11 +350,11 @@ function M.install(F, deps)
                         and currentTempK and initialTempK
                         and abs(currentTempK - initialTempK) < 8.0 then
                         local coldNow = data.coldPressurePSI or nativePSI
-                        -- Follow native down always (deflate). Follow up only after a real user fill.
+
                         if nativePSI <= (coldNow + 0.25) or data.coldFillAdopt then
                             local coldAlpha = min(1.0, dt / max(0.5, topo.pressureColdRefreshTau or 2.5))
                             data.coldPressurePSI = coldNow * (1.0 - coldAlpha) + nativePSI * coldAlpha
-                            -- Keep hot tgt tied to this group's cold fill (drag rear ≠ flat 110).
+
                             data.targetHotPressurePSI = seedHotTargetPSI(
                                 data.coldPressurePSI,
                                 mods and mods.optimalPressure
@@ -393,8 +366,6 @@ function M.install(F, deps)
                     end
                 end
 
-                -- Skip UP-writes while rubber is still cold (straight-line fronts never leave ~28°C).
-                -- Always allow pull-down: hop/PV chatter trips dP/dt ≥ 8 and used to freeze native at 38 PSI.
                 local luaGauge = (thermalAbsPSI or warmAbsolutePressurePSI or 0) - 14.696
                 local pullingDown = nativePSI and (nativePSI - luaGauge) > 2.0
                 local tireHot = currentTempK and initialTempK and (currentTempK - initialTempK) > 15.0
@@ -440,4 +411,3 @@ function M.install(F, deps)
 end
 
 return M
-

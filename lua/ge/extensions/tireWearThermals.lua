@@ -1,7 +1,6 @@
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
--- Fast local cache of frequently accessed primitive functions and tables
 local tostring = tostring
 local serialize = serialize
 local ipairs = ipairs
@@ -9,14 +8,11 @@ local pairs = pairs
 local type = type
 local pcall = pcall
 
--- Pre-allocated state table to prevent per-frame garbage collection (GC) allocations
 local trackEnvData = { timeOfDay = 0.5, cloudCover = 0.2, level = "" }
 
--- Throttle timer to reduce performance overhead from unthrottled loop serialization
 local updateTimer = 0
-local UPDATE_INTERVAL = 0.5 -- Update environmental stats at 2Hz (every 0.5s)
+local UPDATE_INTERVAL = 0.5
 
--- Manually reads properties directly from the Lua proxy or C++ cdata fallback
 local function safeReadFriction(gm)
     local static = gm.staticFrictionCoefficient or (gm.cdata and gm.cdata.staticFrictionCoefficient)
     local sliding = gm.slidingFrictionCoefficient or (gm.cdata and gm.cdata.slidingFrictionCoefficient)
@@ -29,11 +25,10 @@ local function safeReadFriction(gm)
     return static, sliding, strength, rough, fluidDensity, defaultDepth, stribeckVelocity
 end
 
--- Manually serializes ground model configurations safely using a protected caller
 local function getGroundModels(objId)
     local v
     if objId then
-        -- Priority: use direct vehicle object resolution; Fallback: scenetree
+
         if be and type(be.getObjectById) == "function" then
             v = be:getObjectById(objId)
         elseif scenetree then
@@ -44,7 +39,7 @@ local function getGroundModels(objId)
     end
 
     if v and type(v.queueLuaCommand) == "function" and core_environment and core_environment.groundModels then
-        -- Build the groundModels table manually as a string
+
         local cmd = "local gData = {"
         for k, gm in pairs(core_environment.groundModels) do
             local name = tostring(k)
@@ -56,8 +51,7 @@ local function getGroundModels(objId)
                 local fluidDensity = 0.0
                 local defaultDepth = 0.0
                 local stribeckVelocity = 1.0
-                
-                -- Read direct and C++ cdata properties safely inside pcall
+
                 local ok, static, sliding, str, r, fluid, defDepth, stribeck = pcall(safeReadFriction, gm)
                 if ok then
                     staticFriction = static or 1.0
@@ -68,7 +62,7 @@ local function getGroundModels(objId)
                     defaultDepth = defDepth or 0.0
                     stribeckVelocity = stribeck or 1.0
                 end
-                
+
                 cmd = cmd .. "[\"" .. name .. "\"] = { "
                 cmd = cmd .. "staticFrictionCoefficient = " .. tostring(staticFriction) .. ", "
                 cmd = cmd .. "slidingFrictionCoefficient = " .. tostring(slidingFriction) .. ", "
@@ -80,8 +74,7 @@ local function getGroundModels(objId)
             end
         end
         cmd = cmd .. "debug = 0 }; "
-        
-        -- DYNAMIC RESOLVER: Duck-types the active extensions in Vehicle Lua
+
         cmd = cmd .. "local found = false; "
         cmd = cmd .. "if type(extensions) == 'table' then "
         cmd = cmd .. "  for _, ext in pairs(extensions) do "
@@ -90,8 +83,7 @@ local function getGroundModels(objId)
         cmd = cmd .. "    end "
         cmd = cmd .. "  end "
         cmd = cmd .. "end; "
-        
-        -- Safe fallback path if no active extension is found
+
         cmd = cmd .. "if not found then "
         cmd = cmd .. "  if tireWearThermals and tireWearThermals.setGroundModels then "
         cmd = cmd .. "    tireWearThermals.setGroundModels(gData) "
@@ -99,13 +91,11 @@ local function getGroundModels(objId)
         cmd = cmd .. "    groundModels = gData "
         cmd = cmd .. "  end "
         cmd = cmd .. "end"
-        
+
         v:queueLuaCommand(cmd)
     end
 end
 
--- isTraffic is set only by gameplay_traffic.insertTraffic. Scenario race AI never gets it.
--- Traffic never loads the tire module. Everyone else loads it once.
 local ntfState = {}
 local ntfAge = {}
 local LOAD_FULL = "if extensions and extensions.tireWearThermals and extensions.tireWearThermals.loadFull then extensions.tireWearThermals.loadFull() end"
@@ -174,33 +164,29 @@ local function syncTrafficLight()
     end
 end
 
--- Assigned below. onUpdate closes over this local.
 local pushPlayerCareer
 
--- Main update loop executed with a performance throttle
 local function onUpdate(dt)
     updateTimer = updateTimer + dt
     if updateTimer < UPDATE_INTERVAL then return end
     updateTimer = 0
 
-    -- 1. Safely gather environmental metrics with multiple API fallbacks and global late-binding
     local envTemp = 21
     local tod = 0.5
     local cloudCover = 0.2
 
     if core_environment then
-        -- Retrieve temperature safely (GE may return Kelvin or Celsius)
+
         if type(core_environment.getTemperature) == "function" then
             envTemp = core_environment.getTemperature() or 21
         elseif core_environment.temperature ~= nil then
             envTemp = core_environment.temperature
         end
-        -- Normalize to Celsius before mailbox (vehicle also sanitizes, but keep units consistent)
+
         if type(envTemp) == "number" and envTemp > 180 then
             envTemp = envTemp - 273.15
         end
 
-        -- Retrieve time of day safely
         if type(core_environment.getTimeOfDay) == "function" then
             local todData = core_environment.getTimeOfDay()
             if type(todData) == "table" then
@@ -212,7 +198,6 @@ local function onUpdate(dt)
             tod = core_environment.timeOfDay
         end
 
-        -- Retrieve cloud cover safely
         if type(core_environment.getCloudCover) == "function" then
             cloudCover = core_environment.getCloudCover() or 0.2
         elseif type(core_environment.getCloudScale) == "function" then
@@ -220,7 +205,6 @@ local function onUpdate(dt)
         end
     end
 
-    -- 2. Update values in our pre-allocated table (zero allocations)
     local levelName = ""
     if type(getCurrentLevelIdentifier) == "function" then
         local okLevel, levelId = pcall(getCurrentLevelIdentifier)
@@ -229,19 +213,17 @@ local function onUpdate(dt)
     trackEnvData.timeOfDay = tod
     trackEnvData.cloudCover = cloudCover
     trackEnvData.level = levelName
-    
+
     local trackEnvSerialized = ""
     if type(serialize) == "function" then
         trackEnvSerialized = serialize(trackEnvData)
     end
 
-    -- 3. Broadcast environmental values to the global physics mailbox
     if be and type(be.sendToMailbox) == "function" then
         be:sendToMailbox('tireWearMailboxEnvTemp', tostring(envTemp))
         be:sendToMailbox('tireWearMailboxTrackEnv', trackEnvSerialized)
     end
 
-    -- Career wear stays off until this says otherwise. Freeroam never sets it.
     pushPlayerCareer()
 end
 

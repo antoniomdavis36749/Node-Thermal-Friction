@@ -1,6 +1,3 @@
--- Injects Front/Rear brake cooling duct sliders into every vehicle's Tuning menu.
--- Values persist in .pc configs via vars["$WheelCoolingDuctFront/Rear"].
--- Compatible with BeamNG 0.35+ variable system (documentation.beamng.com/.../variables/).
 -- Upstream authorship: see CREDITS.md / NOTICE.
 
 local M = {}
@@ -99,7 +96,6 @@ local function onVehicleSpawned(vehID)
 
     lastSentFront, lastSentRear = nil, nil
 end
-
 
 local function onSpawnCCallback(vehID)
     if not variablesById[vehID] then return end

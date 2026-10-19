@@ -1,6 +1,5 @@
--- lua/vehicle/extensions/tireWearThermalsPhysicsLoop.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
--- prepareWheelFrame + runFixedPhysicsSteps (100 Hz). Hud is stream-only.
+
 local M = {}
 
 local min, max, abs, sin, sqrt = math.min, math.max, math.abs, math.sin, math.sqrt
@@ -27,9 +26,6 @@ function M.install(F, deps)
     local TempCarcassToAvgTemp = deps.TempCarcassToAvgTemp
     local axleLoadSum, axleLoadCount = {}, {}
 
-    -- Axles and front/rear from hub positions along the car's forward axis (not wheel names).
-    -- Wheels closer than axleGroupGapM share an axle (duals, steered pairs). Single-axle
-    -- vehicles keep the name-based isFront from init.
     local function resolveAxleGeometry(wheels)
         local fwd = objCall("getDirectionVector")
         if not fwd then return end
@@ -61,7 +57,7 @@ function M.install(F, deps)
                 end
             end
         end
-        -- 0 = no hub position: skipped by axle load sums, never re-probed this spawn.
+
         for i in pairs(wheels.wheelRotators) do
             if tyreData[i] and tyreData[i].axleId == nil then tyreData[i].axleId = 0 end
         end
@@ -76,7 +72,7 @@ function M.install(F, deps)
                 break
             end
         end
-        -- P1: count driven wheels + F/R layout for AWD / FWD Soft-like damp
+
         local nDriven = 0
         local nFrontDriven = 0
         local nRearDriven = 0
@@ -108,15 +104,15 @@ function M.install(F, deps)
         end
 
         for i, wd in pairs(wheels.wheelRotators) do
-            if not wheelCache[i] then 
+            if not wheelCache[i] then
                 wheelCache[i] = {
                     initialTempK = localizedEnvTemp + 273.15,
                     radius = wd.radius or 0.3
-                } 
+                }
             end
             local w = wheelCache[i]
             local data = tyreData[i]
-        
+
             if data then
                 F.updateWheelSuspension(w, data, wd, dt, invQuat, upVector)
 
@@ -124,7 +120,7 @@ function M.install(F, deps)
                 if outSign then w.outSign = outSign end
                 local outDir = w.outSign or 1
                 w.camber = camberDeg
-                -- Standard camber on both sides of the car: negative = top leaning in.
+
                 w.camberStd = camberDeg * outDir
                 data.lastCamberDeg = w.camberStd or 0
                 w.toe = toeDeg
@@ -139,8 +135,6 @@ function M.install(F, deps)
                 local airborneState = (not wd.contactMaterialID1 or wd.contactMaterialID1 == -1) or (loadRaw <= 0)
                 w.loadRaw, w.isAirborne = loadRaw, airborneState
 
-                -- This tire's own static load: settles while the car is slow, holds while driving.
-                -- Until the first slow second it tracks load slowly so rolling spawns still get a value.
                 if not airborneState and loadRaw > 50 then
                     local slow = vehSpeed < (topo.staticLoadMaxSpeed or 1.5)
                     local ref = data.staticLoadN
@@ -156,7 +150,6 @@ function M.install(F, deps)
                     end
                 end
 
-                -- This wheel's slip angle toward its own outer (+) or inner (-) shoulder, from hub velocity.
                 local latTarget = 0
                 local groundSpeed = vehSpeed
                 if axX and not airborneState and wd.node1 and wd.node2 then
@@ -171,14 +164,12 @@ function M.install(F, deps)
                     end
                 end
                 w.groundSpeed = groundSpeed
-                -- Patch slip speed over ground speed; the 3 m/s floor keeps crawling from reading as a slide.
+
                 w.slipRatio = abs(wd.lastSlip or 0) / max(3.0, groundSpeed)
                 local latPrev = w.latSlipDir or 0
                 w.latSlipDir = latPrev + (latTarget - latPrev) * min(1.0, dt / max(0.02, topo.latSlipEmaTau or 0.10))
                 data.lastSideSlipDeg = (w.latSlipDir or 0) * (topo.latSlipAngleRef or 0.10) * 57.295779513
 
-                -- Ring 1 = outer shoulder, ring 3 = inner. Top-in camber loads the inner shoulder;
-                -- sliding outward loads the outer one.
                 w.combinedBias = (-w.camberStd * 0.12) - (topo.latSlipShoulderBias or 0.28) * w.latSlipDir
                 w.contactMatId = wd.contactMaterialID1 or -1
                 w.isBroken = wd.isBroken or false
@@ -188,26 +179,22 @@ function M.install(F, deps)
                 w.contactDepth = wd.contactDepth or 0
                 w.downForceRaw = wd.downForceRaw or loadRaw
 
-                -- Invalidate surface cache when material changes (resolveWheelSurface also keys on this)
                 if w.surfCacheMatId ~= w.contactMatId then
                     w.surfaceType = nil
                 end
 
-                -- Immersion check (same path as stock brake underwater cooling)
                 w.underWater = false
                 if wd.node1 then
                     w.underWater = not not objCall("inWater", wd.node1)
                 end
 
-                -- Spike-strip (mat 32): native wheels.lua owns setGroupPressure while isPunctured.
-                -- Node-Thermal Friction only mirrors UI/condition — do NOT arm leakRatePa for applyPressureLeakPa.
                 w.isPunctured = wd.isPunctured and true or false
                 local mat1, mat2 = wd.contactMaterialID1, wd.contactMaterialID2
                 if (mat1 == SPIKE_STRIP_MATERIAL_ID or mat2 == SPIKE_STRIP_MATERIAL_ID or w.isPunctured)
                     and not w.isTireDeflated and not w.isBroken then
                     data.punctureSeverity = max(data.punctureSeverity or 0, 0.5)
                 end
-                -- Path A2: secondary contact GM for heat/wear blend (never spike — leak ownership stays native)
+
                 w.groundModel2 = nil
                 w.contactMatId2 = -1
                 if mat2 and mat2 ~= -1 and mat2 ~= mat1
@@ -220,14 +207,10 @@ function M.install(F, deps)
                 local scrubSens = data.interpolatedMods and data.interpolatedMods.scrubSensitivity or 1.0
                 local dynR = w.dynamicRadius or (wd.radius or 0.3)
                 local surfaceSpeed = abs(wd.angularVelocity or 0) * dynR
-                -- Toe scrub: soft-saturation v/(1+v/Vref) keeps effect proportional at low-mid speed
-                -- and gently saturates above Vref rather than hard-capping. At v=Vref scrub is ~50%
-                -- of linear extrapolation; real toe scrub saturates around highway speed.
+
                 local toeScrubVref = topo.toeScrubVref or 70.0
                 local toeScrubEnergy = (surfaceSpeed / (1.0 + surfaceSpeed / toeScrubVref)) * abs(sin(w.toeRad or 0)) * 0.025 * scrubSens
 
-                -- Prefer BeamNG core slip energy (sounds.lua uses *5e-6); add explicit long/lat slip
-                -- Fix A: high-|lastSlip| longComp boost so burnout/lock can smoke; cruise/corner stay flat.
                 local gmStatic = gm.staticFrictionCoefficient or 1
                 local nativeWork = (wd.slipEnergy or 0) * NATIVE_SLIP_ENERGY_SCALE
                 local absLongSlip = abs(wd.lastSlip or 0)
@@ -238,15 +221,15 @@ function M.install(F, deps)
                 local boostMax = topoSlip.slipVelBoostMax or 9.0
                 local boostSpan = max(1e-3, boostFull - boostStart)
                 local boostRamp = max(0, min(1, (absLongSlip - boostStart) / boostSpan))
-                boostRamp = boostRamp * boostRamp * (3.0 - 2.0 * boostRamp) -- smoothstep
+                boostRamp = boostRamp * boostRamp * (3.0 - 2.0 * boostRamp)
                 longComp = longComp * (1.0 + boostMax * boostRamp)
                 local sideComp = abs(wd.lastSideSlip or 0) * NATIVE_SLIP_VEL_SCALE * gmStatic
                 w.longSlipEnergy = longComp
                 w.sideSlipEnergy = sideComp
                 w.slipEnergy = max(nativeWork, longComp * 0.55 + sideComp * 0.45)
-                -- Heat and wear both read dynamicSlipEnergy. Chassis g_mag does not scale this.
+
                 local dynamicSlipEnergy = w.slipEnergy + toeScrubEnergy
-                -- Soft ground depth amplifies scrub/work slightly (paddling / ploughing)
+
                 if (wd.contactDepth or 0) > 0.05 then
                     dynamicSlipEnergy = dynamicSlipEnergy * (1.0 + min(0.6, wd.contactDepth))
                 end
@@ -254,7 +237,6 @@ function M.install(F, deps)
             end
         end
 
-        -- Mean load of each axle: left/right split without the car's weight, aero or pitch.
         for k in pairs(axleLoadSum) do axleLoadSum[k], axleLoadCount[k] = nil, nil end
         for i in pairs(wheels.wheelRotators) do
             local data, w = tyreData[i], wheelCache[i]
@@ -290,7 +272,7 @@ function M.install(F, deps)
                 local w = wheelCache[i]
                 local data = tyreData[i]
                 if w and data then
-                    -- Thermals / wear / pressure leak at 100Hz (do not gate on native wheel handle)
+
                     F.CalcTyreWear(i, FIXED_DT, localizedEnvTemp)
 
                     local carcassTemp = TempCarcassToAvgTemp(data.temp, w.combinedBias or 0, 1.0, localizedEnvTemp)
@@ -314,12 +296,12 @@ function M.install(F, deps)
                     if doGripStep then
                         local longGrip, latGrip, grip = F.CalculateTyreGrip(i, localizedEnvTemp)
                         if longGrip ~= longGrip or latGrip ~= latGrip or longGrip <= 0.001 or latGrip <= 0.001 then
-                            -- Do not write ice μ; keep last good (spawn defaults to 1.0)
+
                             longGrip = data.lastLongGripRaw or data.lastLongGrip or 1.0
                             latGrip = data.lastLatGripRaw or data.lastLatGrip or 1.0
                             grip = data.lastGrip or 1.0
                         end
-                        -- Raw (unfaded) — lock fade applied live below from ω/slip
+
                         data.lastLongGripRaw, data.lastLatGripRaw = longGrip, latGrip
                         data.lastGrip = grip
                         tyreGripTable[i] = grip
@@ -329,14 +311,14 @@ function M.install(F, deps)
                         if w.isTireDeflated or w.isBroken then
                             F.applyWheelFriction(wheel, 1.0)
                         else
-                            -- Raw thermal grip. Brake lock fade stays off; BeamNG owns lock.
+
                             local longGrip = data.lastLongGripRaw or data.lastLongGrip or 1.0
                             local latGrip = data.lastLatGripRaw or data.lastLatGrip or longGrip
                             local fade = 0
                             longGrip, latGrip, fade = F.applyBrakeLockFade(longGrip, latGrip, wd, w)
                             data.lastLongGrip, data.lastLatGrip = longGrip, latGrip
                             data.lockFade = fade or 0
-                            -- BeamNG has one friction multiplier per wheel; long and lat each weight half.
+
                             F.applyWheelFriction(wheel, (longGrip + latGrip) * 0.5)
                         end
                     end

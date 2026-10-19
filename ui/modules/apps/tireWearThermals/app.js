@@ -7,7 +7,7 @@ angular.module("beamng.apps")
             link: function (scope, element, attrs) {
                 var StreamsManager = window.StreamsManager || ($injector.has("StreamsManager") ? $injector.get("StreamsManager") : null);
                 var streamsList = ["TireWearThermals"];
-                
+
                 if (StreamsManager) {
                     StreamsManager.add(streamsList);
                 }
@@ -34,7 +34,6 @@ angular.module("beamng.apps")
                     c.height = data.height || 220;
                 });
 
-                // Standard border-radius drawing utility
                 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
                     if (radius === undefined) radius = 5;
                     if (fill === undefined) fill = false;
@@ -69,8 +68,6 @@ angular.module("beamng.apps")
                     return t * t * (3 - 2 * t);
                 }
 
-                // Color from this tire's profile opt window.
-                // Green inside optimalTemp ± tempPlateau. Cold through coldWidth. Hot through hotWidth.
                 function getTempColor(tempVal, wheel) {
                     var sat = 85;
                     var lit = 52;
@@ -171,8 +168,7 @@ angular.module("beamng.apps")
 
                     if (condition === undefined) condition = 100;
                     camber = camber || 0;
-                    // A1 / A3 stream: O|M|I from zoneCondition; header condition = display hybrid
-                    // min(scalar, node). Cond % does not tax grip while node spike on.
+
                     var zc = d.zoneCondition || [];
                     var zoneConds = [
                         (zc[0] !== undefined && zc[0] !== null) ? zc[0] : condition,
@@ -182,22 +178,20 @@ angular.module("beamng.apps")
 
                     ctx.textAlign = 'center';
 
-                    // Robust horizontal coordinate (Left/Right Side detection)
                     var right = (tyreNumber % 2 === 1) ? 1 : 0;
                     var nameUpper = name.toUpperCase();
                     var testStr = nameUpper;
-                    
+
                     if (nameUpper.length > 1 && (nameUpper[0] === 'F' || nameUpper[0] === 'R')) {
                         testStr = nameUpper.substring(1);
                     }
-                    
+
                     if (testStr.indexOf("R") !== -1) {
                         right = 1;
                     } else if (testStr.indexOf("L") !== -1) {
                         right = 0;
                     }
 
-                    // Robust dynamic axle coordinate assignment (Row detection)
                     var back = 0;
                     if (nameUpper.indexOf("F") === 0) {
                         back = 0;
@@ -223,7 +217,6 @@ angular.module("beamng.apps")
                     var y = pad + back * (rowH + gapY);
                     var cx = x + colW * 0.5;
 
-                    // Reserve vertical bands inside the cell so text/triangles never collide
                     var headerH = Math.max(12, rowH * 0.16);
                     var footerH = Math.max(12, rowH * 0.16);
                     var camberGap = Math.max(5, rowH * 0.05);
@@ -231,18 +224,16 @@ angular.module("beamng.apps")
                     var treadH = Math.max(18, rowH - headerH - footerH - camberGap * 2);
                     var treadW = colW;
 
-                    // 1. Header Text: Wheel Name & Condition (e.g., FL | 98%)
                     ctx.fillStyle = "#ffffff";
                     var headerSize = Math.max(Math.min(colW / 12.0, 10.0), 7.0);
                     ctx.font = 'bold ' + headerSize + 'pt "Lucida Console", Monaco, monospace';
                     var headerText = name.toUpperCase() + " " + gripText(d) + " | Cond " + Math.ceil(condition) + "%";
                     ctx.fillText(headerText, cx, y + headerH * 0.72);
 
-                    // 2. Draw Tire Tread Rings
                     var segGap = 2;
                     var sectionWidth = (treadW - segGap * 2) / 3.0;
                     for (var i = 0; i < 3; i++) {
-                        // Zones are outer|middle|inner; mirror right-side cells so outer faces outward.
+
                         var zi = right ? 2 - i : i;
                         var tempVal = temps[zi] || 0;
                         var sectionColor = getTempColor(tempVal, d);
@@ -256,14 +247,12 @@ angular.module("beamng.apps")
                         }
 
                         var sectionXOffset = (sectionWidth + segGap) * i;
-                        
-                        // Draw empty background representing tread loss
+
                         ctx.fillStyle = "rgba(15, 23, 42, 0.65)";
                         ctx.beginPath();
                         ctx.rect(x + sectionXOffset, treadY, sectionWidth, treadH);
                         ctx.fill();
 
-                        // Fill color representing remaining tread (per O|M|I zone)
                         var zoneCond = zoneConds[zi];
                         if (zoneCond === undefined || zoneCond === null) zoneCond = condition;
                         if (zoneCond > 1) {
@@ -273,19 +262,17 @@ angular.module("beamng.apps")
                             ctx.rect(x + sectionXOffset, treadY + treadH * ft, sectionWidth, treadH - treadH * ft);
                             ctx.fill();
                         }
-                        
+
                         ctx.lineWidth = "2";
                         ctx.strokeStyle = "rgba(0,0,0,1)";
                         roundRect(ctx, x + sectionXOffset, treadY, sectionWidth, treadH, radius, false, true);
 
-                        // Overlay Temperature centered vertically inside the block
                         ctx.fillStyle = "#ffffff";
                         var font_size = Math.max(Math.min(colW / 16.0 * 2.6, 11.0), 7.0);
                         ctx.font = 'bold ' + font_size + 'pt "Lucida Console", Monaco, monospace';
                         ctx.fillText("" + Math.floor(tempVal), x + sectionXOffset + (sectionWidth / 2), treadY + treadH / 2 + (font_size / 2.2));
                     }
 
-                    // 3. Draw Camber Triangle Indicators (bound-clamped within the tread width)
                     var triX = x + treadW * 0.5 + treadW * (camber * 0.2 * 0.5);
                     var safetyMargin = Math.max(5, sectionWidth * 0.15);
                     triX = Math.max(x + safetyMargin, Math.min(x + treadW - safetyMargin, triX));
@@ -303,15 +290,13 @@ angular.module("beamng.apps")
                     ctx.lineTo(triX + 4, treadY + treadH + 6);
                     ctx.fill();
 
-                    // 4. Footer Text: Pressure with Context-Aware Highlight
                     var pres = (pressure !== undefined) ? pressure : 25;
                     var hot = (d.targetHotPressure !== undefined && d.targetHotPressure !== null)
                         ? d.targetHotPressure : 25;
                     ctx.fillStyle = pressureColor(pres, hot);
                     var infoFontSize = Math.max(Math.min(colW / 18.0 * 2.4, 10.0), 6.5);
                     ctx.font = 'bold ' + infoFontSize + 'pt "Lucida Console", Monaco, monospace';
-                    
-                    // Show a warning indicator if surface damage or tread is severe
+
                     var warningTag = "";
                     if ((surfaceDamage && surfaceDamage > 25) || (condition < 35)) {
                         warningTag = "⚠ ";
@@ -364,7 +349,7 @@ angular.module("beamng.apps")
                     if (!acceptNtfStream(dataStream)) return;
                     isNtfLifeReset(dataStream);
 
-                    ctx.setTransform(1, 0, 0, 1, 0, 0); 
+                    ctx.setTransform(1, 0, 0, 1, 0, 0);
                     ctx.clearRect(0, 0, c.width, c.height);
                     ctx.textAlign = 'center';
 

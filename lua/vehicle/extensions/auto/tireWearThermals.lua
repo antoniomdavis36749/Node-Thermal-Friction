@@ -1,10 +1,3 @@
--- lua/vehicle/extensions/auto/tireWearThermals.lua
--- The seated car parses the tire module on its first GFX step.
--- A car you are not driving prints lite and does not parse it.
--- tools/FULL_HEAT_AI (an empty file, dev only, not in the release zip) lets
--- those cars parse it too. Each one then writes tools/output/ntf-ai-<id>.csv.
--- There is no traffic on/off switch.
--- The app open flags stay on this table so the UI can call them before load.
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -120,7 +113,7 @@ local function devAiHeat()
 end
 
 local function gateUpdateGFX(dt)
-    -- Unseated cars never parse the tire module unless the dev file is present.
+
     if not (playerInfo and playerInfo.firstPlayerSeated) and not devAiHeat() then
         if not liteNoted then
             liteNoted = true
@@ -170,9 +163,6 @@ M.setCareerMode = function(on)
     end
 end
 
--- Vehicle auto extensions are timed inside onExtensionLoaded. Parsing the
--- tire module there is the slow line. The seated car parses it on the first
--- GFX step instead.
 M.onExtensionLoaded = function() end
 M.onInit = function() end
 M.updateGFX = gateUpdateGFX

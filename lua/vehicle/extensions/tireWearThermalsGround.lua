@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsGround.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -16,7 +15,7 @@ function M.install(F, deps)
         local materials = (particles and type(particles.getMaterialsParticlesTable) == "function") and particles.getMaterialsParticlesTable() or {}
         local matData = materials[id] or materials[id + 1] or {}
         local name = matData.name or "DOESNT EXIST"
-    
+
         local rawData = cache.models[name] or { staticFrictionCoefficient = 1, slidingFrictionCoefficient = 1 }
         local data = {
             name = name,
@@ -29,15 +28,11 @@ function M.install(F, deps)
             stribeckVelocity = rawData.stribeckVelocity or rawData.stribeckVel or 1,
             defaultDepth = rawData.defaultDepth or 0
         }
-    
+
         cache.lut[id] = data
         return name, data
     end
 
-    -- Path A1/A2: blend primary+secondary GM soft/friction fields into CalcTyreWear scratch.
-    -- Must take scratch as arg — module `local ctw` is declared later, so a bare `ctw` here
-    -- would resolve as a nil global and disable the vehicle (BeamNG Lua ~200-local split).
-    -- Asphalt dry ≈ identity (strength≈1, defaultDepth≈0, fluid≈0, stribeck≈1). Spike mats excluded upstream.
     F.blendGroundThermal = function(w, groundModel, isAirborne, scratch)
         if not scratch then return end
         local gm = groundModel or MISSING
@@ -74,7 +69,7 @@ function M.install(F, deps)
         scratch.gmStribeck = stribeck
         scratch.dualContactBlend = dualB
         scratch.dualRoughDelta = max(0, rough - rough1)
-        -- Soft-sink / conduction extras from unused GM fields (A1)
+
         local sRef = max(0.2, topo.softSinkStrengthRef or 1.0)
         local softExtra = max(0, defDepth) * (topo.softSinkDefaultDepthCoef or 2.2)
             + max(0, 1.0 - strength / sRef) * (topo.softSinkStrengthCoef or 0.40)
@@ -88,9 +83,8 @@ function M.install(F, deps)
 
     F.setGroundModels = function(data)
         cache.models = data or {}
-        cache.lut = {} -- Invalidate LUT cache to force evaluation under the new environment
+        cache.lut = {}
     end
 end
 
 return M
-

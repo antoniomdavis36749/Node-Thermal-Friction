@@ -1,6 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsCareer.lua
--- Career wear file. Freeroam, scenario, and traffic do not read or write it.
--- Heat does not read it. The mode flag comes from the GE extension.
 local M = {}
 
 local min, max = math.min, math.max
@@ -14,7 +11,6 @@ function M.install(F, deps)
         return F._careerMode and playerInfo and playerInfo.firstPlayerSeated and true or false
     end
 
-    -- GE calls this. False is the default, so a freeroam spawn never reads the file.
     F.setCareerMode = function(on)
         local nextOn = on and true or false
         F._careerMode = nextOn

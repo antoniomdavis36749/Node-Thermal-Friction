@@ -1,6 +1,5 @@
--- lua/vehicle/extensions/tireWearThermalsSurface.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
--- Ground-model classify + surface grip bias (cold path; not on 100 Hz thermal step).
+
 local M = {}
 
 local min, max = math.min, math.max
@@ -9,11 +8,10 @@ local function lerp(a, b, t) return a + (b - a) * t end
 M.classifySurfaceGrip = function(gmName)
     gmName = string.lower(gmName or "")
 
-    -- Base-game keys / aliases first (art/groundmodels.json)
     if gmName == "frictionless" or gmName == "ice" then
         return "ice"
     end
-    -- SLIPPERY is wet-asphalt class in BeamNG (collisiontype ASPHALT_WET), NOT ice
+
     if gmName == "slippery" or gmName == "asphalt_wet" or string.find(gmName, "asphalt_wet") then
         return "wet_paved"
     end
@@ -29,7 +27,7 @@ M.classifySurfaceGrip = function(gmName)
     if string.find(gmName, "gravel") or gmName == "dirt_loose" then
         return "gravel"
     end
-    -- Dirt before sand so aliases like dirt_sandy stay dirt (not sand)
+
     if string.find(gmName, "grass") or string.find(gmName, "forest")
         or string.find(gmName, "leaves") or string.find(gmName, "branches")
         or string.find(gmName, "foliage") or string.find(gmName, "dirt") then
@@ -51,11 +49,11 @@ M.classifySurfaceGrip = function(gmName)
         or string.find(gmName, "spike") or string.find(gmName, "grid") then
         return "dry_paved"
     end
-    -- Smooth hard props (bridges, ramps, barriers)
+
     if string.find(gmName, "metal") or string.find(gmName, "wood") or string.find(gmName, "plastic") then
         return "hard_smooth"
     end
-    -- Non-drive / special
+
     if string.find(gmName, "void") or string.find(gmName, "soft_collision") or string.find(gmName, "shock_absorber") then
         return "generic"
     end
@@ -67,15 +65,13 @@ M.getSurfaceSanityScale = function(surfaceType, treadCoef, drainage)
     drainage = max(0, min(1, drainage or 0.5))
 
     if surfaceType == "dry_paved" then
-        -- Low tread favors asphalt slightly; hard cap keeps high-G from tripping chassis
-        -- Cap 1.15 ≈ peak logged ~1.34 @ Belasco gmμ~0.86 (was 1.49 @ cap 1.28)
+
         return lerp(1.04, 0.90, treadCoef), 1.15
     elseif surfaceType == "hard_smooth" then
-        -- Kerbs/metal: keep below asphalt so curb strikes scrub instead of trip
+
         return lerp(0.96, 0.90, treadCoef), 1.10
     elseif surfaceType == "wet_paved" then
-        -- Drainage/tread help in the wet, but never beat the same tire's dry-paved scale
-        -- (MT/logger with wetGripScale were exceeding dry asphalt — illogical).
+
         local wet = lerp(0.82, 0.98, drainage) * lerp(0.94, 1.02, treadCoef)
         local dry = lerp(1.06, 0.90, treadCoef)
         return min(wet, dry * 0.92), 1.15
@@ -92,7 +88,7 @@ M.getSurfaceSanityScale = function(surfaceType, treadCoef, drainage)
     elseif surfaceType == "snow" then
         return lerp(0.36, 1.00, treadCoef), 0.60
     elseif surfaceType == "ice" then
-        -- Winter tread helps a little; slicks are awful
+
         return lerp(0.42, 0.78, treadCoef), 0.30
     elseif surfaceType == "rock" then
         return lerp(0.88, 1.05, treadCoef), 1.40
@@ -100,8 +96,6 @@ M.getSurfaceSanityScale = function(surfaceType, treadCoef, drainage)
     return 1.0, 1.30
 end
 
--- Shared surface flags for wear/heat/grip (keeps CalcTyreWear and CalculateTyreGrip aligned)
--- Fills `out` in place — no allocation when caller reuses a table.
 M.fillSurfaceFlags = function(out, surfaceType, gmName)
     out = out or {}
     out.ice = surfaceType == "ice"
@@ -119,7 +113,6 @@ M.fillSurfaceFlags = function(out, surfaceType, gmName)
     return out
 end
 
--- Cache classifySurfaceGrip + rain morph until contact material or rain state changes
 M.resolveWheelSurface = function(w, groundModel, isRaining)
     local matId = w.contactMatId
     if matId == nil then matId = -2 end
@@ -148,9 +141,6 @@ M.resolveWheelSurface = function(w, groundModel, isRaining)
     return surfaceType, w.surfaceFlags
 end
 
--- Profile × surface grip bias (compound character on top of treadCoef sanity scale)
--- profile1/profile2 should already be lowercased (tyreData.profile1Lower / profile2Lower).
--- Resolved once at spawn and stored on the tire. The hot path passes that table.
 M.profileSurfaceFlags = function(profile1, profile2)
     local p1 = profile1 or ""
     local p2 = profile2 or ""
@@ -244,7 +234,7 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2, 
         elseif isSlick then tyreGrip = tyreGrip * 0.94
         end
     elseif surfaceType == "gravel" or surfaceType == "dirt" then
-        -- Rally: raised loose baseline (was 1.12) — asphalt path unchanged
+
         if isRally then tyreGrip = tyreGrip * 1.20
         elseif isAllTerrain then tyreGrip = tyreGrip * 1.10
         elseif isTruckOffroad then tyreGrip = tyreGrip * 1.10
@@ -276,12 +266,12 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2, 
         elseif isSlick or isDrag then tyreGrip = tyreGrip * 0.82
         end
     elseif surfaceType == "wet_paved" then
-        if isRain then tyreGrip = tyreGrip * 1.06 -- stacks mildly with wetGripScale
+        if isRain then tyreGrip = tyreGrip * 1.06
         elseif isWinter then tyreGrip = tyreGrip * 1.04
-        elseif isSlick or isDrag then tyreGrip = tyreGrip * 0.92 -- extra caution; wetGripScale already harsh
+        elseif isSlick or isDrag then tyreGrip = tyreGrip * 0.92
         end
     elseif surfaceType == "dry_paved" or surfaceType == "hard_smooth" then
-        -- Slicks already get dryGripScale + surfaceCap; avoid stacking another asphalt bonus
+
         if isSlick or isDrag then tyreGrip = tyreGrip * 1.0
         elseif isMudTerrain or isCrawler or isTruckOffroad then tyreGrip = tyreGrip * 0.96
         elseif isPaddle then tyreGrip = tyreGrip * 0.90
@@ -292,8 +282,6 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2, 
     return tyreGrip
 end
 
--- Gaming add-on. Dirt rides on the tire after loose ground and clears on pavement.
--- Grip only. Cooling and the locked heat bands are not in this path.
 local CARRY_DIRT_GRIP_LOSS = 0.04
 local CARRY_DIRT_PICKUP = 0.05
 local CARRY_DIRT_CLEAN = 0.06

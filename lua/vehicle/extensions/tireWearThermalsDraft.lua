@@ -1,4 +1,3 @@
--- lua/vehicle/extensions/tireWearThermalsDraft.lua
 -- Upstream authorship: see CREDITS.md / NOTICE.
 local M = {}
 
@@ -9,10 +8,9 @@ function M.install(F, deps)
     local getVehicleAirspeedRef = deps.getVehicleAirspeedRef
     local getFreestreamAirspeed = deps.getFreestreamAirspeed
 
-    -- Recompute pack-air / convection vs native 0.39 interAero.
     F.refreshDraftCompat = function()
         if draft.hasNativeInterAero then
-            -- Drag/cooling freestream already handled by setWindAero → airflowspeed.
+
             draft.convectionMult = 1.0
             local fromInfer = draft.inferredWake * draft.nativeAirTempMax
             local fromCompanion = draft.airTempDelta
@@ -23,7 +21,6 @@ function M.install(F, deps)
         end
     end
 
-    -- Infer wake shelter from native aero: airflowspeed drops vs vehicle airspeed in a tow.
     F.updateInferredNativeWake = function(dt)
         if not draft.hasNativeInterAero then
             draft.inferredWake = 0
@@ -45,8 +42,6 @@ function M.install(F, deps)
         end
     end
 
-    -- Optional legacy companion (LuuksDraftingMod). On 0.39+, convection cut is ignored;
-    -- airTempDelta can still raise pack ambient if stronger than inference.
     F.setDraftWake = function(wake, side, push, airTempDelta)
         draft.wake = max(0, min(1, tonumber(wake) or 0))
         draft.side = max(0, min(1, tonumber(side) or 0))
@@ -87,4 +82,3 @@ function M.install(F, deps)
 end
 
 return M
-
