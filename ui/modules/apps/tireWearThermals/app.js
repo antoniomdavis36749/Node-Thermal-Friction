@@ -12,7 +12,15 @@ angular.module("beamng.apps")
                     StreamsManager.add(streamsList);
                 }
 
+                function setClassicOpen(open) {
+                    if (window.bngApi && bngApi.activeObjectLua) {
+                        bngApi.activeObjectLua("extensions.tireWearThermals.setClassicOpen(" + (open ? "true" : "false") + ")");
+                    }
+                }
+                setClassicOpen(true);
+
                 scope.$on("$destroy", function () {
+                    setClassicOpen(false);
                     if (StreamsManager) {
                         StreamsManager.remove(streamsList);
                     }
@@ -61,8 +69,8 @@ angular.module("beamng.apps")
                     return t * t * (3 - 2 * t);
                 }
 
-                // Color from this wheel's streamed grip window (thermalGripWindow edges).
-                // In band: green. Below opt − plateau: cold. Above opt + plateau: hot, darker through hotWidth.
+                // Color from this tire's profile opt window.
+                // Green inside optimalTemp ± tempPlateau. Cold through coldWidth. Hot through hotWidth.
                 function getTempColor(tempVal, wheel) {
                     var sat = 85;
                     var lit = 52;
@@ -95,13 +103,66 @@ angular.module("beamng.apps")
                     return "hsla(" + Math.round(hueH) + "," + sat + "%," + Math.round(litH) + "%,1)";
                 }
 
+                function pressureColor(pres, hot) {
+                    var opt = hot || 25;
+                    if (!(opt > 0)) opt = 25;
+                    var ratio = pres / opt;
+                    if (pres < 5) return "#ef4444";
+                    if (ratio < 0.75) return "#38bdf8";
+                    if (ratio < 0.90) return "#a3e635";
+                    if (ratio <= 1.25) return "#10b981";
+                    if (ratio <= 1.40) return "#f59e0b";
+                    return "#ef4444";
+                }
+
+                function gripText(d) {
+                    var grip = (d && d.tyreGrip !== undefined && d.tyreGrip !== null) ? d.tyreGrip : 0;
+                    return (Math.round(grip * 100) / 100).toFixed(2);
+                }
+
+                function gridRowHeight(wheelCount) {
+                    var axleCount = Math.max(2, Math.ceil(wheelCount / 2));
+                    var pad = Math.max(6, Math.min(c.width, c.height) * 0.035);
+                    var gapY = Math.max(10, c.height * 0.045);
+                    return (c.height - pad * 2 - gapY * (axleCount - 1)) / axleCount;
+                }
+
+                function drawWheelList(d, index, wheelCount) {
+                    var name = (d.name || "unknown").toUpperCase();
+                    var temps = d.temp || [0, 0, 0];
+                    var condition = d.condition === undefined ? 100 : d.condition;
+                    var pres = (d.pressure !== undefined) ? d.pressure : 25;
+                    var hot = (d.targetHotPressure !== undefined && d.targetHotPressure !== null)
+                        ? d.targetHotPressure : 25;
+                    var rowH = c.height / Math.max(1, wheelCount);
+                    var y = index * rowH;
+                    var mid = rowH * 0.72;
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "alphabetic";
+                    var fontSize = Math.max(8, Math.min(12, rowH * 0.46));
+                    ctx.font = "bold " + fontSize + "pt \"Lucida Console\", Monaco, monospace";
+                    ctx.fillStyle = (condition < 35 || (d.surfaceDamage && d.surfaceDamage > 25)) ? "#ffaa44" : "#f1f5f9";
+                    var head = name + "  " + gripText(d) + "  Cond " + Math.ceil(condition) + "%  ";
+                    ctx.fillText(head, 8, y + mid);
+                    var x = 8 + ctx.measureText(head).width;
+                    var i;
+                    for (i = 0; i < 3; i++) {
+                        var t = temps[i] || 0;
+                        var bit = Math.floor(t) + (i < 2 ? " " : "");
+                        ctx.fillStyle = getTempColor(t, d);
+                        ctx.fillText(bit, x, y + mid);
+                        x += ctx.measureText(bit).width;
+                    }
+                    ctx.fillStyle = pressureColor(pres, hot);
+                    ctx.fillText("  " + Math.round(pres) + " PSI · hot " + Math.round(hot), x, y + mid);
+                }
+
                 function drawWheelData(d, tyreNumber, wheelCount) {
                     var name = d.name || "unknown";
                     var temps = d.temp;
                     var condition = d.condition;
                     var camber = d.camber;
                     var pressure = d.pressure;
-                    var initialPressure = d.initialPressure;
                     var surfaceDamage = d.surfaceDamage;
 
                     if (!temps || temps.length === 0) {
@@ -174,7 +235,7 @@ angular.module("beamng.apps")
                     ctx.fillStyle = "#ffffff";
                     var headerSize = Math.max(Math.min(colW / 12.0, 10.0), 7.0);
                     ctx.font = 'bold ' + headerSize + 'pt "Lucida Console", Monaco, monospace';
-                    var headerText = name.toUpperCase() + " | Cond " + Math.ceil(condition) + "%";
+                    var headerText = name.toUpperCase() + " " + gripText(d) + " | Cond " + Math.ceil(condition) + "%";
                     ctx.fillText(headerText, cx, y + headerH * 0.72);
 
                     // 2. Draw Tire Tread Rings
@@ -244,11 +305,9 @@ angular.module("beamng.apps")
 
                     // 4. Footer Text: Pressure with Context-Aware Highlight
                     var pres = (pressure !== undefined) ? pressure : 25;
-                    var initPres = initialPressure || 25;
-                    var isLow = (pres < initPres * 0.8) || (pres < 10);
-                    var isHigh = (pres > initPres * 1.3);
-                    
-                    ctx.fillStyle = isLow ? "#38bdf8" : (isHigh ? "#ef4444" : "#e2e8f0");
+                    var hot = (d.targetHotPressure !== undefined && d.targetHotPressure !== null)
+                        ? d.targetHotPressure : 25;
+                    ctx.fillStyle = pressureColor(pres, hot);
                     var infoFontSize = Math.max(Math.min(colW / 18.0 * 2.4, 10.0), 6.5);
                     ctx.font = 'bold ' + infoFontSize + 'pt "Lucida Console", Monaco, monospace';
                     
@@ -259,7 +318,7 @@ angular.module("beamng.apps")
                         ctx.fillStyle = "#ffaa44";
                     }
 
-                    var footerText = warningTag + Math.round(pres) + " PSI";
+                    var footerText = warningTag + Math.round(pres) + " PSI · hot " + Math.round(hot);
                     ctx.fillText(footerText, cx, y + rowH - footerH * 0.25);
                 }
 
@@ -325,16 +384,24 @@ angular.module("beamng.apps")
                         ctx.fillText("Enable core NTF (not Compat alone)", c.width * 0.5, c.height * 0.74);
                         return;
                     }
+                    var useList = gridRowHeight(wheelCount) < 36;
                     for (var i = 0; i < wheelCount; i++) {
                         var d = dataStream.data[i];
                         if (d) {
-                            drawWheelData(d, i, wheelCount);
+                            if (useList) drawWheelList(d, i, wheelCount);
+                            else drawWheelData(d, i, wheelCount);
                         }
                     }
                 }
 
-                scope.$on("VehicleChange", resetNtfStreamBind);
-                scope.$on("VehicleFocusChanged", resetNtfStreamBind);
+                scope.$on("VehicleChange", function () {
+                    resetNtfStreamBind();
+                    setClassicOpen(true);
+                });
+                scope.$on("VehicleFocusChanged", function () {
+                    resetNtfStreamBind();
+                    setClassicOpen(true);
+                });
                 scope.$on("TireWearThermals", function (event, dataStream) {
                     renderData(dataStream);
                 });

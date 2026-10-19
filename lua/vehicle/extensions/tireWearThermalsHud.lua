@@ -29,6 +29,7 @@ function M.install(F, deps)
     local getChassisDynamicsSnapshot = deps.getChassisDynamicsSnapshot or function()
         return { gLong = 0, gLat = 0, gMag = 0, yawRateDeg = 0 }
     end
+    local pitwallOpen = deps.pitwallOpen or function() return false end
 
     F.initGuiStream = function()
         local wheels = getWheels()
@@ -83,11 +84,11 @@ function M.install(F, deps)
                 luaPressure = 25, nativePressure = 25, pressureDelta = 0,
                 pressureRatio = 1, skinCarcassGap = 0, driveHeatGate = 0, driveHeatGateCarcass = 0,
                 streetSlipScale = 1, stintMaxAvgTemp = 0, avgTemp = ENV_TEMP,
-                airCoolRate = 0, skinVelCoolScale = 1, workHeatG0 = 0.22,
+                airCoolRate = 0, skinVelCoolScale = 1,
                 slipHeatRate = 0, workHeatRate = 0, trackCondMult = 1, staticCoolRate = 0,
-                clog = 0, cycles = 0, graining = 0, blistering = 0, flatspot = 0,
-                surfaceDamage = 0, stintFade = 0, leak = 0, waterFilm = 0, ductPercent = 1,
-                ductAirCoolFactor = 1, ductSoakCondFactor = 1.15, brakeSoakRateCs = 0,
+                clog = 0, cycles = 0, graining = 0, blistering = 0,
+                surfaceDamage = 0, stintFade = 0, leak = 0, waterFilm = 0, ductPercent = 50,
+                ductAirCoolFactor = 1, ductSoakCondFactor = 1, brakeSoakRateCs = 0,
                 carcassAvg = ENV_TEMP, rimTemp = ENV_TEMP, airTemp = ENV_TEMP,
                 brakeSurface = ENV_TEMP, brakeCore = ENV_TEMP, brakeThermalEfficiency = 1,
                 contactDepth = 0, underWater = false,
@@ -133,11 +134,11 @@ function M.install(F, deps)
             if not wheels or not wheels.wheelRotators then return end
             local totalLoad = 0
             local frontLoad, rearLoad, leftLoad, rightLoad = 0, 0, 0, 0
-            local airMps = tonumber(getFreestreamAirspeed()) or 0
-            if airMps < 0 then airMps = 0 end
-            guiStream.airspeedMps = math.floor(airMps * 100) / 100
-            guiStream.airspeedMph = math.floor(airMps * 2.23693629 * 10) / 10
-            do
+            if pitwallOpen() then
+                local airMps = tonumber(getFreestreamAirspeed()) or 0
+                if airMps < 0 then airMps = 0 end
+                guiStream.airspeedMps = math.floor(airMps * 100) / 100
+                guiStream.airspeedMph = math.floor(airMps * 2.23693629 * 10) / 10
                 local dyn = getChassisDynamicsSnapshot() or {}
                 guiStream.gLong = math.floor(((dyn.gLong or 0) * 100) + 0.5) / 100
                 guiStream.gLat = math.floor(((dyn.gLat or 0) * 100) + 0.5) / 100
@@ -152,7 +153,6 @@ function M.install(F, deps)
                 if w and data and idx and guiStream.data[idx] then
                     local entry = guiStream.data[idx]
                     local rawLoad = w.loadRaw or wd.downForce or 0
-                    entry.aeroLoadN = math.floor(nativeAeroWheelShare(wd.name, rawLoad))
                     local interpolatedMods = data.interpolatedMods
                     local initialPressurePSI = wd.pressure or 25
                     local cond = data.condition or 100
@@ -166,19 +166,21 @@ function M.install(F, deps)
                     entry.condition = (w.isBroken) and -1 or cond
                     entry.conditionScalar = (w.isBroken) and -1 or (data.conditionScalar or cond)
                     entry.conditionNode = (w.isBroken) and -1 or (data.conditionNode or cond)
-                    entry.conditionNodeLead = (w.isBroken) and -1 or (data.conditionNodeLead or 0)
                     if not entry.zoneCondition then entry.zoneCondition = { cond, cond, cond } end
                     local zc = data.zoneCondition or entry.zoneCondition
                     entry.zoneCondition[1], entry.zoneCondition[2], entry.zoneCondition[3] = zc[1] or cond, zc[2] or cond, zc[3] or cond
                     entry.tyreGrip = (w.isBroken) and 0 or grip
+                    entry.nodeWearPeak = (w.isBroken) and 0 or (data.nodeWearPeak or 0)
+                    if pitwallOpen() then
+                    entry.aeroLoadN = math.floor(nativeAeroWheelShare(wd.name, rawLoad))
                     entry.longGrip = (w.isBroken) and 0 or longGrip
                     entry.latGrip = (w.isBroken) and 0 or latGrip
                     entry.wearPenalty = (w.isBroken) and 0 or (data.lastWearPenalty or 1)
                     entry.lockFade = (w.isBroken) and 0 or (data.lockFade or 0)
+                    entry.conditionNodeLead = (w.isBroken) and -1 or (data.conditionNodeLead or 0)
                     entry.nodeSpikeOn = (data.nodeSpikeOn and data.nodeSpikeOn ~= 0) and 1 or 0
                     entry.nodeGate = data.nodeGate or "idle"
                     entry.nodeContactCid = data.nodeContactCid or 0
-                    entry.nodeWearPeak = (w.isBroken) and 0 or (data.nodeWearPeak or 0)
                     entry.nodeWearContact = (w.isBroken) and 0 or (data.nodeWearContact or 0)
                     entry.nodeMuScale = (w.isBroken) and 1 or (data.nodeMuScale or 1)
                     entry.nodeSlideScale = (w.isBroken) and 1 or (data.nodeSlideScale or 1)
@@ -226,32 +228,36 @@ function M.install(F, deps)
                     entry.nodeColPeakCid = data.nodeColPeakCid or 0
                     entry.nodeColWheelCid = data.nodeColWheelCid or 0
                     entry.nodeColMatch = (data.nodeColMatch and data.nodeColMatch ~= 0) and 1 or 0
+                    end
                     entry.camber = (w.isBroken) and 0 or ((w.camber or 0) * (wd.wheelDir or 1))
-                    entry.camberStd = (w.isBroken) and 0 or (math.floor((w.camberStd or w.camber or 0) * 100) / 100)
-                    entry.toe = (w.isBroken) and 0 or math.floor((w.toe or 0) * 100) / 100
                     entry.pressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.currentPressurePSI or initialPressurePSI) * 10) / 10)
-                    entry.luaPressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.luaPressurePSI or data.currentPressurePSI or initialPressurePSI) * 10) / 10)
-                    entry.nativePressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.nativePressurePSI or data.currentPressurePSI or initialPressurePSI) * 10) / 10)
-                    entry.pressureDelta = (w.isBroken or w.isTireDeflated) and 0 or (math.floor(((data.pressurePsiDelta or ((data.luaPressurePSI or 0) - (data.nativePressurePSI or 0))) * 10) + 0.5) / 10)
                     entry.initialPressure = data.coldPressurePSI or initialPressurePSI
                     entry.coldPressure = data.coldPressurePSI or initialPressurePSI
                     entry.optimalPressure = interpolatedMods and interpolatedMods.optimalPressure or 25
                     entry.targetHotPressure = data.targetHotPressurePSI or entry.optimalPressure
-                    entry.flatspot = (w.isBroken) and 0 or math.floor((data.currentFlatSpot or 0) * 100)
                     entry.profile = (w.isBroken) and "none" or (interpolatedMods and interpolatedMods.descriptor or (((data.interpFactor or 0) > 0.5) and data.profile2 or data.profile1))
+                    entry.purpose = (w.isBroken) and "none" or (interpolatedMods and interpolatedMods.purpose or "street")
+                    entry.stintFade = math.floor((data.stintFade or 0) * 1000) / 10
+                    entry.graining = (w.isBroken) and 0 or math.floor((data.currentGraining or data.graining or 0) * 100)
+                    entry.blistering = (w.isBroken) and 0 or math.floor((data.currentBlistering or data.blistering or 0) * 100)
+                    entry.surfaceDamage = (w.isBroken) and 0 or math.floor((data.currentSurfaceDamage or 0) * 100)
+                    if pitwallOpen() then
+                    entry.camberStd = (w.isBroken) and 0 or (math.floor((w.camberStd or w.camber or 0) * 100) / 100)
+                    entry.toe = (w.isBroken) and 0 or math.floor((w.toe or 0) * 100) / 100
+                    entry.luaPressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.luaPressurePSI or data.currentPressurePSI or initialPressurePSI) * 10) / 10)
+                    entry.nativePressure = (w.isBroken or w.isTireDeflated) and 0 or (math.floor((data.nativePressurePSI or data.currentPressurePSI or initialPressurePSI) * 10) / 10)
+                    entry.pressureDelta = (w.isBroken or w.isTireDeflated) and 0 or (math.floor(((data.pressurePsiDelta or ((data.luaPressurePSI or 0) - (data.nativePressurePSI or 0))) * 10) + 0.5) / 10)
                     entry.profile1 = data.profile1 or ""
                     entry.profile2 = data.profile2 or ""
                     entry.compoundClass = interpolatedMods and interpolatedMods.descriptor or entry.profile
-                    entry.purpose = (w.isBroken) and "none" or (interpolatedMods and interpolatedMods.purpose or "street")
                     entry.classifyReason = (w.isBroken) and "none" or (interpolatedMods and interpolatedMods.classifyReason or "street_spectrum")
                     entry.dutyMods = (w.isBroken) and "" or (data.lastDutyMods or "")
                     entry.cycles = data.heatCycles or 0
-                    entry.stintFade = math.floor((data.stintFade or 0) * 1000) / 10
                     entry.leak = math.floor((data.punctureSeverity or 0) * 100)
                     entry.waterFilm = math.floor(getWaterFilmDepth() * 100)
                     entry.ductPercent = data.ductPercent or getBrakeDuctPercent(data.isFront)
                     entry.ductAirCoolFactor = math.floor((data.ductAirCoolFactor or 1) * 1000) / 1000
-                    entry.ductSoakCondFactor = math.floor((data.ductSoakCondFactor or 1.15) * 1000) / 1000
+                    entry.ductSoakCondFactor = math.floor((data.ductSoakCondFactor or 1) * 1000) / 1000
                     entry.brakeSoakRateCs = math.floor((data.brakeSoakRateCs or 0) * 100) / 100
                     entry.driveHeatGate = math.floor((data.lastDriveHeatGate or 0) * 1000) / 1000
                     entry.driveHeatGateCarcass = math.floor((data.lastDriveHeatGateCarcass or 0) * 1000) / 1000
@@ -266,16 +272,11 @@ function M.install(F, deps)
                     entry.dualContactBlend = math.floor((data.lastDualContactBlend or 0) * 1000) / 1000
                     entry.airCoolRate = math.floor((data.lastAirCoolProfile or 0) * 10000) / 10000
                     entry.skinVelCoolScale = math.floor((data.lastSkinVelCoolScale or 1) * 1000) / 1000
-                    entry.workHeatG0 = math.floor((data.lastWorkHeatG0 or 0.22) * 1000) / 1000
                     entry.slipHeatRate = math.floor((data.lastSlipHeatProfile or 0) * 100) / 100
                     entry.workHeatRate = math.floor((data.lastWorkHeatProfile or 0) * 100) / 100
                     entry.trackCondMult = math.floor((data.lastTrackCondMult or 1) * 1000) / 1000
                     entry.staticCoolRate = math.floor((data.lastStaticCoolProfile or 0) * 10000) / 10000
-
                     entry.clog = (w.isBroken) and 0 or math.floor((data.currentClog or data.clog or 0) * 100)
-                    entry.graining = (w.isBroken) and 0 or math.floor((data.currentGraining or data.graining or 0) * 100)
-                    entry.blistering = (w.isBroken) and 0 or math.floor((data.currentBlistering or data.blistering or 0) * 100)
-                    entry.surfaceDamage = (w.isBroken) and 0 or math.floor((data.currentSurfaceDamage or 0) * 100)
 
                     local gm = w.groundModel or DOESNT_EXIST_DATA
                     entry.surfaceName = gm.name or "unknown"
@@ -320,6 +321,7 @@ function M.install(F, deps)
                     entry.suspStress = math.floor((w.suspStress or 0) * 1000) / 1000
                     entry.suspBumpMm = math.floor((w.suspBump or 0) * 1000)
                     entry.suspDroopMm = math.floor((w.suspDroop or 0) * 1000)
+                    end
 
                     if not entry.temp then entry.temp = { 0, 0, 0, 0, 0, 0, 0, 0 } end
                     if data.temp and not w.isBroken then
@@ -327,47 +329,58 @@ function M.install(F, deps)
                         for ti = 1, TEMP_NODE_COUNT do
                             entry.temp[ti] = math.floor((data.temp[ti] or localizedEnvTemp) * 10) / 10
                         end
-                        entry.carcassAvg = math.floor(carcassTemp * 10) / 10
                         entry.rimTemp = math.floor((data.temp[7] or localizedEnvTemp) * 10) / 10
-                        entry.airTemp = math.floor((data.temp[8] or localizedEnvTemp) * 10) / 10
-                        local bSurf, bCore = getNativeBrakeTemps(wd, localizedEnvTemp)
-                        entry.brakeSurface = math.floor(bSurf * 10) / 10
-                        entry.brakeCore = math.floor(bCore * 10) / 10
-                        entry.brakeThermalEfficiency = math.floor((data.brakeThermalEfficiency or 1) * 1000) / 1000
-                        entry.contactDepth = math.floor((data.contactDepthSmooth or w.contactDepth or 0) * 1000) / 1000
-                        entry.underWater = not not w.underWater
                         entry.working_temp = math.floor((data.working_temp or WORKING_TEMP) * 10) / 10
+                        if pitwallOpen() then
+                            entry.carcassAvg = math.floor(carcassTemp * 10) / 10
+                            entry.airTemp = math.floor((data.temp[8] or localizedEnvTemp) * 10) / 10
+                            local bSurf, bCore = getNativeBrakeTemps(wd, localizedEnvTemp)
+                            entry.brakeSurface = math.floor(bSurf * 10) / 10
+                            entry.brakeCore = math.floor(bCore * 10) / 10
+                            entry.brakeThermalEfficiency = math.floor((data.brakeThermalEfficiency or 1) * 1000) / 1000
+                            entry.contactDepth = math.floor((data.contactDepthSmooth or w.contactDepth or 0) * 1000) / 1000
+                            entry.underWater = not not w.underWater
+                        end
                     else
                         for ti = 1, TEMP_NODE_COUNT do
                             entry.temp[ti] = localizedEnvTemp
                         end
-                        entry.carcassAvg, entry.rimTemp, entry.airTemp = localizedEnvTemp, localizedEnvTemp, localizedEnvTemp
-                        entry.brakeSurface, entry.brakeCore = localizedEnvTemp, localizedEnvTemp
-                        entry.brakeThermalEfficiency = 1
-                        entry.brakeSoakRateCs = 0
-                        entry.ductAirCoolFactor = 1
-                        entry.ductSoakCondFactor = 1.15
-                        entry.dutyMods = ""
-                        entry.contactDepth, entry.underWater = 0, false
-                        entry.patchFrac, entry.patchHeatScale, entry.depthHeatBoost = 0, 1, 1
-                        entry.hertzArea, entry.deflArea, entry.depthBlend = 0, 0, 0
+                        entry.rimTemp = localizedEnvTemp
                         entry.working_temp = WORKING_TEMP
+                        if pitwallOpen() then
+                            entry.carcassAvg, entry.airTemp = localizedEnvTemp, localizedEnvTemp
+                            entry.brakeSurface, entry.brakeCore = localizedEnvTemp, localizedEnvTemp
+                            entry.brakeThermalEfficiency = 1
+                            entry.brakeSoakRateCs = 0
+                            entry.ductAirCoolFactor = 1
+                            entry.ductSoakCondFactor = 1
+                            entry.dutyMods = ""
+                            entry.contactDepth, entry.underWater = 0, false
+                            entry.patchFrac, entry.patchHeatScale, entry.depthHeatBoost = 0, 1, 1
+                            entry.hertzArea, entry.deflArea, entry.depthBlend = 0, 0, 0
+                        end
                     end
 
                     local hotTgt = math.max(1.0, entry.targetHotPressure or entry.optimalPressure or 25)
                     local avgT = EffectiveTyreTemp(data.temp, w.combinedBias or 0, (entry.pressure or 0) / hotTgt, localizedEnvTemp, interpolatedMods)
-                    -- Effective window: same softness/compliance scale as getProfileThermalGrip.
-                    -- interpolatedMods is already the blended compound (not a street default).
-                    local softness = wd.softnessCoef or 0.5
-                    local compliance = (interpolatedMods and interpolatedMods.casingCompliance) or 0.5
-                    local opt, plateau, coldW, hotW = F.thermalGripWindow(interpolatedMods, compliance, softness)
+                    -- Profile opt window, unscaled. working_temp is this tire's optimalTemp.
+                    -- tempPlateau, coldWidth, and hotWidth stay the compound knobs.
+                    local opt = entry.working_temp or WORKING_TEMP
+                    local plateau = (interpolatedMods and interpolatedMods.tempPlateau) or 15
+                    local coldW = (interpolatedMods and interpolatedMods.coldWidth) or 55
+                    local hotW = (interpolatedMods and interpolatedMods.hotWidth) or 55
                     entry.optimalTemp = math.floor(opt * 10 + 0.5) / 10
                     entry.tempPlateau = math.floor(plateau * 10 + 0.5) / 10
                     entry.coldWidth = math.floor(coldW * 10 + 0.5) / 10
                     entry.hotWidth = math.floor(hotW * 10 + 0.5) / 10
-                    entry.gripMultiplier = math.floor(((interpolatedMods and interpolatedMods.gripMultiplier) or 1) * 1000 + 0.5) / 1000
-                    local therm = F.getProfileThermalGrip(interpolatedMods, avgT, compliance, softness)
-                    entry.thermalGrip = math.floor((therm or 0) * 1000 + 0.5) / 1000
+                    if pitwallOpen() then
+                        entry.gripMultiplier = math.floor(((interpolatedMods and interpolatedMods.gripMultiplier) or 1) * 1000 + 0.5) / 1000
+                        local therm = F.getProfileThermalGrip(interpolatedMods, avgT, compliance, softness)
+                        entry.thermalGrip = math.floor((therm or 0) * 1000 + 0.5) / 1000
+                        entry.pressureRatio = math.floor((entry.pressure / hotTgt) * 1000) / 1000
+                        local skinAvg = ((entry.temp[1] or 0) + (entry.temp[2] or 0) + (entry.temp[3] or 0)) / 3.0
+                        entry.skinCarcassGap = math.floor((skinAvg - (entry.carcassAvg or skinAvg)) * 10) / 10
+                    end
                     if avgT < (entry.optimalTemp - entry.tempPlateau) then
                         entry.tempCategory = "Cold"
                     elseif avgT > (entry.optimalTemp + entry.tempPlateau) then
@@ -381,12 +394,10 @@ function M.install(F, deps)
                         data.stintMaxAvgTemp = avgT
                     end
                     entry.stintMaxAvgTemp = math.floor((data.stintMaxAvgTemp or 0) * 10) / 10
-                    entry.pressureRatio = math.floor((entry.pressure / hotTgt) * 1000) / 1000
-                    local skinAvg = ((entry.temp[1] or 0) + (entry.temp[2] or 0) + (entry.temp[3] or 0)) / 3.0
-                    entry.skinCarcassGap = math.floor((skinAvg - (entry.carcassAvg or skinAvg)) * 10) / 10
                 end
             end
 
+            if pitwallOpen() then
             -- Native triangle aero (aeroDebug APIs). Heat uses full wd.downForce (scale 1.0).
             guiStream.totalDownforceN = math.floor(nativeAero.liftN)
             guiStream.aeroDragN = math.floor(nativeAero.dragN)
@@ -414,25 +425,34 @@ function M.install(F, deps)
                 guiStream.weightFrontPct, guiStream.weightRearPct = 0, 0
                 guiStream.weightLeftPct, guiStream.weightRightPct = 0, 0
             end
+            end
 
     end
 
-    -- Player Classic/Crew payload. Pitwall keeps the full guiStream.
-    local PLAYER_WHEEL_KEYS = {
-        "name", "profile", "tempCategory", "condition", "conditionScalar", "conditionNode",
+    -- Separate HUD pipelines. Classic is the smallest set. Crew adds the life row.
+    -- Pitwall keeps the full guiStream and is published only while that app is open.
+    local CLASSIC_WHEEL_KEYS = {
+        "name", "profile", "tempCategory", "condition", "tyreGrip", "pressure",
+        "avgTemp", "working_temp", "optimalTemp", "tempPlateau", "coldWidth", "hotWidth",
+        "rimTemp", "camber", "initialPressure", "targetHotPressure", "surfaceDamage",
+    }
+    local CREW_WHEEL_KEYS = {
+        "name", "profile", "purpose", "tempCategory", "condition", "conditionScalar", "conditionNode",
         "nodeWearPeak", "tyreGrip", "pressure", "targetHotPressure", "optimalPressure",
-        "avgTemp", "working_temp", "rimTemp", "stintFade", "graining", "blistering",
+        "avgTemp", "working_temp", "optimalTemp", "tempPlateau", "coldWidth", "hotWidth",
+        "rimTemp", "stintFade", "graining", "blistering",
         "camber", "initialPressure", "surfaceDamage",
     }
-    local playerStream = { data = {}, playerLean = 1 }
+    local classicStream = { data = {}, playerLean = "classic" }
+    local crewStream = { data = {}, playerLean = "crew" }
 
-    F.syncPlayerHudStream = function()
-        playerStream.vehId = guiStream.vehId
-        playerStream.resetGen = guiStream.resetGen
-        playerStream.mpRemote = guiStream.mpRemote
-        playerStream.streamTag = guiStream.streamTag
+    local function copyHudStream(keys, dest)
+        dest.vehId = guiStream.vehId
+        dest.resetGen = guiStream.resetGen
+        dest.mpRemote = guiStream.mpRemote
+        dest.streamTag = guiStream.streamTag
         local src = guiStream.data or {}
-        local dst = playerStream.data
+        local dst = dest.data
         for i = 1, #src do
             local s = src[i]
             local d = dst[i]
@@ -441,13 +461,12 @@ function M.install(F, deps)
                 dst[i] = d
             end
             if s then
-                for k = 1, #PLAYER_WHEEL_KEYS do
-                    local key = PLAYER_WHEEL_KEYS[k]
-                    d[key] = s[key]
+                for k = 1, #keys do
+                    d[keys[k]] = s[keys[k]]
                 end
-                local st, dt = s.temp, d.temp
-                if st and dt then
-                    for ti = 1, 8 do dt[ti] = st[ti] end
+                local st, dtbl = s.temp, d.temp
+                if st and dtbl then
+                    for ti = 1, 8 do dtbl[ti] = st[ti] end
                 end
                 local sz, dz = s.zoneCondition, d.zoneCondition
                 if sz and dz then
@@ -456,8 +475,16 @@ function M.install(F, deps)
             end
         end
         for i = #src + 1, #dst do dst[i] = nil end
-        return playerStream
+        return dest
     end
+
+    F.syncClassicHudStream = function()
+        return copyHudStream(CLASSIC_WHEEL_KEYS, classicStream)
+    end
+    F.syncCrewHudStream = function()
+        return copyHudStream(CREW_WHEEL_KEYS, crewStream)
+    end
+    F.syncPlayerHudStream = F.syncClassicHudStream
 end
 
 return M

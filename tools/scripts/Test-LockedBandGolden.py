@@ -10,7 +10,7 @@ from pathlib import Path
 import lupa
 
 ROOT = Path(__file__).resolve().parents[1].parent
-LUA_PATH = ROOT / "lua" / "vehicle" / "extensions" / "auto" / "tireWearThermals.lua"
+LUA_PATH = ROOT / "lua" / "vehicle" / "extensions" / "tireWearThermalsImpl.lua"
 EXT_DIR = ROOT / "lua" / "vehicle" / "extensions"
 GOLDEN = ROOT / "tools" / "golden" / "locked-bands.txt"
 
@@ -31,6 +31,7 @@ function obj:getRollPitchYawAngularVelocity() return 0, 0, 0 end
 function obj:getVelocity() return nil end
 function obj:getID() return 1 end
 electrics = {{ values = {{ airspeed = 0 }} }}
+playerInfo = {{ firstPlayerSeated = true, anyPlayerSeated = true }}
 sensors = {{ gx = 0, gy = 0 }}
 v = {{ data = {{ nodes = {{}} }} }}
 guihooks = {{}}
@@ -117,6 +118,8 @@ def snapshot(lua) -> list[str]:
   prof("standard_070.nodeWearScale", point(profiles.PROFILE_POINTS, 0.70, nil, "nodeWearScale"))
   prof("soft_slick.scalarTreadWearScale", point(profiles.SLICK_SPECTRUM_POINTS, nil, 0.80, "scalarTreadWearScale"))
   prof("supersoft_slick.scalarTreadWearScale", point(profiles.SLICK_SPECTRUM_POINTS, nil, 0.875, "scalarTreadWearScale"))
+  prof("soft_slick.rollingHystScale", point(profiles.SLICK_SPECTRUM_POINTS, nil, 0.80, "rollingHystScale"))
+  prof("highway_trailer_truck.rollingHystScale", point(profiles.COMMERCIAL_SPECTRUM_POINTS, 0.60, nil, "rollingHystScale"))
   local seen = {{}}
   local constSeen = {{}}
   local function harvest(fn)

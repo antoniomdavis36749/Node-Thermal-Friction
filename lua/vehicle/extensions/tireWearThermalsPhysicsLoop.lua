@@ -126,6 +126,7 @@ function M.install(F, deps)
                 w.camber = camberDeg
                 -- Standard camber on both sides of the car: negative = top leaning in.
                 w.camberStd = camberDeg * outDir
+                data.lastCamberDeg = w.camberStd or 0
                 w.toe = toeDeg
                 w.camberRad = camberRad
                 w.toeRad = toeRad
@@ -174,6 +175,7 @@ function M.install(F, deps)
                 w.slipRatio = abs(wd.lastSlip or 0) / max(3.0, groundSpeed)
                 local latPrev = w.latSlipDir or 0
                 w.latSlipDir = latPrev + (latTarget - latPrev) * min(1.0, dt / max(0.02, topo.latSlipEmaTau or 0.10))
+                data.lastSideSlipDeg = (w.latSlipDir or 0) * (topo.latSlipAngleRef or 0.10) * 57.295779513
 
                 -- Ring 1 = outer shoulder, ring 3 = inner. Top-in camber loads the inner shoulder;
                 -- sliding outward loads the outer one.
@@ -242,8 +244,7 @@ function M.install(F, deps)
                 w.longSlipEnergy = longComp
                 w.sideSlipEnergy = sideComp
                 w.slipEnergy = max(nativeWork, longComp * 0.55 + sideComp * 0.45)
-                -- Wear/lock still see toe scrub + soft-ground depth. Chassis g_mag does not scale this.
-                -- Sliding heat uses smoothed wd.slipEnergy in the thermal step, not this signal.
+                -- Heat and wear both read dynamicSlipEnergy. Chassis g_mag does not scale this.
                 local dynamicSlipEnergy = w.slipEnergy + toeScrubEnergy
                 -- Soft ground depth amplifies scrub/work slightly (paddling / ploughing)
                 if (wd.contactDepth or 0) > 0.05 then
@@ -293,8 +294,12 @@ function M.install(F, deps)
                     F.CalcTyreWear(i, FIXED_DT, localizedEnvTemp)
 
                     local carcassTemp = TempCarcassToAvgTemp(data.temp, w.combinedBias or 0, 1.0, localizedEnvTemp)
-                    local isSlickFail = string.find(data.profile1Lower or "", "slick", 1, true)
-                        or string.find(data.profile2Lower or "", "slick", 1, true)
+                    local isSlickFail = data.slickProfile
+                    if isSlickFail == nil then
+                        isSlickFail = (string.find(data.profile1Lower or "", "slick", 1, true)
+                            or string.find(data.profile2Lower or "", "slick", 1, true)) and true or false
+                        data.slickProfile = isSlickFail
+                    end
                     local optFail = data.interpolatedMods and data.interpolatedMods.optimalTemp
                     local softFailTemp = isSlickFail and 195 or ((optFail and optFail >= 80) and 185 or 165)
                     if carcassTemp > softFailTemp and (data.leakRatePa or 0) < 5000 then

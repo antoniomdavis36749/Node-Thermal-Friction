@@ -15,6 +15,39 @@ function M.install(F, deps)
         return a, b, c, d
     end
     local vec3 = deps.vec3
+    local frameVec = {}
+    local frictionWheelByIndex = {}
+
+    local function fillVec(slot, x, y, z)
+        if not vec3 then return nil end
+        local v = frameVec[slot]
+        if not v then
+            v = vec3(x, y, z)
+            frameVec[slot] = v
+            if frameVec.setter == nil then
+                frameVec.setter = type(v.set) == "function"
+            end
+            return v
+        end
+        if frameVec.setter then
+            v:set(x, y, z)
+        else
+            v.x, v.y, v.z = x, y, z
+        end
+        return v
+    end
+
+    local function rememberFrictionWheel(wheelIndex, wheel)
+        if wheel and type(wheel.setFrictionThermalSensitivity) == "function" then
+            frictionWheelByIndex[wheelIndex] = wheel
+            return wheel
+        end
+    end
+
+    local function tryFrictionIndex(wheelIndex, idx, skip1, skip2)
+        if idx == nil or idx == skip1 or idx == skip2 then return nil end
+        return rememberFrictionWheel(wheelIndex, objCall("getWheel", idx))
+    end
     local quat = deps.quat
     local vecLen = deps.vecLen
     local lerp = deps.lerp
@@ -60,15 +93,17 @@ function M.install(F, deps)
         return DUCT_DEFAULT_PCT
     end
 
-    -- Maps duct % → tire-side factors (Lua only; native brakeTypeSurfaceCoolingCoef restored stock).
-    -- Returns: ductAirCoolFactor, ductSoakCondFactor, open01
-    --   ductAirCoolFactor  — freestream cooling on skin / carcass / rim (1.0→MAX @ open)
-    --   ductSoakCondFactor — brake→rim soak + rim↔carcass conduction (1.15 closed → 0.85 open)
+    -- 50% is neutral: soak 1.0 and no extra tire air.
+    -- 1% keeps the warming lever (soak 1.15, air unchanged).
+    -- 100% is fully open (soak 0.85, air up to MAX_DUCT_AIR_FACTOR).
     F.ductPercentToFactors = function(ductPct)
-        local open = max(0, min(1, (ductPct - 1) / 99)) -- 1→0, 100→1
-        local ductAirCoolFactor = lerp(1.0, MAX_DUCT_AIR_FACTOR, open)
-        local ductSoakCondFactor = lerp(1.15, 0.85, open)
-        return ductAirCoolFactor, ductSoakCondFactor, open
+        local pct = max(1, min(100, ductPct or DUCT_DEFAULT_PCT))
+        if pct <= 50 then
+            local warm = (50 - pct) / 49
+            return 1.0, lerp(1.0, 1.15, warm), 0
+        end
+        local open = (pct - 50) / 50
+        return lerp(1.0, MAX_DUCT_AIR_FACTOR, open), lerp(1.0, 0.85, open), open
     end
 
     -- JBeam construction factors (cached per wheel at init)
@@ -205,7 +240,8 @@ function M.install(F, deps)
 
         local hubLocalZ
         if invQuat and vec3 then
-            hubLocalZ = (invQuat * vec3(hx, hy, hz)).z
+            local hubVec = fillVec(1, hx, hy, hz)
+            hubLocalZ = hubVec and (invQuat * hubVec).z or hz
         elseif upVector then
             -- Fallback: project hub offset onto vehicle up (node pos is vehicle-relative)
             hubLocalZ = hx * upVector.x + hy * upVector.y + hz * upVector.z
@@ -262,27 +298,19 @@ function M.install(F, deps)
     end
 
     -- Resolve native wheel object for setFrictionThermalSensitivity (index vs wheelID/cid).
+    -- The handle is stable until the next tyre init, so the 100 Hz step does not rebuild it.
     F.resolveWheelFrictionTarget = function(wheelIndex, wd)
-        local candidates = { wheelIndex }
-        if wd then
-            if wd.wheelID ~= nil then candidates[#candidates + 1] = wd.wheelID end
-            if wd.cid ~= nil then candidates[#candidates + 1] = wd.cid end
+        local held = frictionWheelByIndex[wheelIndex]
+        if held and type(held.setFrictionThermalSensitivity) == "function" then
+            return held
         end
-        local seen = {}
-        for ci = 1, #candidates do
-            local idx = candidates[ci]
-            if idx ~= nil and not seen[idx] then
-                seen[idx] = true
-                local wheel = objCall("getWheel", idx)
-                if wheel and type(wheel.setFrictionThermalSensitivity) == "function" then
-                    return wheel
-                end
-            end
-        end
-        if wd and type(wd.setFrictionThermalSensitivity) == "function" then
-            return wd
-        end
-        return nil
+        local wheelID = wd and wd.wheelID
+        local cid = wd and wd.cid
+        local found = tryFrictionIndex(wheelIndex, wheelIndex, nil, nil)
+            or tryFrictionIndex(wheelIndex, wheelID, wheelIndex, nil)
+            or tryFrictionIndex(wheelIndex, cid, wheelIndex, wheelID)
+        if found then return found end
+        return rememberFrictionWheel(wheelIndex, wd)
     end
 
     -- One multiplier per wheel. The last three arguments are BeamNG's low / middle / high
@@ -296,6 +324,7 @@ function M.install(F, deps)
         local wheels = getWheels()
         if not wheels or not wheels.wheelRotators then return end
         for k in pairs(tyreData) do tyreData[k] = nil end
+        for k in pairs(frictionWheelByIndex) do frictionWheelByIndex[k] = nil end
         resetStintDistance() -- new stint / reload gate for Pitwall trip
         classifyCache.rallyDamper = nil -- re-probe on part reload / re-init
     
@@ -328,6 +357,10 @@ function M.install(F, deps)
             local skinStart = lerp(envNow, optTemp, preheatBlend * SKIN_PREHEAT_FRAC)
             local wheelNameLower = string.lower(tostring(wheelName))
             local isFront = not not string.match(wheelNameLower, "^f")
+            local profile1Lower = string.lower(tostring(p1 or ""))
+            local profile2Lower = string.lower(tostring(p2 or ""))
+            local slickProfile = (string.find(profile1Lower, "slick", 1, true)
+                or string.find(profile2Lower, "slick", 1, true)) and true or false
             local coldPSI = max(1.0, wd.pressure or 25.0)
             -- Prefer live pressure-group fill when available (matches stock TPMS / cold set).
             -- If native is still pumped from a previous hop/write-back loop, restore the
@@ -351,7 +384,6 @@ function M.install(F, deps)
                 scalarTreadCondition = 100, -- A1 pure scalar life (rate curve + sc); never node-min'd
                 scalarWearScale = 0.15,
                 zoneCondition = { 100, 100, 100 }, -- Outer / Middle / Inner wear (per-zone)
-                flatSpot = 0,
                 nodeWearPeak = 0,
                 nodeWearContact = 0,
                 nodeContactCid = 0,
@@ -389,8 +421,10 @@ function M.install(F, deps)
                 profile1 = p1,
                 profile2 = p2,
                 -- Cached lowers for CalcTyreWear / grip hot paths (profiles are static after init)
-                profile1Lower = string.lower(tostring(p1 or "")),
-                profile2Lower = string.lower(tostring(p2 or "")),
+                profile1Lower = profile1Lower,
+                profile2Lower = profile2Lower,
+                profileBook = F.buildProfileBook(profile1Lower, profile2Lower),
+                slickProfile = slickProfile,
                 interpFactor = factor,
                 interpolatedMods = initialMods,
                 baseFactors = baseFactors,
@@ -475,7 +509,8 @@ function M.install(F, deps)
 
         -- World-axis spindle → vehicle frame for toe (and camber fallback)
         if invQuat and vec3 then
-            local axis = invQuat * vec3(lax, lay, laz)
+            local axisVec = fillVec(1, lax, lay, laz)
+            local axis = axisVec and (invQuat * axisVec) or nil
             lax, lay, laz = axis.x, axis.y, axis.z
             local len = sqrt(lax * lax + lay * lay + laz * laz)
             if len > 1e-5 then
@@ -495,8 +530,9 @@ function M.install(F, deps)
         -- Toe: stay vehicle-frame (road-relative toe is noisy; grip path is camber-led)
         local sideSign = 1
         if invQuat and vec3 then
-            local hub = invQuat * vec3(pos1.x, pos1.y, pos1.z)
-            sideSign = hub.x > 0 and 1 or -1
+            local hubVec = fillVec(2, pos1.x, pos1.y, pos1.z)
+            local hub = hubVec and (invQuat * hubVec) or nil
+            sideSign = hub and (hub.x > 0 and 1 or -1) or (pos1.x > 0 and 1 or -1)
         else
             sideSign = pos1.x > 0 and 1 or -1
         end

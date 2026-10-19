@@ -7,7 +7,7 @@ from pathlib import Path
 import lupa
 
 ROOT = Path(__file__).resolve().parents[1].parent
-LUA = ROOT / "lua" / "vehicle" / "extensions" / "auto" / "tireWearThermals.lua"
+LUA = ROOT / "lua" / "vehicle" / "extensions" / "tireWearThermalsImpl.lua"
 EXT = ROOT / "lua" / "vehicle" / "extensions"
 
 
@@ -74,7 +74,14 @@ end"""
 def main() -> int:
     fail = 0
     lua = boot(True)
-    lua.eval("function() M.onInit() end")()
+    lua.eval(
+        """function()
+  M.onInit()
+  local _, F = debug.getupvalue(M.updateGFX, 1)
+  F.setCareerMode(true)
+  F.ensureFullInit()
+end"""
+    )()
     lua.eval(
         """function()
   local td
@@ -103,6 +110,58 @@ end"""
     if "item42" not in str(path):
         print("FAIL: career item id was not the file key")
         fail += 1
+
+    lua.eval(
+        """function()
+  local _, F = debug.getupvalue(M.updateGFX, 1)
+  F.setCareerMode(false)
+  local td
+  local i = 1
+  while true do
+    local name, value = debug.getupvalue(M.updateGFX, i)
+    if not name then break end
+    if name == "tyreData" then td = value break end
+    i = i + 1
+  end
+  td[0].scalarTreadCondition = 10
+  F.careerWearSave()
+  td[0].scalarTreadCondition = 100
+  F.careerWearLoad()
+  F.ensureFullInit()
+end"""
+    )()
+    scalar, _peak, _path = read_scalar(lua)
+    if abs(float(scalar) - 100) > 1e-6:
+        print(f"FAIL: freeroam load restored career wear ({scalar})")
+        fail += 1
+    else:
+        print("OK: freeroam load left the tires fresh")
+    skip, tagged, mode = lua.eval(
+        """function()
+  local _, F = debug.getupvalue(M.updateGFX, 1)
+  local snap = M.onSerialize()
+  return snap.skip, snap.career, F._careerMode
+end"""
+    )()
+    if skip is not True or tagged is not None or mode:
+        print(f"FAIL: freeroam serialize still carries wear (skip={skip} career={tagged} mode={mode})")
+        fail += 1
+    else:
+        print("OK: freeroam serialize skips the wear file")
+
+    lua.eval(
+        """function()
+  local _, F = debug.getupvalue(M.updateGFX, 1)
+  F.setCareerMode(true)
+  F.careerWearLoad()
+end"""
+    )()
+    scalar, _peak, _path = read_scalar(lua)
+    if abs(float(scalar) - 82.5) > 1e-6:
+        print(f"FAIL: career load did not restore after a freeroam skip ({scalar})")
+        fail += 1
+    else:
+        print("OK: career load still restores")
 
     lua.eval(
         """function()
@@ -141,7 +200,7 @@ end"""
     if fail:
         print(f"OVERALL: FAIL - {fail}")
         return 1
-    print("OVERALL: PASS - player wear persists, traffic does not write, reset starts fresh.")
+    print("OVERALL: PASS - career wear persists, freeroam and traffic do not write, reset starts fresh.")
     return 0
 
 

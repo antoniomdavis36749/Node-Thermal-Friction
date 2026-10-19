@@ -23,6 +23,8 @@ const CAMBER_SLIP_F_REF 180.000000
 const SCALAR_GRIP_FADE_FLOOR 0.700000
 profile drag.gripMultiplier 1.320000
 profile drag.longGripMult 1.180000
+profile highway_trailer_truck.rollingHystScale 16.000000
+profile soft_slick.rollingHystScale 2.200000
 profile soft_slick.scalarTreadWearScale 4.700000
 profile sport.nodeWearScale 1.000000
 profile sport_plus.nodeWearScale 1.100000

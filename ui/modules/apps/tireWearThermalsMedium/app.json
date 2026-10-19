@@ -1,7 +1,7 @@
 {
   "name": "Node-Thermal Friction Crew",
   "author": "Node-Thermal Friction",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "directive": "tireWearThermalsMedium",
   "domElement": "<tire-wear-thermals-medium></tire-wear-thermals-medium>",
   "types": [
@@ -10,7 +10,7 @@
     "ui.apps.categories.info",
     "ui.apps.categories.racing"
   ],
-  "description": "Node-Thermal Friction Crew: Cond% with sc/nd split, O|M|I zones, grip, PSI, carcass/rim, profile. Respawn if no signal.",
+  "description": "Life and grip. Condition, tread zones, the written grip coefficient, and carcass temperature. Scrolls. Respawn if no signal.",
   "category": "Telemetry",
   "isAuxiliary": false,
   "interactive": "yes",

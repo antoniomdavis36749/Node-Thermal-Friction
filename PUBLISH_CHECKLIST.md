@@ -1,10 +1,11 @@
 # BeamNG Repo publish checklist
 
-> **Public source:** `main` on Node-Thermal-Friction is the 0.2.2 tree. The BeamNG
+> **Public source:** `main` on Node-Thermal-Friction is the 0.2.3 tree. The BeamNG
 > resource zip is a separate upload of `NodeThermalFriction.zip` from `Pack-Release.ps1`.
+> The website listing stays on the 0.2.2 upload until that form is submitted.
 
 Branches: **`testing/main`** (active polish) → merge to **`main`** (GitHub default / Repo source link)  
-Working folder: `Node-Thermal-Friction-dev` (local git sync under `mods/unpacked/`)  
+Working folder: `Node-Thermal-Friction-work` (the copy BeamNG is loading)  
 Official packing docs: https://documentation.beamng.com/modding/mod-support/mod_packing/  
 Guidelines: https://www.beamng.com/game/support/policies/modding-guidelines/
 

@@ -173,10 +173,10 @@ angular.module("beamng.apps")
                     </div>
 
                     <div class="ttm-grid" ng-if="wheels.length">
-                        <div class="ttm-card" ng-repeat="w in wheels">
+                        <div class="ttm-card" ng-repeat="w in wheels track by (w.name || $index)">
                             <div class="ttm-card-header">
                                 <span class="ttm-wheel-name">{{ w.name }}</span>
-                                <span class="ttm-compound-tag">{{ formatProfile(w.profile) }}</span>
+                                <span class="ttm-compound-tag">{{ formatProfile(w.profile, w.purpose) }}</span>
                             </div>
 
                             <div class="ttm-stat-row">
@@ -211,8 +211,8 @@ angular.module("beamng.apps")
 
                             <div class="ttm-stat-row">
                                 <span class="ttm-label">Dynamic Grip:</span>
-                                <span class="ttm-value" ng-style="{'color': getGripColor(w.tyreGrip)}">
-                                    {{ ((w.tyreGrip || 0) * 100).toFixed(0) }}%
+                                <span class="ttm-value">
+                                    {{ (w.tyreGrip || 0).toFixed(2) }}
                                 </span>
                             </div>
 
@@ -295,11 +295,18 @@ angular.module("beamng.apps")
             restrict: "EA",
             link: function (scope, element, attrs) {
                 var StreamsManager = window.StreamsManager || ($injector.has("StreamsManager") ? $injector.get("StreamsManager") : null);
-                var streamsList = ["TireWearThermals"];
+                var streamsList = ["TireWearThermalsCrew"];
 
                 if (StreamsManager) {
                     StreamsManager.add(streamsList);
                 }
+
+                function setCrewOpen(open) {
+                    if (window.bngApi && bngApi.activeObjectLua) {
+                        bngApi.activeObjectLua("extensions.tireWearThermals.setCrewOpen(" + (open ? "true" : "false") + ")");
+                    }
+                }
+                setCrewOpen(true);
 
 
                 var LERP_K = 12;
@@ -320,19 +327,35 @@ angular.module("beamng.apps")
 
                 scope.wheels = [];
 
-                // Profiles whose scalar life is provisional / fallback (see tools/SPECTRA_STATUS.md).
-                var PROVISIONAL_PROFILES = {
-                    truck: true, truck_offroad: true, light_truck_std: true, light_truck_hd: true,
-                    vintage: true, allterrain: true, mudterrain: true, crawler: true, paddle: true,
-                    highway_utility_utility: true
+                // Descriptors the HUD actually prints. SPECTRA_STATUS provisional bands.
+                // Standard stays untagged: a commercial Standard is tagged from purpose.
+                var PROVISIONAL_DESCRIPTORS = {
+                    "all-terrain": true,
+                    "mud-terrain": true,
+                    crawler: true,
+                    paddle: true,
+                    vintage: true,
+                    rally: true,
+                    drift: true,
+                    winter: true,
+                    wet: true
+                };
+                var PROVISIONAL_PURPOSE = {
+                    commercial: true,
+                    utility: true,
+                    tarmac_rally: true,
+                    gravel: true,
+                    wet: true,
+                    drift: true
                 };
 
-                scope.formatProfile = function (profile) {
+                scope.formatProfile = function (profile, purpose) {
                     if (!profile) return "";
                     var raw = String(profile);
                     var key = raw.toLowerCase().replace(/\s+/g, "_");
                     var pretty = raw.replace(/_/g, " ");
-                    if (PROVISIONAL_PROFILES[key] || /utility|truck|vintage|allterrain|mudterrain|crawler|paddle/.test(key)) {
+                    var purposeKey = purpose ? String(purpose).toLowerCase() : "";
+                    if (PROVISIONAL_DESCRIPTORS[key] || PROVISIONAL_PURPOSE[purposeKey]) {
                         return pretty + " · provisional";
                     }
                     return pretty;
@@ -357,14 +380,6 @@ angular.module("beamng.apps")
                     if (v < 0) v = 0;
                     if (v > 100) v = 100;
                     return v + "%";
-                };
-
-                scope.getGripColor = function (grip) {
-                    if (grip === undefined) return "#f1f5f9";
-                    if (grip >= 0.95) return "#10b981";
-                    if (grip >= 0.85) return "#a3e635";
-                    if (grip >= 0.70) return "#f59e0b";
-                    return "#ef4444";
                 };
 
                 scope.getDiagnosticColor = function (value) {
@@ -392,7 +407,7 @@ angular.module("beamng.apps")
                     return t * t * (3 - 2 * t);
                 }
 
-                // Color from this wheel's streamed grip window (thermalGripWindow edges).
+                // Color from this tire's profile opt window.
                 scope.getTempColor = function (tempVal, wheel) {
                     var sat = 80;
                     var lit = 45;
@@ -470,6 +485,7 @@ angular.module("beamng.apps")
                 function copyStaticWheel(dst, src) {
                     dst.name = src.name;
                     dst.profile = src.profile;
+                    dst.purpose = src.purpose;
                     dst.tempCategory = src.tempCategory;
                     dst.targetHotPressure = src.targetHotPressure;
                     dst.optimalPressure = src.optimalPressure;
@@ -644,8 +660,23 @@ angular.module("beamng.apps")
                     return false;
                 }
 
+                var pendingStream = null;
+                var streamQueued = false;
                 function ingestStream(dataStream) {
                     if (!acceptNtfStream(dataStream)) return;
+                    if (scope.$$phase) {
+                        pendingStream = dataStream;
+                        if (!streamQueued) {
+                            streamQueued = true;
+                            scope.$evalAsync(function () {
+                                streamQueued = false;
+                                var next = pendingStream;
+                                pendingStream = null;
+                                if (next) ingestStream(next);
+                            });
+                        }
+                        return;
+                    }
 
                     var src = dataStream.data;
                     var count = src.length;
@@ -682,21 +713,28 @@ angular.module("beamng.apps")
 
                 scope.$on("$destroy", function () {
                     stopRaf();
+                    setCrewOpen(false);
                     document.removeEventListener("visibilitychange", onVisibilityChange);
                     if (StreamsManager) {
                         StreamsManager.remove(streamsList);
                     }
                 });
 
-                scope.$on("VehicleChange", resetNtfStreamBind);
-                scope.$on("VehicleFocusChanged", resetNtfStreamBind);
-                scope.$on("TireWearThermals", function (event, dataStream) {
+                scope.$on("VehicleChange", function () {
+                    resetNtfStreamBind();
+                    setCrewOpen(true);
+                });
+                scope.$on("VehicleFocusChanged", function () {
+                    resetNtfStreamBind();
+                    setCrewOpen(true);
+                });
+                scope.$on("TireWearThermalsCrew", function (event, dataStream) {
                     ingestStream(dataStream);
                 });
 
                 scope.$on("streamsUpdate", function (event, streams) {
-                    if (streams && streams.TireWearThermals) {
-                        ingestStream(streams.TireWearThermals);
+                    if (streams && streams.TireWearThermalsCrew) {
+                        ingestStream(streams.TireWearThermalsCrew);
                     }
                 });
             }

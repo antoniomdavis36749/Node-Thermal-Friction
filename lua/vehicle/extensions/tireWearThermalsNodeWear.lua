@@ -59,82 +59,110 @@ local DRIFT_CAMBER_PARK_OMEGA = 4 -- rad/s; nearly stopped → mute camber
 
 local function isSlickOrCircuit(data)
     if not data then return false end
+    if data.slickOrCircuit ~= nil then return data.slickOrCircuit end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
-    if string.find(p1, "slick", 1, true) or string.find(p2, "slick", 1, true) then
-        return true
+    local result = (string.find(p1, "slick", 1, true) or string.find(p2, "slick", 1, true)) and true or false
+    if not result then
+        local mods = data.interpolatedMods
+        result = (mods and mods.purpose == "circuit") and true or false
     end
-    local mods = data.interpolatedMods
-    return mods and mods.purpose == "circuit" or false
+    data.slickOrCircuit = result
+    return result
 end
 
 local function isTrackDayProfile(data)
     if not data then return false end
+    if data.trackDayProfile ~= nil then return data.trackDayProfile end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
-    return (string.find(p1, "track_day", 1, true) ~= nil)
+    local result = (string.find(p1, "track_day", 1, true) ~= nil)
         or (string.find(p2, "track_day", 1, true) ~= nil)
+    data.trackDayProfile = result
+    return result
 end
 
 local function isSportPlusProfile(data)
     if not data then return false end
+    if data.sportPlusProfile ~= nil then return data.sportPlusProfile end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
-    return (string.find(p1, "sport_plus", 1, true) ~= nil)
+    local result = (string.find(p1, "sport_plus", 1, true) ~= nil)
         or (string.find(p2, "sport_plus", 1, true) ~= nil)
+    data.sportPlusProfile = result
+    return result
 end
 
 -- Plain Sport only — must not match sport_plus.
 local function isSportProfile(data)
     if not data or isSportPlusProfile(data) then return false end
+    if data.plainSportProfile ~= nil then return data.plainSportProfile end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
     local function plainSport(p)
         if p == "" or string.find(p, "sport_plus", 1, true) then return false end
         return string.find(p, "sport", 1, true) ~= nil
     end
-    return plainSport(p1) or plainSport(p2)
+    local result = plainSport(p1) or plainSport(p2)
+    data.plainSportProfile = result
+    return result
 end
 
 local function isStandardProfile(data)
     if not data then return false end
+    if data.standardProfile ~= nil then return data.standardProfile end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
-    return (string.find(p1, "standard", 1, true) ~= nil)
+    local result = (string.find(p1, "standard", 1, true) ~= nil)
         or (string.find(p2, "standard", 1, true) ~= nil)
+    data.standardProfile = result
+    return result
 end
 
 local function isVintageProfile(data)
     if not data then return false end
+    if data.vintageProfile ~= nil then return data.vintageProfile end
     local p1 = data.profile1Lower or ""
     local p2 = data.profile2Lower or ""
-    return (string.find(p1, "vintage", 1, true) ~= nil)
+    local result = (string.find(p1, "vintage", 1, true) ~= nil)
         or (string.find(p2, "vintage", 1, true) ~= nil)
+    data.vintageProfile = result
+    return result
 end
 
 -- Commercial spectrum + light_truck standalones (*truck* / light_truck in profile).
 local function isTruckOrCommercialProfile(data)
     if not data then return false end
+    if data.truckProfile ~= nil then return data.truckProfile end
     local mods = data.interpolatedMods
-    if mods and mods.purpose == "commercial" then return true end
-    local p1 = data.profile1Lower or ""
-    local p2 = data.profile2Lower or ""
-    local function truckish(p)
-        if p == "" then return false end
-        if string.find(p, "light_truck", 1, true) then return true end
-        return string.find(p, "truck", 1, true) ~= nil
+    local result = (mods and mods.purpose == "commercial") and true or false
+    if not result then
+        local p1 = data.profile1Lower or ""
+        local p2 = data.profile2Lower or ""
+        local function truckish(p)
+            if p == "" then return false end
+            if string.find(p, "light_truck", 1, true) then return true end
+            return string.find(p, "truck", 1, true) ~= nil
+        end
+        result = truckish(p1) or truckish(p2)
     end
-    return truckish(p1) or truckish(p2)
+    data.truckProfile = result
+    return result
 end
 
 local function isDriftPurpose(data)
     if not data then return false end
+    if data.driftProfile ~= nil then return data.driftProfile end
     local mods = data.interpolatedMods
-    if mods and mods.purpose == "drift" then return true end
-    local p1 = data.profile1Lower or ""
-    local p2 = data.profile2Lower or ""
-    return (string.find(p1, "drift", 1, true) ~= nil)
-        or (string.find(p2, "drift", 1, true) ~= nil)
+    local result = (mods and mods.purpose == "drift") and true or false
+    if not result then
+        local p1 = data.profile1Lower or ""
+        local p2 = data.profile2Lower or ""
+        result = (string.find(p1, "drift", 1, true) ~= nil)
+            or (string.find(p2, "drift", 1, true) ~= nil)
+    end
+    data.driftProfile = result
+    return result
 end
 
 -- Drift slip arm + camber guard: true drift compound, or plain Sport (not Plus).

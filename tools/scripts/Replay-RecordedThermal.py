@@ -3,9 +3,14 @@
 Feeds each logged slip ratio into the live stick-flex path. Above 0.30 the
 extra heat must be zero. At least one sample at or below 0.12 must still
 produce it. Does not retune locked numbers.
+
+Heat prediction is not this script. A 1 Hz row is too coarse to rerun the
+thermal step. `Read-NtfRun.py predict` compares a straight rolling step
+with a same-setup pair's noise floor.
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import sys
 from pathlib import Path
@@ -13,15 +18,25 @@ from pathlib import Path
 import lupa
 
 ROOT = Path(__file__).resolve().parents[1].parent
-CSV_PATH = ROOT / "tools" / "output" / "stick-flex-drift-telemetry.csv"
-LUA_PATH = ROOT / "lua" / "vehicle" / "extensions" / "auto" / "tireWearThermals.lua"
+OUTPUT = ROOT / "tools" / "output"
+LUA_PATH = ROOT / "lua" / "vehicle" / "extensions" / "tireWearThermalsImpl.lua"
 EXT_DIR = ROOT / "lua" / "vehicle" / "extensions"
 
 
+def default_csv() -> Path:
+    logs = sorted(OUTPUT.glob("stick-flex-drift-telemetry*.csv"), key=lambda p: p.stat().st_mtime)
+    return logs[-1] if logs else OUTPUT / "stick-flex-drift-telemetry-v6.csv"
+
+
 def main() -> int:
-    if not CSV_PATH.is_file():
-        print(f"FAIL: recorded log missing: {CSV_PATH}")
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--file", type=Path, help="recorded telemetry CSV (default: newest stick-flex-drift log)")
+    args = ap.parse_args()
+    csv_path = args.file or default_csv()
+    if not csv_path.is_file():
+        print(f"FAIL: recorded log missing: {csv_path}")
         return 1
+    print(f"log {csv_path.name}")
     ext = str(EXT_DIR).replace("\\", "/")
     lua_file = str(LUA_PATH).replace("\\", "/")
     lua = lupa.LuaRuntime(unpack_returned_tuples=True)
@@ -35,6 +50,7 @@ function obj:getRollPitchYawAngularVelocity() return 0, 0, 0 end
 function obj:getVelocity() return nil end
 function obj:getID() return 1 end
 electrics = {{ values = {{ airspeed = 0 }} }}
+playerInfo = {{ firstPlayerSeated = true, anyPlayerSeated = true }}
 sensors = {{ gx = 0, gy = 0 }}
 v = {{ data = {{ nodes = {{}} }} }}
 guihooks = {{}}
@@ -76,7 +92,7 @@ end"""
     low_alive = 0
     worst = 0.0
     rows = 0
-    with CSV_PATH.open(encoding="utf-8", errors="replace", newline="") as handle:
+    with csv_path.open(encoding="utf-8", errors="replace", newline="") as handle:
         for row in csv.DictReader(handle):
             raw = row.get("slipRatio")
             if raw in (None, ""):

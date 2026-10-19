@@ -1,8 +1,8 @@
 {
   "name": "Node-Thermal Friction Pitwall",
-  "description": "Dev Pitwall: 8-node temps, node-spike / cole energy, elevation/env, pressure, drive heat, surface μ, suspension, slip.",
+  "description": "Lab app for testing. Not in the public zip. Short tire row until Capture is open.",
   "author": "Node-Thermal Friction",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "directive": "tireWearThermalsHeavy",
   "domElement": "<tire-wear-thermals-heavy></tire-wear-thermals-heavy>",
   "types": [

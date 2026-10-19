@@ -5,14 +5,45 @@ local M = {}
 
 local min, max, abs = math.min, math.max, math.abs
 local vec3 = _G.vec3
+local axleKeyCache = {}
+local axleVec = {}
+
+local function fillAxle(slot, x, y, z)
+    local ctor = vec3 or _G.vec3
+    if not ctor then return nil end
+    local v = axleVec[slot]
+    if not v then
+        v = ctor(x, y, z)
+        axleVec[slot] = v
+        if axleVec.setter == nil then
+            axleVec.setter = type(v.set) == "function"
+        end
+        return v
+    end
+    if axleVec.setter then
+        v:set(x, y, z)
+    else
+        v.x, v.y, v.z = x, y, z
+    end
+    return v
+end
 
 M.wheelAxleKey = function(name)
-    local n = string.lower(tostring(name or ""))
-    if string.find(n, "rr", 1, true) or string.find(n, "rl", 1, true) then return "r" end
-    if string.find(n, "fr", 1, true) or string.find(n, "fl", 1, true) then return "f" end
-    if string.match(n, "^r") then return "r" end
-    if string.match(n, "^f") then return "f" end
-    return nil
+    if name == nil or name == "" then return nil end
+    local cached = axleKeyCache[name]
+    if cached ~= nil then
+        if cached == "" then return nil end
+        return cached
+    end
+    local n = string.lower(tostring(name))
+    local k
+    if string.find(n, "rr", 1, true) or string.find(n, "rl", 1, true) then k = "r"
+    elseif string.find(n, "fr", 1, true) or string.find(n, "fl", 1, true) then k = "f"
+    elseif string.match(n, "^r") then k = "r"
+    elseif string.match(n, "^f") then k = "f"
+    end
+    axleKeyCache[name] = k or ""
+    return k
 end
 
 M.reset = function(state)
@@ -87,8 +118,9 @@ local function sampleInner(state, ctx)
     local torque = obj:calcTotalAeroTorque(cop)
     if not torque then return end
 
-    local frontAxle = vec3(fx / nFront, fy / nFront, fz / nFront)
-    local rearAxle = vec3(rx / nRear, ry / nRear, rz / nRear)
+    local frontAxle = fillAxle(1, fx / nFront, fy / nFront, fz / nFront)
+    local rearAxle = fillAxle(2, rx / nRear, ry / nRear, rz / nRear)
+    if not frontAxle or not rearAxle then return end
     local wheelbase = (frontAxle - rearAxle):length()
     if wheelbase < 0.5 then return end
     local frontAxleToCOP = copVec - frontAxle

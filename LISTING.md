@@ -17,7 +17,7 @@ Keep each zip filename stable across updates. **Listed 2026-08-18.** Cross-link 
 | --- | --- |
 | **Title** | Node-Thermal Friction |
 | **Tagline** | Tire temperature, wear, and grip. Per-tire profiles. |
-| **Version** | 0.2.2 |
+| **Version** | 0.2.3 |
 | **Zip filename** | `NodeThermalFriction.zip` (stable Repo id; display title is Node-Thermal Friction) |
 | **Prefix** | Beta |
 
@@ -60,7 +60,7 @@ Vehicle mod: [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23
 • Track Day heat locked for now (between Sport Plus and Hard C2)
 • Layout-aware Soft drive heat (FWD / AWD fronts) — keeps Hot under abuse without rewriting compound knobs
 • Pressure, load, and surface effects on grip
-• Brake cooling duct sliders (Tuning → Brakes; saved in .pc configs)
+• Front Tire Ducts (Tuning → Tires → Band tuning). 50% = neutral. 1% warms the tire from the brakes. 100% = open. Saved with the car.
 • UI apps: Classic / Crew (player HUDs). **Dev Pitwall** (testers): dense engineer telemetry — not in public zip
 • Dev Pitwall (`-dev` / git): stint/odo distance, heat-knob chips, node-spike debug (testers only)
 • Multiplayer-compatible vehicle extension
@@ -72,7 +72,7 @@ Vehicle mod: [URL]https://www.beamng.com/resources/scintilla-gt3-racing-parts.23
 1. Install / enable the mod (disable any older thermals-and-wear unpack if present).
 2. Spawn a vehicle.
 3. Apps menu → add [B]Node-Thermal Friction[/B] (Classic or Crew). **Dev Pitwall** is for testers/engineering only — not shipped in the public zip.
-4. Optional: Tuning → Brakes → Front/Rear duct opening (1% = closed, 100% = fully open).
+4. Optional, near the end of a band: Tuning → Tires → Front Tire Ducts. 50% = neutral. 1% warms the tire from the brakes. 100% = open.
 5. Optional (compatibility tires): install [B]Node-Thermal Friction — Compat Tires[/B] ([URL]https://www.beamng.com/resources/tire-wear-and-thermals-respin-%E2%80%94-compat-tires.39083/[/URL]), plus [I]Scintilla GT3[/I] or [I]Pigniteon ETK Racing[/I] for meshes. Scintilla: pick a [B]GT3 NTF[/B] config (Endurance Hard/Medium/Soft or Qualify Supersoft), or Parts → tires → [B]NTF[/B]. Author configs still default to upstream tires.
 
 [HR][/HR]
@@ -134,6 +134,12 @@ Gallery for that listing: tires unpack `mod_info/TWTRS_COMPAT/images/listing_her
 
 ---
 
+## Changelog (0.2.3)
+
+- Tester pre-release from the current heat tree. Front Tire Ducts default to 50% neutral.
+- Classic and Crew show written grip as a coefficient.
+- The public zip leaves out vehicles, Pitwall Heavy, NodeProbe, and the West Coast lap test. The BeamNG website listing is still the 0.2.2 upload.
+
 ## Changelog (0.2.1)
 
 - Private-beta polish: Classic/Crew blank-stream + Cond labeling; duct Tuning copy; Compat README/inventory/pack script
@@ -168,7 +174,7 @@ Yes — BeamNG Repo listings support **multiple images** with **captions/descrip
 | --- | --- | --- |
 | `mod_info/TWTRS_NTF/images/listing_hero.jpg` (icon: `icon.jpg`) | **Core** Node-Thermal Friction | **Node-Thermal Friction** — Tires heat up, wear down, and lose grip. Vehicle: Scintilla GT3 Racing Parts (listing stills used with author permission) — https://www.beamng.com/resources/scintilla-gt3-racing-parts.23027/ |
 | `mod_info/TWTRS_NTF/images/ui_four_apps.jpg` | **Core** Node-Thermal Friction | **Apps in one shot** — Pitwall (dev engineer), Crew (carcass + stint fade), and Classic (compact inner / center / outer temps). Driver HUD removed. |
-| `mod_info/TWTRS_NTF/images/ducts.jpg` | **Core** Node-Thermal Friction | **Brake cooling ducts** — Tuning → Brakes → Front/Rear Cooling Ducts (1% = closed, 100% = open). Saved with the car. |
+| `mod_info/TWTRS_NTF/images/ducts.jpg` | **Core** Node-Thermal Friction | **Tire ducts** — Tuning → Tires → Front/Rear Tire Ducts. 50% = neutral. 1% warms the tire from the brakes. 100% = open. Does not cool the brake rotors. Saved with the car. |
 | `tools/listing/locked/ntf-compat-hero.jpg` | **Compat Tires** companion (shipped from the tires repo) | **Node-Thermal Friction Tires** — Optional extra `*_NTF` GT3 tire parts (3D models stay in the car mods). Install beside core Node-Thermal Friction. |
 | `mod_info/TWTRS_NTF/images/tire_thermal_map.jpg` (draft) | **Core** Node-Thermal Friction (optional 4th gallery) | **Tire thermal map** — Inner / center / outer tread in Pitwall colors (cyan-teal cooler, green usable, amber hotter) plus surface, carcass, and rim-soak callouts. |
 

@@ -15,6 +15,8 @@ In-load verification is one print when the vehicle Lua loads. A missing function
 | 3 | Loaded clean 26 Sep 2026. Two Scintilla spawns printed `ARCH stage 3 OK layoutDamp=0` | Slip, work, brake, and flex energy go into scratch. The integrator still writes the eight nodes |
 | 4 | Loaded clean 26 Sep 2026. Log printed `ARCH stage 4 OK layoutDamp=0` | Integrator calls `ctwAccumulateHeat`. `ctwEmitDuty` writes the duty line and does not write `data.temp` |
 | 5 | Loaded 26 Sep 2026. Burnside drag spawn printed `ARCH stage 5 OK layoutDamp=1` | Player stream is the lean tire card. Pitwall listens to `TireWearThermalsPitwall` and keeps the full payload. Classic and Crew stay on `TireWearThermals` |
+| 6 | Logged 27 Sep 2026, 14:31. Pickup printed `ARCH stage 6 OK layoutDamp=1` once. Twenty-four other vehicles printed `lite` and none printed stage 6 | Tire code left `auto/`. The seated car requires the impl on the first GFX step. An unseated car prints `lite` and does not parse it |
+| 7 | Logged 27 Sep 2026. Bastion printed `ARCH stage 7 OK layoutDamp=1` | Player wear lives in `tireWearThermalsCareer.lua`. The load print requires `careerWearLoad`. Heat stays in the impl |
 
 Stage 4 loaded and a 9.2 km Sport Plus stint still heated and cooled. Architecture rating is 4. Stage 5 printed `ARCH stage 5 OK` on the Burnside drag spawn.
 
@@ -38,7 +40,8 @@ Goal: keep main `auto/tireWearThermals.lua` readable and every hot function safe
 
 ```
 lua/vehicle/extensions/
-  auto/tireWearThermals.lua          orchestration + grip + ctw thermal + lifecycle
+  auto/tireWearThermals.lua          load gate only. The seated car requires the impl on the first GFX step. Unseated cars print lite and do not parse it
+  tireWearThermalsImpl.lua           orchestration + grip + ctw thermal + lifecycle
   tireWearThermalsProfiles.lua       profile tables / interpolate inputs
   tireWearThermalsSurface.lua        ground classify, surface bias
   tireWearThermalsAero.lua           native aero sample

@@ -54,19 +54,40 @@ function M.install(F, deps)
             targetTable[k] = nil
         end
     
-        -- Merge and interpolate metrics
+        -- A missing numeric key blends toward the default from either side.
+        -- It does not copy the neighbor. scalarTreadWearScale and nodeWearScale
+        -- keep their blend defaults (0.15 and 1), which are not DEFAULT_MODS.
+        local function missingNumber(k)
+            if k == "scalarTreadWearScale" then return 0.15 end
+            if k == "nodeWearScale" then return 1.0 end
+            local v = DEFAULT_MODS[k]
+            if type(v) == "number" then return v end
+            return nil
+        end
+
         for k, v1 in pairs(p1.mods) do
             local v2 = p2.mods[k]
-            targetTable[k] = v2 and lerp(v1, v2, factor) or v1
+            if type(v1) == "number" then
+                if type(v2) == "number" then
+                    targetTable[k] = lerp(v1, v2, factor)
+                else
+                    local fb = missingNumber(k)
+                    if type(fb) == "number" then
+                        targetTable[k] = lerp(v1, fb, factor)
+                    else
+                        targetTable[k] = v1
+                    end
+                end
+            elseif v2 ~= nil then
+                targetTable[k] = lerp(v1, v2, factor)
+            else
+                targetTable[k] = v1
+            end
         end
-        -- Keys only on p2: lerp from a numeric default when factor < 1 so Soft-adjacent
-        -- does not inherit full supersoft-only knobs (e.g. scalarTreadWearScale 1.0).
         for k, v2 in pairs(p2.mods) do
             if targetTable[k] == nil then
                 if type(v2) == "number" then
-                    local v1 = DEFAULT_MODS[k]
-                    if k == "scalarTreadWearScale" then v1 = 0.15 end
-                    if k == "nodeWearScale" then v1 = 1.0 end
+                    local v1 = missingNumber(k)
                     if type(v1) == "number" then
                         targetTable[k] = lerp(v1, v2, factor)
                     else
@@ -77,7 +98,20 @@ function M.install(F, deps)
                 end
             end
         end
-    
+
+        local function hasRoll(pt)
+            return pt and pt.mods and type(pt.mods.rollingHystScale) == "number"
+        end
+        local onAnchor
+        if factor <= 0 then
+            onAnchor = hasRoll(p1)
+        elseif factor >= 1 then
+            onAnchor = hasRoll(p2)
+        else
+            onAnchor = hasRoll(p1) and hasRoll(p2)
+        end
+        targetTable.rollFromAnchor = onAnchor and 1 or 0
+
         return p1.profile, p2.profile, factor
     end
 
@@ -381,47 +415,55 @@ function M.install(F, deps)
 
         -- 1. DETECT DETACHED OR STANDALONE SPECIFIC DESIGNS FIRST
         -- Vintage before spare: spare slots often contain "tire" and used to win incorrectly.
+        -- packId is the table this tire copied. classifyReason can be renamed later; packId is not.
         local purpose, classifyReason = "street", "street_spectrum"
+        local function takeStandalone(key, packId, purposeName, reason)
+            local src = STANDALONE_MODIFIERS[key]
+            rawProfile1, rawProfile2, interpFactor = key, key, 0
+            F.copyMods(src, mods)
+            mods.rollFromAnchor = (src and type(src.rollingHystScale) == "number") and 1 or 0
+            mods.packId = packId
+            purpose, classifyReason = purposeName, reason
+        end
+        local function takePoint(profileName, packId, purposeName, reason)
+            local src = F.getProfilePointMods(profileName)
+            rawProfile1, rawProfile2, interpFactor = profileName, profileName, 0
+            F.copyMods(src, mods)
+            mods.rollFromAnchor = (src and type(src.rollingHystScale) == "number") and 1 or 0
+            mods.packId = packId
+            purpose, classifyReason = purposeName, reason
+        end
+        local function takeSpectrum(spectrum, keyName, value, packId, purposeName, reason)
+            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(spectrum, keyName, value, mods)
+            mods.packId = packId
+            purpose, classifyReason = purposeName, reason
+        end
         if string.find(nameLower, "crawler") or string.find(nameLower, "beadlock") then
-            rawProfile1, rawProfile2, interpFactor = "crawler", "crawler", 0; F.copyMods(STANDALONE_MODIFIERS.crawler, mods)
-            purpose, classifyReason = "utility", "standalone_crawler"
+            takeStandalone("crawler", "standalone_crawler", "utility", "standalone_crawler")
         elseif string.find(nameLower, "paddle") or string.find(nameLower, "sand") then
-            rawProfile1, rawProfile2, interpFactor = "paddle", "paddle", 0; F.copyMods(STANDALONE_MODIFIERS.paddle, mods)
-            purpose, classifyReason = "utility", "standalone_paddle"
+            takeStandalone("paddle", "standalone_paddle", "utility", "standalone_paddle")
         elseif isRallyAsphaltMount then
-            rawProfile1, rawProfile2, interpFactor = "rally", "rally", 0; F.copyMods(STANDALONE_MODIFIERS.rally, mods)
-            purpose, classifyReason = "tarmac_rally", tarmacClassifyReason or "rally_damper"
+            takeStandalone("rally", "standalone_rally", "tarmac_rally", tarmacClassifyReason or "rally_damper")
         elseif isGravelRallyName then
-            rawProfile1, rawProfile2, interpFactor = "rally", "rally", 0; F.copyMods(STANDALONE_MODIFIERS.rally, mods)
-            purpose, classifyReason = "gravel", "gravel_name"
+            takeStandalone("rally", "standalone_rally", "gravel", "gravel_name")
         elseif string.find(nameLower, "winter") or string.find(nameLower, "snow") then
-            rawProfile1, rawProfile2, interpFactor = "winter", "winter", 0; F.copyMods(STANDALONE_MODIFIERS.winter, mods)
-            purpose, classifyReason = "winter", "standalone_winter"
+            takeStandalone("winter", "standalone_winter", "winter", "standalone_winter")
         elseif string.find(nameLower, "vintage") or string.find(nameLower, "biasply") or string.find(nameLower, "bias_ply") or string.find(nameLower, "whitewall") then
-            rawProfile1, rawProfile2, interpFactor = "vintage", "vintage", 0; F.copyMods(STANDALONE_MODIFIERS.vintage, mods)
-            purpose, classifyReason = "street", "standalone_vintage"
+            takeStandalone("vintage", "standalone_vintage", "street", "standalone_vintage")
         elseif string.find(nameLower, "donut") or string.find(nameLower, "spare") then
-            rawProfile1, rawProfile2, interpFactor = "donut", "donut", 0; F.copyMods(STANDALONE_MODIFIERS.donut, mods)
-            purpose, classifyReason = "utility", "standalone_donut"
+            takeStandalone("donut", "standalone_donut", "utility", "standalone_donut")
         elseif string.find(nameLower, "rain") or string.find(nameLower, "wet") or string.find(nameLower, "inter") then
-            rawProfile1, rawProfile2, interpFactor = "rain", "rain", 0; F.copyMods(STANDALONE_MODIFIERS.rain, mods)
-            purpose, classifyReason = "wet", "standalone_rain"
+            takeStandalone("rain", "standalone_rain", "wet", "standalone_rain")
         elseif string.find(nameLower, "drag") then
-            rawProfile1, rawProfile2, interpFactor = "drag", "drag", 0; F.copyMods(STANDALONE_MODIFIERS.drag, mods)
-            purpose, classifyReason = "drag", "standalone_drag"
+            takeStandalone("drag", "standalone_drag", "drag", "standalone_drag")
         elseif string.find(nameLower, "drift") then
-            rawProfile1, rawProfile2, interpFactor = "drift", "drift", 0; F.copyMods(STANDALONE_MODIFIERS.drift, mods)
-            purpose, classifyReason = "drift", "standalone_drift"
+            takeStandalone("drift", "standalone_drift", "drift", "standalone_drift")
         elseif string.find(nameLower, "track_day", 1, true) or string.find(nameLower, "sport_tour", 1, true) then
             -- sport_tour is the old Track Day name; do not keep a fourth sport profile.
-            rawProfile1, rawProfile2, interpFactor = "track_day", "track_day", 0
-            F.copyMods(F.getProfilePointMods("track_day"), mods)
-            purpose, classifyReason = "street", "track_day_name"
+            takePoint("track_day", "profile_track_day", "street", "track_day_name")
         elseif string.find(nameLower, "sport_plus", 1, true) then
             -- Native Sport Plus JBeam is treadCoef 0.40; name still owns the Scintilla plus lock.
-            rawProfile1, rawProfile2, interpFactor = "sport_plus", "sport_plus", 0
-            F.copyMods(F.getProfilePointMods("sport_plus"), mods)
-            purpose, classifyReason = "street", "sport_plus_name"
+            takePoint("sport_plus", "profile_sport_plus", "street", "sport_plus_name")
         elseif isRaceLikeName and not string.find(nameLower, "gravel", 1, true) then
             -- Remap BeamNG 0.5/0.8/1.0 soft tiers onto densified 0.50/0.65/0.80 spectrum
             -- (explicit 0.875 SKU is C5 supersoft; 1.0 stays C4).
@@ -430,32 +472,23 @@ function M.install(F, deps)
                 softnessCoef = 0.875
             end
             local sc = F.remapSlickSoftness(softnessCoef)
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(SLICK_SPECTRUM_POINTS, "softness", sc, mods)
-            purpose, classifyReason = "circuit", "slick_spectrum"
+            takeSpectrum(SLICK_SPECTRUM_POINTS, "softness", sc, "slick_spectrum", "circuit", "slick_spectrum")
         elseif isNamedStreetSportCompound(nameLower) then
             -- Bare *_sport JBeam (not plus/track_day/tour); tread may differ from 0.50 anchor.
-            rawProfile1, rawProfile2, interpFactor = "sport", "sport", 0
-            F.copyMods(F.getProfilePointMods("sport"), mods)
-            purpose, classifyReason = "street", "sport_name"
+            takePoint("sport", "profile_sport", "street", "sport_name")
         elseif isCommercialTire then
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(COMMERCIAL_SPECTRUM_POINTS, "tread", max(0.50, min(0.90, treadCoef)), mods)
-            purpose, classifyReason = "commercial", "commercial_spectrum"
+            takeSpectrum(COMMERCIAL_SPECTRUM_POINTS, "tread", max(0.50, min(0.90, treadCoef)), "commercial_spectrum", "commercial", "commercial_spectrum")
         elseif isVintageTire then
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(VINTAGE_SPECTRUM_POINTS, "tread", max(0.50, min(0.65, treadCoef)), mods)
-            purpose, classifyReason = "street", "vintage_spectrum"
+            takeSpectrum(VINTAGE_SPECTRUM_POINTS, "tread", max(0.50, min(0.65, treadCoef)), "vintage_spectrum", "street", "vintage_spectrum")
         elseif isUtilityTire then
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(UTILITY_SPECTRUM_POINTS, "tread", max(0.50, min(0.95, treadCoef)), mods)
-            purpose, classifyReason = "utility", "utility_spectrum"
+            takeSpectrum(UTILITY_SPECTRUM_POINTS, "tread", max(0.50, min(0.95, treadCoef)), "utility_spectrum", "utility", "utility_spectrum")
         elseif isUTVTire then
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(ATV_UTV_SPECTRUM_POINTS, "tread", max(0.50, min(0.85, treadCoef)), mods)
-            purpose, classifyReason = "utility", "utv_spectrum"
+            takeSpectrum(ATV_UTV_SPECTRUM_POINTS, "tread", max(0.50, min(0.85, treadCoef)), "utv_spectrum", "utility", "utv_spectrum")
         else
             -- Spectrum path updated to re-aligned discrete JBeam increments
-            rawProfile1, rawProfile2, interpFactor = F.interpolateSpectrum(PROFILE_POINTS, "tread", max(0.30, min(1, treadCoef)), mods)
+            takeSpectrum(PROFILE_POINTS, "tread", max(0.30, min(1, treadCoef)), "street_spectrum", "street", "street_spectrum")
             if string.find(nameLower, "gravel", 1, true) and treadCoef > 0.78 then
                 purpose, classifyReason = "gravel", "gravel_mt_name"
-            else
-                purpose, classifyReason = "street", "street_spectrum"
             end
         end
 

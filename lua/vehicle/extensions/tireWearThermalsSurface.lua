@@ -150,7 +150,8 @@ end
 
 -- Profile × surface grip bias (compound character on top of treadCoef sanity scale)
 -- profile1/profile2 should already be lowercased (tyreData.profile1Lower / profile2Lower).
-M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2)
+-- Resolved once at spawn and stored on the tire. The hot path passes that table.
+M.profileSurfaceFlags = function(profile1, profile2)
     local p1 = profile1 or ""
     local p2 = profile2 or ""
     local function has(tag)
@@ -167,15 +168,11 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2)
     local isRain = (p1 == "rain" or p2 == "rain")
     local isDrift = has("drift")
     local isDrag = has("drag")
-    -- Truck / commercial family (spectrum names: highway_*_truck, heavy_offroad_truck, logger_utility, etc.)
     local isTruckOffroad = has("offroad") or has("logger")
     local isTruckDrive = has("traction") and has("drive")
     local isTruckHighway = has("highway") or has("trailer") or (has("steer") and has("truck"))
     local isLightTruckHd = has("light_truck_hd") or has("heavy_duty")
     local isLightTruck = has("light_truck") and not isLightTruckHd
-    -- Street continuum (standard / sport / vintage): asphalt preference + loose penalty.
-    -- Restores asphalt>loose gap after global gm bump; excludes rally/AT/MT/race/truck specialists.
-    -- Asphalt *1.02 only on standard/vintage (sport already has dryGripScale 1.02).
     local isSportPlus = has("sport_plus")
     local isSport = has("sport") and not isSportPlus
     local isStreetLoose = (has("standard") or isSport or has("vintage"))
@@ -188,6 +185,34 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2)
         and not isSlick and not isDrag and not isPaddle
         and not isTruckOffroad and not isTruckDrive and not isTruckHighway
         and not isLightTruck and not isLightTruckHd
+    return {
+        paddle = isPaddle, winter = isWinter, rally = isRally, crawler = isCrawler,
+        mudTerrain = isMudTerrain, allTerrain = isAllTerrain, slick = isSlick, rain = isRain,
+        drift = isDrift, drag = isDrag, truckOffroad = isTruckOffroad, truckDrive = isTruckDrive,
+        truckHighway = isTruckHighway, lightTruckHd = isLightTruckHd, lightTruck = isLightTruck,
+        sportPlus = isSportPlus, sport = isSport, streetLoose = isStreetLoose, streetAsphalt = isStreetAsphalt,
+    }
+end
+
+M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2, flags)
+    flags = flags or M.profileSurfaceFlags(profile1, profile2)
+    local isPaddle = flags.paddle
+    local isWinter = flags.winter
+    local isRally = flags.rally
+    local isCrawler = flags.crawler
+    local isMudTerrain = flags.mudTerrain
+    local isAllTerrain = flags.allTerrain
+    local isSlick = flags.slick
+    local isRain = flags.rain
+    local isDrift = flags.drift
+    local isDrag = flags.drag
+    local isTruckOffroad = flags.truckOffroad
+    local isTruckDrive = flags.truckDrive
+    local isTruckHighway = flags.truckHighway
+    local isLightTruckHd = flags.lightTruckHd
+    local isLightTruck = flags.lightTruck
+    local isStreetLoose = flags.streetLoose
+    local isStreetAsphalt = flags.streetAsphalt
 
     if surfaceType == "sand" then
         if isPaddle then tyreGrip = tyreGrip * 1.35
@@ -265,6 +290,31 @@ M.applyProfileSurfaceBias = function(tyreGrip, surfaceType, profile1, profile2)
         end
     end
     return tyreGrip
+end
+
+-- Gaming add-on. Dirt rides on the tire after loose ground and clears on pavement.
+-- Grip only. Cooling and the locked heat bands are not in this path.
+local CARRY_DIRT_GRIP_LOSS = 0.04
+local CARRY_DIRT_PICKUP = 0.05
+local CARRY_DIRT_CLEAN = 0.06
+
+M.stepCarryDirt = function(data, flags, dt, speed, slipPower)
+    if not data or not flags or not dt or dt <= 0 then return 1 end
+    local dirt = data.carryDirt or 0
+    local loose = flags.dirtGrass or flags.mud or flags.gravel or flags.sand
+    local paved = flags.dryPaved or flags.wet
+    if speed < 0 then speed = 0 end
+    if slipPower < 0 then slipPower = 0 end
+    local move = math.min(1, speed / 15)
+    local slip = math.min(1, slipPower / 2)
+    if loose and (move + slip) > 0.02 then
+        dirt = dirt + dt * (CARRY_DIRT_PICKUP * move + 0.04 * slip)
+    elseif paved then
+        dirt = dirt - dt * (0.015 + CARRY_DIRT_CLEAN * move)
+    end
+    if dirt < 0 then dirt = 0 elseif dirt > 1 then dirt = 1 end
+    data.carryDirt = dirt
+    return 1 - dirt * CARRY_DIRT_GRIP_LOSS
 end
 
 return M

@@ -3,7 +3,7 @@
 # Test-RallyLooseSpeedSweep.ps1 + brake/rim/clog/wear gates from live
 # tireWearThermals.lua (driveHeatGate brake open, brake*0.025 netTorque,
 # cruiseRR off when |brake|>50, LOCKUP_HEAT_FLOOR, rim soak via brakeGainRate,
-# loose surfaceWearScale, rally clog pack*0.55 / clogCoef 0.16).
+# loose surfaceWearScale, rally clog pack*0.55 / clog ceiling 12% rally, 16% off-road).
 #
 # Scenario: ABS-ish residual brake slip (wheel still rolling) on gravel/dirt/mud;
 # elevated long g demand; optional short pre-brake cruise settle then hard stop + soak.
@@ -547,11 +547,12 @@ function Simulate-BrakeStop {
     $clog = Clamp $clog 0 1
     if ($clog -gt $peakClog) { $peakClog = $clog }
 
-    # Grip penalty from clog (rally clogCoef 0.16)
-    $clogCoef = if ([bool]$comp.isRally) { 0.16 } else { 0.28 }
+    # Grip penalty from clog. Rally ceiling 12%, other off-road 16%.
+    # Tread factor 1.2..0.6 sits under that ceiling.
+    $clogCap = if ([bool]$comp.isRally) { 0.12 } else { 0.16 }
     $gripAtEnd = 1.0
     if ($clog -gt 0.01) {
-      $gripAtEnd = 1.0 - $clog * $clogCoef * (Lerp 1.2 0.6 $tread)
+      $gripAtEnd = 1.0 - $clog * $clogCap * ((Lerp 1.2 0.6 $tread) / 1.2)
     }
 
     if ([double]::IsNaN($skin) -or [double]::IsInfinity($skin) -or
@@ -653,7 +654,7 @@ foreach ($s in $surfaces) {
     $s.cruiseSlip, $s.cruiseG, $s.condFactor, $s.contactDepth, $s.packsClog)
 }
 Out 'Knobs: skinCoreScale=1.85 floor=0.070  carcassCoolVel/Static=0.28/0.20  hystSkinShare=0.18'
-Out '        rally clog pack*0.55  clogCoef=0.16  brakeGain=1.05'
+Out '        rally clog pack*0.55  clog ceiling 12% rally / 16% off-road  brakeGain=1.05'
 Out ''
 
 $all = New-Object System.Collections.Generic.List[object]

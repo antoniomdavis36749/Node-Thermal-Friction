@@ -35,6 +35,20 @@ legacy indices (e.g. `Summarize-WcTelemetry.ps1` cols 0–13) stay compatible.
 
 Example runners: `scripts/Run-WestCoastManualTelemetry.ps1`, `Run-WestCoastGt4Laps.ps1`, etc.
 
+## Numbers
+
+The logger sets the bound. A scale moves from that log. Feeling is the fine adjustment inside the bound, and it is written beside the number. Slick and sport aim at realistic grip windows and temperatures. A wide plateau from the feeling phase stays retired.
+
+Heat generators are balanced one at a time. A cold straightaway raises straight-line heat. A corner peak over the hot side lowers corner heat. Cooling comes after those, by car class. Each step is its own logged run.
+
+## Straight rolling run
+
+Recommend this for a cruise heat band whose heat share is rolling: truck, heavy-duty, light-truck, highway utility, highway steer, trailer, traction drive, crawler, and paddle, and for the straight-line heat step on slick and sport. Hold a steady straight for 12 km with a dev logger on. Temps are settled by then. The number is the straightaway median inside that profile’s opt ± `tempPlateau`, with hysteresis as the main heat share. The log is the armed telemetry CSV in `tools/output`. `python tools/scripts/Read-NtfRun.py read --last` reads it with the fixed definitions, and `stamp` records the code before a drive.
+
+The slick restart uses the AMD balanced cars with native race tires: `ntf_test_bastion_gt4_native_race`, `ntf_test_vivace_race_native_race`, `ntf_test_sunburst_native_race`, and `ntf_test_scintilla_gt3_native_race`. The open card in `VERIFICATION.md` owns that round.
+
+Sport, Sport Plus, track day, slick, rally, rain, drag, drift, winter, vintage, and the spare use this straight only for the straight-line heat step. It does not set their grip window. Corner heat keeps a run that spends corner heat.
+
 ## High-speed (HS) slip test protocol (Belasco / straight)
 
 Use this procedure when you want a *compound ranking* based on **steady high-speed longitudinal slip**, not on “extra slip-energy from accelerating” and not from “cold/unwarmed tires”.

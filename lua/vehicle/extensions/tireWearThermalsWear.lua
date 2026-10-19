@@ -207,9 +207,6 @@ function M.install(F, deps)
         end
         local scaleWearModifier = (mods.wearRate or 0.0005) * 2000
 
-        -- pressureWheel articulation. Revisit as clean-room node wear later.
-        data.flatSpot = 0
-
         -- DISTINCT surface modes: clog (loose + offroad/rally only) / grain / blister
         -- isDryPaved already from shared flags (includes hard_smooth)
 
@@ -315,8 +312,12 @@ function M.install(F, deps)
         local nativeOwnsSpikeLeak = wd.isPunctured and true or false
         local leak = 0
         local carcassLeakTemp = ctw.avgCarcassTemp or avgWeightedTemp
-        local isSlickLeak = string.find(data.profile1Lower or "", "slick", 1, true)
-                or string.find(data.profile2Lower or "", "slick", 1, true)
+        local isSlickLeak = data.slickProfile
+        if isSlickLeak == nil then
+            isSlickLeak = (string.find(data.profile1Lower or "", "slick", 1, true)
+                or string.find(data.profile2Lower or "", "slick", 1, true)) and true or false
+            data.slickProfile = isSlickLeak
+        end
         if (data.blistering or 0) > 0.70 and carcassLeakTemp > current_optimal_temp * 1.30 then
                 leak = max(leak, lerp(0, 22000, min(1, (data.blistering - 0.70) / 0.30))) -- Pa/s
         end
@@ -426,7 +427,6 @@ function M.install(F, deps)
                 data.nativePressurePSI = dynamicPressurePSI
         end
         data.pressurePsiDelta = (data.luaPressurePSI or dynamicPressurePSI) - (data.nativePressurePSI or dynamicPressurePSI)
-        data.currentFlatSpot = 0 -- feature removed; stream stays 0 for schema stability
         data.currentSurfaceDamage = data.surfaceDamage or 0
         data.currentClog = data.clog or 0
         data.currentGraining = data.graining or 0

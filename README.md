@@ -1,6 +1,6 @@
 # Node-Thermal Friction
 
-> **`0.2.2` (Beta)** — public source on `main`. V2 node wear + per-tire thermals. See
+> **`0.2.3` (Beta)** — public source on `main`. V2 node wear + per-tire thermals. See
 > `tools/V2_FRICTION_CONTRACT.md` and `tools/V2_NODE_WEAR_SPIKE.md`.
 > Friction **A1**: node μ owns contact feel; soft scalar ×0.15 ages Cond; flatspot
 > removed; lock is native. Soft life A3b + Soft→Med→Hard Belasco ladder locked.

@@ -5,6 +5,7 @@ tire-wear-thermals-heavy {
     box-sizing: border-box;
     overflow: hidden;
     min-height: 0;
+    background: transparent;
 }
 
 .tth-panel-container {

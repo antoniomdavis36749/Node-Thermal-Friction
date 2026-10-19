@@ -1,0 +1,24 @@
+---
+description: NTF verification ladder and the open A/B. Follow it before a drive, a retune, or the next phase.
+alwaysApply: true
+---
+
+# Verification
+
+Before any Node-Thermal Friction drive, retune, or "next phase" step, read `tools/DOCUMENTATION.md` for which file owns the claim, then `tools/VERIFICATION.md`, and follow the open card only.
+
+- One claim at a time. A smoke can reject. A log answers its question. An enable-flag A/B keeps or retires that flag. Locked scales stay unless the protocol that locked them misses.
+- The logger sets the bound. A scale moves from that log. Feeling is the fine adjustment inside the bound, and it is written beside the number.
+- Slick and sport aim at realistic grip windows and temperatures. Wide feeling-era plateaus stay retired. A log that sits cold of a realistic window is a heat result. The plateau is not widened to cover it.
+- Balance heat one generator at a time. A cold straightaway raises straight-line heat. A corner peak over the hot side lowers corner heat. Cooling comes after those, by car class. Each step is its own logged run.
+- Front and rear edits are the standard. A miss on one axle gets that axle's scale. A global step is reserved for a miss both axles share.
+- GT3 is smoke-only for heat. A soft-sim PASS is not a live verdict. Native °C stays a second thermometer until the open queue is done.
+- Recommend the steady straight rolling run, 12 km with the dev logger on. Temps are settled by then. It answers the straightaway median for truck, heavy-duty, light-truck, highway utility, steer, trailer, crawler, and paddle, and for the straight-line heat step on slick and sport. Corner heat keeps a run that spends corner heat.
+- The slick restart uses native race tires on the AMD balanced configs `ntf_test_bastion_gt4_native_race`, `ntf_test_vivace_race_native_race`, and `ntf_test_sunburst_native_race`. Those stock race tires remap to soft slick. `ntf_test_scintilla_gt3_native_race` is smoke. The ETK K-Series race is the fifth car and does not vote. Medium rolling 2.5 is coded on the medium anchors and is not locked. The Bastion medium straight waits on the slip-runaway task S-01 in `tools/ROADMAP.md`.
+- Public source is main on Node-Thermal-Friction at 0.2.2. Do not retune 0.58/0.48, 0.45/0.38, stick-flex gain 0.22, drag longGripMult 1.18, highway trailer rollingHystScale 16, or soft slick rollingHystScale 2.20. The 3.1 straight lock is reopened. Brake 1.1, static cooling 0.140, and flex 0.00125 stay until a car misses the window.
+- When a claim is locked after verification, commit it and push it to the private repo `Node-Thermal-Friction-private` on `testing/main` and `main`. Do not wait for the public repo. An edit that is not locked stays local.
+- After each run review is written, run `tools/scripts/Copy-NtfLogs.ps1` so the dated copy on `D:\ntf-logs` matches the run that was read.
+- After a code edit that a drive will test, run `python tools/scripts/Read-NtfRun.py stamp` so the run carries the current code stamp.
+- The forward task list is `tools/ROADMAP.md`. A task there does not override the open card.
+- When a logged settled median misses the card's target by more than that track's floor, edit the open card's knob in that same review. Use the smallest step whose predicted shift clears the floor and moves toward the target. Locked scales stay. One knob. Do not wait to be asked.
+- If the user is about to leave the card, restate the card and the allowed result in one short paragraph, then wait.

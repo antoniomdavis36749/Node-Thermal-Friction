@@ -10,13 +10,13 @@ local lastSentFront, lastSentRear = nil, nil
 local sendTimer = 0
 local SEND_INTERVAL = 0.5
 
-local function makeDuctVar(name, title, subCategory, savedVal)
+local function makeDuctVar(name, title, category, subCategory, savedVal, description)
     return {
         name = name,
-        category = "Brakes",
+        category = category,
         subCategory = subCategory,
         title = title,
-        description = "Tire & rim cooling duct opening only. 1%=Closed (stock / no ducts), 100%=Fully open. Increases tire/rim air cooling and slightly cuts brake→rim heat soak. Does NOT cool native rotors, change pad fade, ABS, or brake torque. Saved with .pc configs.",
+        description = description,
         type = "range",
         unit = "%",
         min = 1,
@@ -25,8 +25,8 @@ local function makeDuctVar(name, title, subCategory, savedVal)
         maxDis = 100,
         step = 1,
         stepDis = 1,
-        default = 1,
-        val = savedVal or 1
+        default = 50,
+        val = savedVal or 50
     }
 end
 
@@ -75,12 +75,18 @@ local function onVehicleSpawned(vehID)
 
     if not variablesById[vehID] then
         variablesById[vehID] = {
-            ["$WheelCoolingDuctFront"] = makeDuctVar("$WheelCoolingDuctFront", "Front Cooling Ducts", "Front", savedFront),
-            ["$WheelCoolingDuctRear"] = makeDuctVar("$WheelCoolingDuctRear", "Rear Cooling Ducts", "Rear", savedRear)
+            ["$WheelCoolingDuctFront"] = makeDuctVar(
+                "$WheelCoolingDuctFront", "Front Tire Ducts", "Band tuning", "Final", savedFront,
+                "Near-final front band lever. Use after rolling, corner heat, and class cooling are already in the window, when a front tire is still just off its band. 50% = neutral. 1% lets more brake heat into the tire (warming). 100% = fully open: less brake heat into the rim and more tire air. Does not cool the brake rotors, and does not change pad fade, ABS, or brake torque. Does not move a heat scale. Saved with the config."
+            ),
+            ["$WheelCoolingDuctRear"] = makeDuctVar(
+                "$WheelCoolingDuctRear", "Rear Tire Ducts", "Tires", "Rear", savedRear,
+                "Tire and rim duct only. 50% = neutral. 1% lets more brake heat into the tire (warming). 100% = fully open: less brake heat into the rim and more tire air. Does not cool the brake rotors, and does not change pad fade, ABS, or brake torque. Saved with the config."
+            )
         }
     else
-        variablesById[vehID]["$WheelCoolingDuctFront"].val = savedFront or variablesById[vehID]["$WheelCoolingDuctFront"].val or 1
-        variablesById[vehID]["$WheelCoolingDuctRear"].val = savedRear or variablesById[vehID]["$WheelCoolingDuctRear"].val or 1
+        variablesById[vehID]["$WheelCoolingDuctFront"].val = savedFront or variablesById[vehID]["$WheelCoolingDuctFront"].val or 50
+        variablesById[vehID]["$WheelCoolingDuctRear"].val = savedRear or variablesById[vehID]["$WheelCoolingDuctRear"].val or 50
     end
 
     if type(tableMerge) == "function" then
@@ -108,7 +114,7 @@ local function onSpawnCCallback(vehID)
         if desirialized.vars[name] ~= nil then
             variablesById[vehID][name].val = desirialized.vars[name]
         else
-            variablesById[vehID][name].val = variablesById[vehID][name].default or 1
+            variablesById[vehID][name].val = variablesById[vehID][name].default or 50
         end
     end
 end
@@ -121,8 +127,8 @@ local function sendDuctMailbox(force)
 
     local frontVar = pdata.vdata.variables["$WheelCoolingDuctFront"]
     local rearVar = pdata.vdata.variables["$WheelCoolingDuctRear"]
-    local front = (frontVar and tonumber(frontVar.val)) or 1
-    local rear = (rearVar and tonumber(rearVar.val)) or 1
+    local front = (frontVar and tonumber(frontVar.val)) or 50
+    local rear = (rearVar and tonumber(rearVar.val)) or 50
 
     if force or front ~= lastSentFront or rear ~= lastSentRear then
         lastSentFront, lastSentRear = front, rear

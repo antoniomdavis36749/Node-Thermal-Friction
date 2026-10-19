@@ -5,13 +5,23 @@
 -- Scintilla sport_plus pass: vehicle=scintilla/gts (ESC optional).
 --
 -- Modes:
---   auto   — slow sensor-aided learn lap (≤10 mph) → repair → 10 aggressive AI laps
---   manual — teleport once, arm tire CSV telemetry, AI disabled (user drives)
+--   auto     — slow sensor-aided learn lap (≤10 mph) → repair → 10 aggressive AI laps on Belasco
+--   manual   — teleport once, arm tire CSV telemetry, AI disabled (user drives)
+--   straight — smallgrid, AI held at a set speed, 12 km, CSV armed
 --
--- Triggers (under mods/unpacked/Node-Thermal-Friction-dev/tools/):
---   RUN_WC_MANUAL_TEL          → manual telemetry-only
---   RUN_WC_GT4_TEST            → auto AI test (default)
---   RUN_WC_GT4_TEST contents containing "manual" → manual telemetry-only
+-- The trigger folder is this mod's own tools/ directory. It is resolved from
+-- this file, so the folder name does not have to be Node-Thermal-Friction-dev.
+--
+-- Triggers:
+--   RUN_WC_MANUAL_TEL   manual telemetry-only
+--   RUN_WC_GT4_TEST     auto AI test. A body containing "manual" selects manual instead.
+--   RUN_WC_STRAIGHT     held-speed straight. Body lines: speed=80  km=12
+--   STOP_WC_TEST        stop the AI and disarm the CSV
+--
+-- Straight: load smallgrid, sit in the test car, and create tools/RUN_WC_STRAIGHT.
+-- The log is tools/output/straight-telemetry.csv. The trigger is deleted when read.
+-- If smallgrid is not the current level, the harness asks the game to load it and
+-- resumes from tools/output/straight-pending.txt.
 -- Outputs (CSV / status / result) go under tools/output/.
 local M = {}
 
@@ -41,9 +51,38 @@ local ARM_MIN_NODES = 8               -- must hit this many checkpoints before f
 local NODE_HIT_RADIUS_EXTRA = 28      -- m beyond waypoint radius to register a hit
 local MPH_PER_MPS = 2.2369362920544
 
+local toolsDirCached = nil
+
 local function getToolsDir()
-  -- Relative to BeamNG user folder (io.open works here; absolute Windows paths often fail in GELUA)
-  return 'mods/unpacked/Node-Thermal-Friction-dev/tools'
+  -- Relative to the BeamNG user folder. Absolute Windows paths often fail in GELUA.
+  -- Resolve from this file so a renamed mod folder still finds its own tools/.
+  if toolsDirCached then return toolsDirCached end
+  local src = ''
+  if debug and debug.getinfo then
+    local info = debug.getinfo(1, 'S')
+    src = (info and info.source) or ''
+  end
+  src = src:gsub('^@', ''):gsub('\\', '/')
+  local rel = src:match('(mods/unpacked/[^/]+)/lua/ge/extensions/tireWestCoastLapTest%.lua$')
+  if rel then
+    toolsDirCached = rel .. '/tools'
+    return toolsDirCached
+  end
+  local candidates = {
+    'mods/unpacked/Node-Thermal-Friction-work/tools',
+    'mods/unpacked/Node-Thermal-Friction-dev/tools',
+  }
+  for _, dir in ipairs(candidates) do
+    local root = dir:gsub('/tools$', '')
+    local f = io.open(root .. '/lua/ge/extensions/tireWestCoastLapTest.lua', 'r')
+    if f then
+      f:close()
+      toolsDirCached = dir
+      return toolsDirCached
+    end
+  end
+  toolsDirCached = candidates[1]
+  return toolsDirCached
 end
 
 local function getOutDir()
@@ -97,6 +136,9 @@ local state = {
   telemetryCsvName = 'wc-gt4-lap-telemetry.csv',
   statusJsonName = 'wc-gt4-lap-status.json',
   resultTxtName = 'wc-gt4-lap-result.txt',
+  straightSpeedMps = 80,
+  straightTargetKm = 12,
+  straightKm = 0,
 }
 
 local function resultPath()
@@ -119,6 +161,8 @@ local function applyRunProfileFromTrigger(body)
   state.telemetryCsvName = 'wc-gt4-lap-telemetry.csv'
   state.statusJsonName = 'wc-gt4-lap-status.json'
   state.resultTxtName = 'wc-gt4-lap-result.txt'
+  state.straightSpeedMps = 80
+  state.straightTargetKm = 12
   if not body or body == '' then return end
   local vehicle = body:match('[%s\n]vehicle=([%w%._/%-]+)') or body:match('^vehicle=([%w%._/%-]+)')
   local label = body:match('[%s\n]label=([^\r\n]+)') or body:match('^label=([^\r\n]+)')
@@ -150,6 +194,10 @@ local function applyRunProfileFromTrigger(body)
   if tel and tel ~= '' then state.telemetryCsvName = tel end
   if st and st ~= '' then state.statusJsonName = st end
   if res and res ~= '' then state.resultTxtName = res end
+  local speed = tonumber(body:match('speed=([%d%.]+)'))
+  local km = tonumber(body:match('km=([%d%.]+)'))
+  if speed and speed >= 15 and speed <= 120 then state.straightSpeedMps = speed end
+  if km and km >= 1 and km <= 40 then state.straightTargetKm = km end
 end
 
 local function writeJson(path, tbl)
@@ -682,6 +730,21 @@ local function finishTest(reason)
 
   local elapsed = state.startTime > 0 and (os.clock() - state.startTime) or 0
   local raceElapsed = state.raceStartTime > 0 and (os.clock() - state.raceStartTime) or 0
+  if state.runKind == 'straight' then
+    appendResult('==== SMALLGRID STRAIGHT RESULT ====')
+    appendResult(string.format('vehicle=%s (%s)', state.vehicle or '?', state.vehicleLabel or '?'))
+    appendResult(string.format('targetSpeedMps=%.1f drivenKm=%.2f targetKm=%.1f',
+      state.straightSpeedMps or 0, state.straightKm or 0, state.straightTargetKm or 0))
+    appendResult(string.format('elapsedSec=%.1f', elapsed))
+    appendResult(string.format('status=%s', reason and ('FAIL:' .. reason) or 'OK'))
+    appendResult('telemetry=' .. telemetryPath())
+    guihooks.trigger('toastrMsg', {
+      type = reason and 'error' or 'success',
+      title = 'NTF Straight',
+      msg = reason and ('Failed: ' .. reason) or string.format('Straight %.1f km', state.straightKm or 0),
+    })
+    return
+  end
   appendResult('==== WEST COAST BELASCO RESULT ====')
   appendResult(string.format('vehicle=%s (%s)', state.vehicle or '?', state.vehicleLabel or '?'))
   appendResult('track=Belasco Motorsports Park / race_track')
@@ -767,6 +830,7 @@ end
 local function clearTriggers()
   pcall(function() os.remove(pathJoin(getToolsDir(), 'RUN_WC_GT4_TEST')) end)
   pcall(function() os.remove(pathJoin(getToolsDir(), 'RUN_WC_MANUAL_TEL')) end)
+  pcall(function() os.remove(pathJoin(getToolsDir(), 'RUN_WC_STRAIGHT')) end)
   pcall(function() os.remove(pathJoin(getToolsDir(), 'STOP_WC_TEST')) end)
 end
 
@@ -821,6 +885,19 @@ local function readTriggerMode()
     mf:close()
     applyRunProfileFromTrigger(body)
     return 'manual', 'RUN_WC_MANUAL_TEL'
+  end
+  local straightPath = pathJoin(getToolsDir(), 'RUN_WC_STRAIGHT')
+  local sf = io.open(straightPath, 'r')
+  if sf then
+    local body = sf:read('*a') or ''
+    sf:close()
+    applyRunProfileFromTrigger(body)
+    if state.telemetryCsvName == 'wc-gt4-lap-telemetry.csv' then
+      state.telemetryCsvName = 'straight-telemetry.csv'
+      state.statusJsonName = 'straight-status.json'
+      state.resultTxtName = 'straight-result.txt'
+    end
+    return 'straight', 'RUN_WC_STRAIGHT'
   end
   local autoPath = pathJoin(getToolsDir(), 'RUN_WC_GT4_TEST')
   local af = io.open(autoPath, 'r')
@@ -955,10 +1032,207 @@ local function beginSequence(reason, runKind)
     .. ' vehicle=' .. tostring(state.vehicle))
 end
 
+local function currentLevelId()
+  if type(getCurrentLevelIdentifier) ~= 'function' then return '' end
+  local ok, id = pcall(getCurrentLevelIdentifier)
+  if ok and type(id) == 'string' then return id:lower() end
+  return ''
+end
+
+local function levelIsSmallgrid()
+  return currentLevelId():find('smallgrid', 1, true) ~= nil
+end
+
+local function straightPendingPath()
+  return pathJoin(getOutDir(), 'straight-pending.txt')
+end
+
+local function writeStraightPending()
+  local f = io.open(straightPendingPath(), 'w')
+  if not f then return end
+  f:write(string.format('at=%d\nspeed=%.3f\nkm=%.3f\ntelemetryCsv=straight-telemetry.csv\n',
+    os.time(), state.straightSpeedMps or 80, state.straightTargetKm or 12))
+  f:close()
+end
+
+local function readStraightPending()
+  local f = io.open(straightPendingPath(), 'r')
+  if not f then return nil end
+  local body = f:read('*a') or ''
+  f:close()
+  if body == '' then return nil end
+  return body
+end
+
+local function clearStraightPending()
+  pcall(function() os.remove(straightPendingPath()) end)
+end
+
+local function requestSmallgrid()
+  local tried = {}
+  local function note(name, ok, err)
+    table.insert(tried, name .. '=' .. tostring(ok) .. ((err and ok == false) and (' ' .. tostring(err)) or ''))
+  end
+  if freeroam_freeroam and type(freeroam_freeroam.startFreeroam) == 'function' then
+    local ok, err = pcall(function()
+      freeroam_freeroam.startFreeroam('/levels/smallgrid/main.level.json')
+    end)
+    note('freeroam', ok, err)
+  elseif core_levels and type(core_levels.startLevel) == 'function' then
+    local ok, err = pcall(function()
+      core_levels.startLevel('/levels/smallgrid/info.json')
+    end)
+    note('core_levels', ok, err)
+  end
+  appendResult('currentLevel=' .. currentLevelId())
+  if #tried == 0 then
+    appendResult('No level-load API. Load smallgrid, sit in the car, and the pending file will start the straight.')
+  else
+    appendResult('level load attempts: ' .. table.concat(tried, '; '))
+  end
+  guihooks.trigger('toastrMsg', {
+    type = 'info',
+    title = 'NTF Straight',
+    msg = 'Load smallgrid if it does not open. The straight starts there.',
+  })
+end
+
+local function queueStraightDrive(veh, speedMps, distanceM)
+  if not veh then return false end
+  local pos = veh:getPosition()
+  if not pos then return false end
+  local dir = vec3(0, 1, 0)
+  local ok, raw = pcall(function() return veh:getDirectionVector() end)
+  if ok and raw then
+    local flat = vec3(raw.x or 0, raw.y or 0, 0)
+    if flat:length() > 0.2 then
+      flat:normalize()
+      dir = flat
+    end
+  end
+  local script = {}
+  local step = 200
+  local count = math.ceil((distanceM + 400) / step)
+  for i = 1, count do
+    local p = pos + dir * (i * step)
+    table.insert(script, { x = p.x, y = p.y, z = pos.z, r = 6, v = speedMps })
+  end
+  veh:queueLuaCommand(string.format([[
+    ai.setMode('disabled')
+    ai.setAvoidCars('off')
+    ai.setSpeed(%s)
+    ai.setSpeedMode('set')
+    ai.driveUsingPath({
+      script = %s,
+      noOfLaps = 1,
+      aggression = 1,
+      avoidCars = 'off',
+      driveInLane = 'off'
+    })
+  ]], tostring(speedMps), toLuaScriptNodes(script)))
+  state.aiMode = 'straight:' .. tostring(#script)
+  return true
+end
+
+local function beginStraight(reason)
+  if state.phase == 'straight' and state.aiStarted then return end
+  state.finished = false
+  state.runKind = 'straight'
+  state.mode = 'straight'
+  state.aiStarted = false
+  state.telemetryArmed = false
+  state.telemetryArmPending = false
+  state.failReason = nil
+  state.straightKm = 0
+  state.startTime = 0
+  if state.telemetryCsvName == 'wc-gt4-lap-telemetry.csv' then
+    state.telemetryCsvName = 'straight-telemetry.csv'
+    state.statusJsonName = 'straight-status.json'
+    state.resultTxtName = 'straight-result.txt'
+  end
+  clearTriggers()
+  clearStraightPending()
+  pcall(function()
+    local f = io.open(resultPath(), 'w')
+    if f then
+      f:write('SMALLGRID HELD-SPEED STRAIGHT\n')
+      f:write(os.date('!%Y-%m-%d %H:%M:%SZ') .. '\n')
+      f:write(string.format('speedMps=%.1f targetKm=%.1f\n', state.straightSpeedMps or 80, state.straightTargetKm or 12))
+      f:write(string.format('telemetry=%s\n\n', telemetryPath()))
+      f:close()
+    end
+  end)
+  setPhase('straight', { targetLaps = 0 })
+  appendResult(tostring(reason or 'straight') .. string.format(' speed=%.1f km=%.1f level=%s',
+    state.straightSpeedMps or 80, state.straightTargetKm or 12, currentLevelId()))
+end
+
+local function updateStraight(dt)
+  if state.phase == 'straight_load' then
+    if levelIsSmallgrid() then
+      beginStraight('smallgrid ready')
+    end
+    return
+  end
+  local veh = getPlayerVeh()
+  if not veh then return end
+  if not state.aiStarted then
+    armTelemetry(veh, 1.0)
+    if not queueStraightDrive(veh, state.straightSpeedMps or 80, (state.straightTargetKm or 12) * 1000) then
+      finishTest('straight path failed')
+      return
+    end
+    state.aiStarted = true
+    state.startTime = os.clock()
+    appendResult(string.format('straight driving speed=%.1f m/s target=%.1f km log=%s',
+      state.straightSpeedMps or 80, state.straightTargetKm or 12, telemetryPath()))
+  end
+  local spd = getVehSpeed(veh)
+  state.currentSpeedMps = spd
+  if spd > 8 and spd < 200 then
+    state.straightKm = (state.straightKm or 0) + spd * dt / 1000
+  end
+  sampleTimer = sampleTimer + dt
+  if sampleTimer > 2 then
+    sampleTimer = 0
+    veh:queueLuaCommand(string.format("ai.setSpeed(%s)\nai.setSpeedMode('set')\n", tostring(state.straightSpeedMps or 80)))
+    armTelemetry(veh, 1.0)
+    setPhase('straight', { targetLaps = 0 })
+  end
+  if (state.straightKm or 0) >= (state.straightTargetKm or 12) then
+    appendResult(string.format('straight reached %.2f km', state.straightKm))
+    finishTest(nil)
+    return
+  end
+  if state.startTime > 0 and (os.clock() - state.startTime) > 600 then
+    finishTest('straight timeout')
+  end
+end
+
+local function resumeStraightPending(reason)
+  local body = readStraightPending()
+  if not body then return false end
+  local at = tonumber(body:match('at=(%d+)'))
+  if at and (os.time() - at) > 1800 then
+    clearStraightPending()
+    return false
+  end
+  if not levelIsSmallgrid() then return false end
+  applyRunProfileFromTrigger(body)
+  if state.telemetryCsvName == 'wc-gt4-lap-telemetry.csv' then
+    state.telemetryCsvName = 'straight-telemetry.csv'
+    state.statusJsonName = 'straight-status.json'
+    state.resultTxtName = 'straight-result.txt'
+  end
+  beginStraight(reason or 'resume straight')
+  return true
+end
+
 local function isActiveRunPhase()
   return state.phase == 'boot' or state.phase == 'teleport' or state.phase == 'arming'
       or state.phase == 'start_ai' or state.phase == 'learning' or state.phase == 'racing'
       or state.phase == 'manual_telemetry'
+      or state.phase == 'straight' or state.phase == 'straight_load'
 end
 
 -- Hot-switch / idle poll: consume trigger and start (or switch to) the right mode.
@@ -979,6 +1253,24 @@ local function tryConsumeTrigger(reasonPrefix)
       return true
     end
     beginSequence((reasonPrefix or 'trigger') .. ' via ' .. tostring(trigName), 'manual')
+    return true
+  end
+  if kind == 'straight' then
+    if state.phase == 'straight' or state.phase == 'straight_load' then
+      clearTriggers()
+      return false
+    end
+    if not levelIsSmallgrid() then
+      writeStraightPending()
+      clearTriggers()
+      state.runKind = 'straight'
+      state.finished = false
+      setPhase('straight_load', { targetLaps = 0 })
+      appendResult((reasonPrefix or 'trigger') .. ' via ' .. tostring(trigName) .. ' — waiting for smallgrid')
+      requestSmallgrid()
+      return true
+    end
+    beginStraight((reasonPrefix or 'trigger') .. ' via ' .. tostring(trigName))
     return true
   end
   -- auto
@@ -1089,6 +1381,11 @@ local function onUpdate(dt)
   bootTimer = bootTimer + dt
 
   if not isActiveRunPhase() then
+    return
+  end
+
+  if state.phase == 'straight' or state.phase == 'straight_load' then
+    updateStraight(dt)
     return
   end
 
@@ -1315,6 +1612,11 @@ end
 
 local function onWorldReadyState(ready)
   if ready ~= 2 then return end
+  if state.phase == 'straight_load' and levelIsSmallgrid() then
+    beginStraight('smallgrid loaded')
+    return
+  end
+  if resumeStraightPending('world ready') then return end
   if isActiveRunPhase() then
     appendResult('world ready — keeping active phase=' .. tostring(state.phase))
     return
@@ -1326,8 +1628,8 @@ end
 
 local function onExtensionLoaded()
   setPhase('loaded')
-  log('I', logTag, 'Loaded West Coast Belasco lap test (auto AI + manual telemetry; vehicle via trigger profile)')
-  log('I', logTag, 'Triggers: RUN_WC_MANUAL_TEL=manual | RUN_WC_GT4_TEST=auto; body keys: profile=kingsnake|scintilla|vehicle=...|telemetryCsv=...')
+  log('I', logTag, 'Loaded lap harness. Triggers in ' .. getToolsDir())
+  log('I', logTag, 'RUN_WC_MANUAL_TEL=manual | RUN_WC_GT4_TEST=auto | RUN_WC_STRAIGHT=smallgrid held speed | STOP_WC_TEST')
 end
 
 M.onExtensionLoaded = onExtensionLoaded
@@ -1335,6 +1637,11 @@ M.onUpdate = onUpdate
 M.onWorldReadyState = onWorldReadyState
 M.onTelemetryArmResult = onTelemetryArmResult
 M.onClientStartMission = function()
+  if state.phase == 'straight_load' and levelIsSmallgrid() then
+    beginStraight('smallgrid loaded')
+    return
+  end
+  if resumeStraightPending('mission start') then return end
   if isActiveRunPhase() then
     appendResult('mission start — keeping active phase=' .. tostring(state.phase))
     return

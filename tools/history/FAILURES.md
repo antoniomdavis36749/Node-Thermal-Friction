@@ -4,6 +4,8 @@ Attempts that missed, and defects that must not come back. Add a row at the top 
 
 | Date | What was tried | What happened | Do not |
 | --- | --- | --- | --- |
+| 2026-10-04 | Log `brakeSoak` with the other heat terms in `ctwAccumulateHeat`. | The column was saved before that wheel's soak was computed. Each row carried the previous wheel's value: FL and FR brakes at 230°C logged 9.5 and 3.9. | Save a `data.last*` column before the value it copies is computed. `ctw` is shared by every wheel. |
+| 2026-10-04 | Move rolling in 0.1 steps from single Hirochi runs. | Two runs at 3.8 with the same knobs settled 3.6–3.8°C apart on the driven rears. 0.1 of rolling is about 1.5°C. | Drive a step smaller than that track's noise floor. |
 | 2026-09-26 | Read the 22 km Corse street run from a CSV. | Telemetry was armed at `Node-Thermal-Friction-dev`, which is not the loaded folder. The run left a Pitwall screenshot and no file. | Arm the log on a folder BeamNG is not running. The live copy is `Node-Thermal-Friction-work`. |
 | 2026-09-26 | Use native rubber °C as the Node-Thermal grip temperature. | On the 26.8 km Corse log, native tread started at 15°C while Node-Thermal bands were already 37–39°C, then sat about 10°C cooler in the steady window, and flashed hotter than Node-Thermal on the driven rears at the end. | Feed native °C into the locked grip bands. It stays a second thermometer until a dedicated bypass test. |
 | 2026-09-10 area | Path A6 as the Soft C4 heat pin. | 4-lap still about 58/69/72/76°C against opt 82 after the patch-fraction edits. | Stack more Path A on Soft to chase that pin. |
